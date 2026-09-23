@@ -31,3 +31,17 @@ dist/
 build/
 out/
 coverage/
+
+# Next.js / Vercel
+.next/
+.vercel/
+*.tsbuildinfo
+next-env.d.ts
+
+# Testing
+/test-results/
+/playwright-report/
+
+# Supabase local
+supabase/.branches/
+supabase/.temp/
