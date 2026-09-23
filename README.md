@@ -1,6 +1,6 @@
 # Gym App
 
-An app for planning workouts, logging training sessions, and tracking progress over time.
+A web app for planning workouts, logging training sessions, and tracking progress over time.
 
 > **Status:** Early development. The project is being set up, so expect frequent changes.
 
@@ -15,7 +15,7 @@ An app for planning workouts, logging training sessions, and tracking progress o
 
 ## Tech stack
 
-To be decided. This section will be updated once the stack is chosen.
+Planned as a **web app**. The specific frameworks and hosting are to be decided once the project brief is finalised.
 
 ## Getting started
 
