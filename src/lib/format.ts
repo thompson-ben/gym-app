@@ -52,7 +52,9 @@ export function formatDate(iso: string, timeZone?: string, opts?: Intl.DateTimeF
     year: "numeric",
     timeZone,
     ...opts,
-  }).format(new Date(iso));
+  })
+    .format(new Date(iso))
+    .replace("Sept", "Sep");
 }
 
 export function formatDateTime(iso: string, timeZone?: string): string {

@@ -172,7 +172,7 @@ export default function Logger({ userId, initial, timeZone }: { userId: string; 
   const closed = status.kind === "closed";
 
   return (
-    <div className="mx-auto w-full max-w-2xl px-4 pb-[calc(8rem+env(safe-area-inset-bottom))] sm:px-6">
+    <div className={cx("mx-auto w-full max-w-xl px-4 sm:px-6", record.rest ? "pb-[calc(15rem+env(safe-area-inset-bottom))]" : "pb-[calc(8rem+env(safe-area-inset-bottom))]")}>
       <div className="sticky top-0 z-20 -mx-4 border-b border-line/60 bg-bg/90 px-4 backdrop-blur-lg pt-safe sm:-mx-6 sm:px-6">
         <div className="flex h-14 items-center justify-between gap-2">
           <Link href="/train" className="-ml-2 inline-flex h-11 items-center gap-0.5 rounded-2xl pr-2 pl-1 text-sm text-muted hover:text-fg" aria-label="Leave workout (it stays in progress)">
@@ -261,7 +261,7 @@ export default function Logger({ userId, initial, timeZone }: { userId: string; 
 
       {/* Bottom action area: rest timer and finish. Hidden while typing. */}
       <div className={cx("fixed inset-x-0 bottom-0 z-30 transition-transform duration-200", inputFocused && "translate-y-full")} aria-hidden={inputFocused || undefined}>
-        <div className="mx-auto max-w-2xl space-y-2 bg-gradient-to-t from-bg via-bg/95 to-transparent px-4 pt-6 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:px-6">
+        <div className="mx-auto max-w-xl space-y-2 bg-gradient-to-t from-bg via-bg/95 to-transparent px-4 pt-6 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:px-6">
           {record.rest ? (
             <RestTimerBar
               timer={record.rest}
