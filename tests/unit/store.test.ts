@@ -37,3 +37,23 @@ describe("local session storage", () => {
     expect(saveRecord(broken, newRecord("alice", session([]), {}))).toBe(false);
   });
 });
+
+describe("account switching", () => {
+  it("keeps another account's unsynced workout but drops its synced ones", async () => {
+    const { pruneOtherUsers } = await import("@/lib/session/store");
+    const storage = new MemoryStorage();
+    const synced = { ...newRecord("alice", { ...session([]), id: "s1" }, {}) };
+    const unsynced = { ...newRecord("alice", { ...session([]), id: "s2" }, {}), localVersion: 3, syncedVersion: 1 };
+    saveRecord(storage, synced);
+    saveRecord(storage, unsynced);
+    saveRecord(storage, newRecord("bob", { ...session([]), id: "s3" }, {}));
+    setLastUser(storage, "alice");
+
+    expect(pruneOtherUsers(storage, "bob")).toEqual({ removed: 1, keptUnsynced: 1 });
+    expect(loadRecord(storage, "alice", "s1")).toBeNull();
+    expect(loadRecord(storage, "alice", "s2")).not.toBeNull();
+    expect(loadRecord(storage, "bob", "s3")).not.toBeNull();
+    // Bob's views only ever list Bob's records.
+    expect(listRecords(storage, "bob").map((r) => r.sessionId)).toEqual(["s3"]);
+  });
+});

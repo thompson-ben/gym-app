@@ -2,30 +2,37 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { hasUnsyncedChanges, recordKey, saveRecord, type LocalRecord } from "@/lib/session/store";
-import { RetryableError, SessionSync, type SyncResponse, type SyncStatus, type Transport } from "@/lib/session/sync";
+import { AuthRequiredError, RetryableError, SessionSync, type SyncResponse, type SyncStatus, type Transport } from "@/lib/session/sync";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { friendlyError, isRetryable } from "@/lib/supabase/errors";
 import type { SessionDoc } from "@/lib/types";
 
-const transport: Transport = async ({ sessionId, baseRevision, writeId, payload }) => {
-  if (typeof navigator !== "undefined" && !navigator.onLine) throw new RetryableError("offline");
-  let result;
-  try {
-    result = await supabaseBrowser().rpc("sync_session", {
-      p_session_id: sessionId,
-      p_base_revision: baseRevision,
-      p_write_id: writeId,
-      p_doc: payload,
-    });
-  } catch (error) {
-    throw new RetryableError(error instanceof Error ? error.message : "network");
-  }
-  if (result.error) {
-    if (isRetryable(result.error, result.status)) throw new RetryableError(result.error.message);
-    throw new Error(friendlyError(result.error, "The server rejected this change."));
-  }
-  return result.data as SyncResponse;
-};
+/** Sends writes for `ownerId`'s record, and only while that same account is signed in. */
+function transportFor(ownerId: string): Transport {
+  return async ({ sessionId, baseRevision, writeId, payload }) => {
+    if (typeof navigator !== "undefined" && !navigator.onLine) throw new RetryableError("offline");
+    const supabase = supabaseBrowser();
+    const { data } = await supabase.auth.getSession();
+    if (data.session?.user.id !== ownerId) throw new AuthRequiredError("owner not signed in");
+    let result;
+    try {
+      result = await supabase.rpc("sync_session", {
+        p_session_id: sessionId,
+        p_base_revision: baseRevision,
+        p_write_id: writeId,
+        p_doc: payload,
+      });
+    } catch (error) {
+      throw new RetryableError(error instanceof Error ? error.message : "network");
+    }
+    if (result.error) {
+      if (result.status === 401) throw new AuthRequiredError(result.error.message);
+      if (isRetryable(result.error, result.status)) throw new RetryableError(result.error.message);
+      throw new Error(friendlyError(result.error, "The server rejected this change."));
+    }
+    return result.data as SyncResponse;
+  };
+}
 
 export function useSessionRecord(userId: string, initial: LocalRecord) {
   const [record, setRecord] = useState(initial);
@@ -48,7 +55,7 @@ export function useSessionRecord(userId: string, initial: LocalRecord) {
     const engine = new SessionSync({
       getRecord: () => recordRef.current,
       setRecord: persist,
-      transport,
+      transport: transportFor(userId),
       isOnline: () => navigator.onLine,
       newId: () => crypto.randomUUID(),
       onStatus: setStatus,

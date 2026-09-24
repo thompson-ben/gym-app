@@ -106,6 +106,40 @@ export function clearUser(storage: KeyValueStorage, userId: string) {
   }
 }
 
+/**
+ * On sign-in, removes other accounts' local workouts that are fully synced (nothing would be
+ * lost). Records with unsynced edits are kept, still namespaced to their owner and never
+ * shown to this account, so the owner can sync them after signing back in.
+ */
+export function pruneOtherUsers(storage: KeyValueStorage, userId: string): { removed: number; keptUnsynced: number } {
+  let removed = 0;
+  let keptUnsynced = 0;
+  try {
+    const keys: string[] = [];
+    for (let i = 0; i < storage.length; i++) {
+      const key = storage.key(i);
+      if (key?.startsWith(PREFIX) && key !== LAST_USER_KEY && !key.startsWith(`${PREFIX}${userId}:`)) keys.push(key);
+    }
+    for (const key of keys) {
+      let unsynced = false;
+      try {
+        const record = JSON.parse(storage.getItem(key) ?? "null") as LocalRecord | null;
+        unsynced = record ? hasUnsyncedChanges(record) : false;
+      } catch {
+        /* unreadable: treat as synced */
+      }
+      if (unsynced) keptUnsynced++;
+      else {
+        storage.removeItem(key);
+        removed++;
+      }
+    }
+  } catch {
+    /* storage unavailable */
+  }
+  return { removed, keptUnsynced };
+}
+
 export function setLastUser(storage: KeyValueStorage, userId: string) {
   try {
     storage.setItem(LAST_USER_KEY, userId);

@@ -9,14 +9,41 @@ export const db = new pg.Pool({ connectionString: process.env.SUPABASE_DB_URL ??
 
 export type TestUser = { email: string; password: string; id: string; client: SupabaseClient };
 
-/** Registers a fresh account through Supabase Auth (email confirmation is off locally). */
+export const MAILPIT = process.env.MAILPIT_URL ?? "http://127.0.0.1:54324";
+export const uniqueEmail = (label: string) => `${label}-${randomUUID().slice(0, 8)}@e2e.splitmate.test`;
+
+/** A confirmed account (created with the local admin API), signed in for API seeding. */
 export async function newUser(label: string): Promise<TestUser> {
-  const email = `${label}-${randomUUID().slice(0, 8)}@e2e.splitmate.test`;
+  const email = uniqueEmail(label);
   const password = "correct-horse-battery";
+  const admin = createClient(URL, process.env.SUPABASE_LOCAL_SECRET_KEY!, { auth: { persistSession: false } });
+  const created = await admin.auth.admin.createUser({ email, password, email_confirm: true });
+  if (created.error || !created.data.user) throw created.error ?? new Error("create user failed");
   const client = createClient(URL, KEY, { auth: { persistSession: false } });
-  const { data, error } = await client.auth.signUp({ email, password });
-  if (error || !data.user) throw error ?? new Error("sign up failed");
-  return { email, password, id: data.user.id, client };
+  const { error } = await client.auth.signInWithPassword({ email, password });
+  if (error) throw error;
+  return { email, password, id: created.data.user.id, client };
+}
+
+/** Waits for the newest email to an address in the local Mailpit inbox and returns its first link. */
+export async function emailLink(to: string, subject: RegExp): Promise<string> {
+  for (let i = 0; i < 40; i++) {
+    const res = await fetch(`${MAILPIT}/api/v1/search?query=${encodeURIComponent(`to:"${to}"`)}`);
+    const { messages } = (await res.json()) as { messages: { ID: string; Subject: string }[] };
+    const hit = messages.find((m) => subject.test(m.Subject));
+    if (hit) {
+      const message = (await (await fetch(`${MAILPIT}/api/v1/message/${hit.ID}`)).json()) as { HTML: string };
+      const href = message.HTML.match(/href="([^"]+)"/)?.[1];
+      if (href) return href.replace(/&amp;/g, "&");
+    }
+    await new Promise((r) => setTimeout(r, 250));
+  }
+  throw new Error(`no email "${subject}" for ${to}`);
+}
+
+export async function emailCount(to: string): Promise<number> {
+  const res = await fetch(`${MAILPIT}/api/v1/search?query=${encodeURIComponent(`to:"${to}"`)}`);
+  return ((await res.json()) as { messages: unknown[] }).messages.length;
 }
 
 export async function catalogueId(slug: string) {

@@ -1,9 +1,22 @@
+import { execSync } from "node:child_process";
 import { defineConfig, devices } from "@playwright/test";
 
 try {
   process.loadEnvFile(".env.local");
 } catch {
   /* optional */
+}
+
+// Local-only admin key for creating pre-confirmed test users (printed by the Supabase CLI for
+// the local stack; never a production credential).
+if (!process.env.SUPABASE_LOCAL_SECRET_KEY) {
+  try {
+    const env = execSync("npx supabase status -o env", { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
+    const match = env.match(/^SERVICE_ROLE_KEY="?([^"\n]+)"?/m);
+    if (match) process.env.SUPABASE_LOCAL_SECRET_KEY = match[1];
+  } catch {
+    /* stack not running: auth tests will fail loudly */
+  }
 }
 
 const PORT = Number(process.env.E2E_PORT ?? 3100);

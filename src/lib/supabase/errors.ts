@@ -37,6 +37,6 @@ export function friendlyError(error: Pick<PostgrestError, "message"> | Error | n
 /** True when the outcome of a request is unknown (no response, gateway or server failure). */
 export function isRetryable(error: PostgrestError | null, status: number): boolean {
   if (!error) return false;
-  if (status === 0 || status >= 500 || status === 401) return true;
+  if (status === 0 || status >= 500) return true;
   return !error.code && /fetch|network|load failed|timeout/i.test(error.message ?? "");
 }

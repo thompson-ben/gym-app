@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button, ErrorNote, Field, Input } from "@/components/ui";
@@ -8,7 +9,7 @@ import { supabaseBrowser } from "@/lib/supabase/client";
 type Mode = "sign-in" | "sign-up";
 
 const ERRORS: Record<string, string> = {
-  confirm_failed: "That confirmation link is invalid or has expired. Try signing in, or create the account again.",
+  confirm_failed: "That confirmation link is invalid or has expired. Try signing in; if your email is not confirmed yet, create the account again to get a new link.",
   missing_code: "The sign-in link was incomplete. Please try again.",
 };
 
@@ -36,10 +37,13 @@ export function AuthForm({ initialMode, next, error }: { initialMode: Mode; next
         router.replace(next);
         router.refresh();
       } else {
+        // Where to continue after confirming (e.g. a shared split). Kept in a short-lived cookie
+        // because the email link itself carries only the confirmation token.
+        document.cookie = `sm_next=${encodeURIComponent(next)}; path=/; max-age=3600; samesite=lax`;
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: `${window.location.origin}/auth/confirm?next=${encodeURIComponent(next)}` },
+          options: { emailRedirectTo: `${window.location.origin}/auth/confirm` },
         });
         if (error) {
           setMessage(error.message);
@@ -79,7 +83,18 @@ export function AuthForm({ initialMode, next, error }: { initialMode: Mode; next
       <Field label="Email">
         {(id) => <Input id={id} type="email" autoComplete="email" inputMode="email" required value={email} onChange={(e) => setEmail(e.target.value)} />}
       </Field>
-      <Field label="Password" hint={mode === "sign-up" ? "At least 8 characters." : undefined}>
+      <Field
+        label="Password"
+        hint={
+          mode === "sign-up" ? (
+            "At least 8 characters."
+          ) : (
+            <Link href={`/forgot-password${email ? `?email=${encodeURIComponent(email)}` : ""}`} className="font-medium text-accent-text underline-offset-4 hover:underline">
+              Forgot password?
+            </Link>
+          )
+        }
+      >
         {(id, describedBy) => (
           <Input
             id={id}

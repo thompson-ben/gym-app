@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { setLastUser } from "@/lib/session/store";
+import { pruneOtherUsers, setLastUser } from "@/lib/session/store";
 
 /**
  * Remembers the signed-in user for the offline workout shell and shares the browser's time
@@ -11,6 +11,7 @@ import { setLastUser } from "@/lib/session/store";
 export function ClientBoot({ userId }: { userId: string }) {
   const router = useRouter();
   useEffect(() => {
+    pruneOtherUsers(window.localStorage, userId);
     setLastUser(window.localStorage, userId);
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
     const current = document.cookie.match(/(?:^|; )sm_tz=([^;]*)/)?.[1];

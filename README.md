@@ -30,7 +30,9 @@ Local demo account (created only by `supabase/seed.sql`, **local only**):
 |---|---|
 | `demo@splitmate.test` | `splitmate-demo` |
 
-It contains one real reference workout (Chest & back, 21 September 2026) and two splits. Nothing else is invented, and new accounts start empty.
+It contains one real reference workout (Chest & back, 21 September 2026) and two splits. Nothing else is invented, and new accounts start empty. The equipment used for the incline press is not confirmed, so it is logged on a custom exercise labelled **"Incline press · equipment unconfirmed"** rather than a catalogue variation. Once the variation is confirmed, edit the exercise (name, variant, equipment); its history is kept.
+
+Emails sent by the local stack (sign-up confirmation, password reset) are caught by Mailpit at <http://127.0.0.1:54324>. Email confirmation is **on** locally, as in production.
 
 ### Scripts
 
@@ -40,46 +42,66 @@ It contains one real reference workout (Chest & back, 21 September 2026) and two
 | `npm run lint` / `typecheck` | ESLint / TypeScript |
 | `npm run test:unit` | Pure logic: previous-set matching, session edits, sync engine, storage isolation, timer, formatting |
 | `npm run test:db` | Migrations, functions and RLS against the local database (needs `db:start`) |
-| `npm run test:e2e` | Playwright against a production build and local Supabase (run `npm run build` first) |
+| `npm run test:e2e` | Playwright against a production build and local Supabase (run `npm run build` first; reads the local stack's keys from `supabase status`) |
 | `npm run db:reset` | Re-apply all migrations and the local seed |
 | `npm run icons` | Regenerate PWA icons |
 
 ---
 
-## Supabase setup (hosted)
+## Deployment (Supabase + Vercel)
 
-The app needs **no service-role key**. All data access runs as the signed-in user under Row Level Security.
+Use a **dedicated** Supabase project for Splitmate: the migrations create tables and functions in `public`, so never point it at another product's project. The app needs **no service-role key**; all data access runs as the signed-in user under Row Level Security.
 
-1. Create a **dedicated** Supabase project for Splitmate. Do not reuse another product's project, because the migrations create tables in `public`.
-2. Link and push the migrations:
+### 1. Supabase project
+
+1. Create a project named e.g. `splitmate` (dashboard → New project). Note its **project ref** (the `<ref>` in `https://<ref>.supabase.co`).
+2. From this repository:
    ```bash
-   npx supabase login
-   npx supabase link --project-ref <your-project-ref>
-   npx supabase db push        # applies supabase/migrations/*, including the exercise catalogue
+   npx supabase login                       # opens a browser; no token goes in the repo
+   npx supabase link --project-ref <ref>    # confirm the prompt names the Splitmate project
+   npx supabase db push                     # applies supabase/migrations/* (schema, functions, catalogue)
    ```
-   `db push` does **not** run `supabase/seed.sql`, so no demo data reaches production.
-3. **Authentication → URL configuration**
-   - Site URL: `https://<your-domain>`
-   - Redirect URLs: `https://<your-domain>/auth/confirm` (add your Vercel preview pattern too, e.g. `https://*-<team>.vercel.app/auth/confirm`).
-4. **Authentication → Providers → Email**: keep email + password enabled. With "Confirm email" on (recommended), the default confirmation email works as is: it lands on `/auth/confirm`, which handles both the PKCE `code` and the `token_hash` link formats.
-5. **Project settings → API keys**: copy the Project URL and the **Publishable** key (or the legacy anon key).
+   `db push` never runs `supabase/seed.sql`, so no demo data reaches the hosted project.
+3. **Authentication → Sign In / Providers → Email**: email + password on, **Confirm email on**, minimum password length **8**.
+4. **Authentication → URL Configuration**
+   - Site URL: `https://<production-domain>`
+   - Redirect URLs (add each line):
+     ```
+     https://<production-domain>/auth/confirm
+     https://<production-domain>/auth/reset
+     https://*-<vercel-team-slug>.vercel.app/auth/confirm
+     https://*-<vercel-team-slug>.vercel.app/auth/reset
+     ```
+     The last two let Vercel preview deployments use sign-up and password reset. Links whose redirect is not on this list fall back to the Site URL and will not complete.
+5. **Authentication → Emails → Templates**: paste the two templates from this repository so links work on any device (the default templates use PKCE links that only work in the browser that asked for them; the app accepts both):
+   - *Confirm signup*: subject `Confirm your Splitmate account`, body `supabase/templates/confirmation.html`
+   - *Reset password*: subject `Reset your Splitmate password`, body `supabase/templates/recovery.html`
+6. **Authentication → Emails → SMTP**: configure a real SMTP provider before inviting users. Supabase's built-in sender is heavily rate-limited and meant for testing.
+7. **Project Settings → API Keys**: copy the Project URL and the **Publishable** key (`sb_publishable_…`; the legacy anon key also works).
 
-### Environment variables
+### 2. Vercel project
 
-See `.env.example`:
+1. Vercel → Add New → Project → import `thompson-ben/gym-app`. Framework preset Next.js; build and output settings unchanged.
+2. Environment variables (Production **and** Preview):
 
-| Name | Value |
-|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | `https://<project-ref>.supabase.co` |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Publishable (`sb_publishable_…`) or anon key |
+   | Name | Value |
+   |---|---|
+   | `NEXT_PUBLIC_SUPABASE_URL` | `https://<ref>.supabase.co` |
+   | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | the publishable key |
 
-## Deploying to Vercel
+   Both are public by design (they are sent to the browser); no secret is needed.
+3. Deploy. Put the production domain into Supabase's Site URL and redirect URLs (step 1.4).
 
-1. Import the repository in Vercel (framework preset: Next.js; defaults are fine).
-2. Add the two environment variables above for Production and Preview.
-3. Deploy, then add the production domain to Supabase's Site URL and redirect URLs (step 3 above).
+> Status: no deployment has been made or verified from this repository. The build session had no Supabase or Vercel credentials. All verification so far is against the local Supabase stack.
 
-> Status: deployment has **not** been performed or verified from this repository yet. No Vercel or Supabase project credentials were available while it was built. Everything was verified against a local Supabase stack.
+---
+
+## Accounts and password reset
+
+- Sign-up requires confirming the email address. The confirmation link lands on `/auth/confirm` and continues to where the person started (for example a shared split).
+- **Forgot password?** on the sign-in screen opens `/forgot-password`. The response is always the same ("If an account exists for …, we have sent a link"), whether or not the address has an account; only rate limiting is reported.
+- The reset email links to `/auth/reset`, which verifies the one-time token and opens `/reset-password` to choose a new password. Used, forged or expired links (including Supabase's own `otp_expired` redirect) return to `/forgot-password` with "That reset link is invalid or has expired". Opening `/reset-password` without a recovery session asks for a new link.
+- Required redirect URLs: `/auth/confirm` and `/auth/reset` on every origin the app is served from (see Deployment step 1.4).
 
 ---
 
@@ -104,7 +126,7 @@ user ─┬─ splits ── workout_templates ── template_exercises ──>
 
 ### Custom exercises and sharing
 
-- Custom exercises are private rows owned by their creator. Users can add a **variant** (e.g. a specific gym's machine) so that similar machines keep separate histories instead of being silently merged.
+- Custom exercises are private rows owned by their creator. Users can add a **variant** (e.g. "Gym A · Hammer Strength"). Every custom exercise, variant or not, is its own row with its own id, and history is looked up by id only, never by name. Two "Chest press" machines with different variants, and the catalogue's Machine Chest Press, therefore keep three separate histories (covered by a database test, including after sharing and copying). Creating a custom exercise with a similar name only *suggests* the existing ones; nothing is merged automatically.
 - A share link exposes a **snapshot**: split name, shared description, workouts, exercises and targets, and template notes only if the owner opts in. It never includes weights, reps, history, session notes, activation dates or profile details. The owner sees an exact preview before creating the link, can **update the snapshot** explicitly, and can **revoke** it. Revoking does not affect copies already made.
 - Catalogue exercises keep their canonical ids in the snapshot, so a recipient's own history appears immediately.
 - Custom exercises are shared as **definitions** (name, variant, muscle, equipment, tracking mode) plus an opaque reference. When copying, each one becomes a **new custom exercise owned by the recipient**, with empty history, unless the recipient **explicitly picks** one of their existing exercises instead. Similar names are only suggested, never auto-matched. Copies record the reference so a later copy of the same exercise can be suggested.
@@ -118,7 +140,26 @@ user ─┬─ splits ── workout_templates ── template_exercises ──>
 - **Discarded sessions cannot be resurrected** by late writes; finishing is idempotent; there can be only one in-progress session per user.
 - The status badge says **Saved** only after the server confirms. Otherwise it shows Saving, Offline · on this device, Needs review, or Sync failed · Retry.
 - Only confirmed sets count. Prefilled weights and placeholder reps are drafts; finishing removes all unconfirmed rows, and a workout with no confirmed sets can only be continued or discarded.
-- **Offline scope**: an already-open workout keeps working without a connection, and it can be reloaded offline. The service worker serves a static `/offline` shell that restores the session from this device. Other screens (splits, history, finishing, discarding) need a connection. The service worker caches only that static shell and content-hashed build assets, never authenticated pages or API responses. Signing out clears the user's local data after warning about anything unsynced.
+- **Offline scope**: an already-open workout keeps working without a connection and can be reloaded offline. Other screens (splits, history, finishing, discarding) need a connection.
+
+### Where workout data lives on the device
+
+| Store | What is in it | Scope |
+|---|---|---|
+| `localStorage` key `splitmate:v1:<user-id>:session:<session-id>` | The in-progress workout: exercises, sets (confirmed and draft), the pending write and its write id, server revision, conflict copy, last-session sets for the Previous column, rest-timer start, logger settings | Per browser profile and origin; namespaced by the signed-in user's id; every read checks that the stored user id matches |
+| `localStorage` key `splitmate:v1:last-user` | Only the id of the last signed-in account (lets the offline shell find that account's workout) | Per browser profile |
+| Cache Storage `splitmate-shell-v1` (service worker) | The static `/offline` page and content-hashed JS/CSS, icons and manifest. **No user data**: no authenticated page, RSC payload or API response is ever cached | Per origin |
+| Cookies `sb-<ref>-auth-token*` (set by Supabase) | The auth session | Per origin |
+| Cookie `sm_tz` | Browser time zone, so the server formats dates correctly | Per origin |
+
+So "not cached by the service worker" does **not** mean "not stored locally": the workout itself is deliberately stored in `localStorage` so a set is never lost to a dropped connection; the service worker only stores the code needed to open it.
+
+**Account isolation and unsynced edits**
+
+- A record is only ever loaded for the account whose id is in its key *and* body, and the sync code sends it only while that same account is signed in (it checks the Supabase session's user id before every write). If the session expired or another account is signed in, nothing is sent: the badge shows **Sign in to sync** and the edits are kept.
+- Finishing or discarding a workout is refused unless the owning account is signed in, so another account can never cause a local workout to be dropped.
+- **Sign out** (Profile) checks for unsynced edits first and warns; confirming signs out and deletes that account's local workout data from the device. With nothing unsynced it clears silently.
+- **Switching accounts** without signing out (e.g. a session expired and someone else signs in): on sign-in, other accounts' records that are fully synced are deleted; records with unsynced edits are kept, still invisible to the new account, so their owner can sync them after signing back in.
 
 ### Rest timer
 
@@ -139,11 +180,16 @@ Remaining time is derived from the start timestamp (`Date.now()`), not from coun
 | G. Custom exercises | `tests/db` (no merging, explicit mapping only, no access to another user's exercise) |
 | H. Access controls | `tests/db` (unauthenticated and unrelated users, id hijacking, function access) |
 | I. Timer | `tests/unit/timer.test.ts`, `tests/e2e` (clock jumped without ticks) |
+| Variants kept apart | `tests/db` (two variants + catalogue machine, previous, history, share/copy) |
+| Sign-up confirmation, password reset | `tests/e2e/auth.spec.ts` (real emails through local Mailpit: neutral response, reset, reused/forged/expired links) |
+| Account switching and sign-out | `tests/unit/store.test.ts`, `tests/unit/sync.test.ts`, `tests/e2e/auth.spec.ts` |
+| Installable PWA | `tests/e2e/auth.spec.ts` (Chrome installability check, manifest) |
 
 ## Known limitations (V1)
 
 - Kilograms only (the `weight_unit` column exists for a later lb option).
-- Email + password sign-in only; there is no password-reset screen yet (Supabase's reset email can be enabled later).
+- Email + password sign-in only (no social or magic-link sign-in).
+- A custom exercise cannot be merged into a catalogue exercise afterwards (deliberately: no silent merging). If the demo incline press turns out to be a catalogue variation, future sessions can use that exercise, but past sets stay on the custom one.
 - Finishing, discarding and starting workouts need a connection. The app as a whole is not offline-first.
 - Conflict resolution is per workout (keep this version or the other), not per set.
 - Reordering uses up/down controls rather than drag and drop.

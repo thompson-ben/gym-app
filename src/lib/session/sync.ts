@@ -13,6 +13,12 @@ export type SyncRequest = { sessionId: string; baseRevision: number; writeId: st
 /** Thrown by a transport when the outcome of a request is unknown (offline, timeout, 5xx). */
 export class RetryableError extends Error {}
 
+/**
+ * Thrown when there is no valid session for the record's owner (signed out, expired, or a
+ * different account signed in). Nothing was sent; the pending write is kept for later.
+ */
+export class AuthRequiredError extends Error {}
+
 export type Transport = (request: SyncRequest) => Promise<SyncResponse>;
 
 export type SyncStatus =
@@ -22,6 +28,7 @@ export type SyncStatus =
   | { kind: "offline" }
   | { kind: "error"; message: string }
   | { kind: "conflict" }
+  | { kind: "signed_out" }
   | { kind: "closed"; reason: "discarded" | "not_found" };
 
 type Options = {
@@ -134,6 +141,10 @@ export class SessionSync {
         });
       } catch (error) {
         if (this.stopped) return;
+        if (error instanceof AuthRequiredError) {
+          // Keep everything; syncing resumes once the owner signs in again.
+          return this.emit({ kind: "signed_out" });
+        }
         if (error instanceof RetryableError) {
           // Keep the pending write untouched and retry the identical request later.
           this.attempt++;

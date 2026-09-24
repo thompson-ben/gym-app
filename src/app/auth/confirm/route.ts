@@ -4,26 +4,26 @@ import { safeNext } from "@/lib/safe-next";
 import { supabaseServer } from "@/lib/supabase/server";
 
 /**
- * Auth callback for email confirmation. Supports both the PKCE `code` flow (default
- * Supabase email template) and `token_hash` links (custom template).
+ * Email-confirmation callback. Accepts the `token_hash` links produced by Splitmate's email
+ * templates (work on any device) and the PKCE `code` links of Supabase's default template
+ * (work only in the browser that signed up). Failed or expired links go back to sign-in.
  */
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl;
-  const next = safeNext(searchParams.get("next"));
+  const cookieNext = request.cookies.get("sm_next")?.value;
+  const next = safeNext(searchParams.get("next") ?? (cookieNext ? decodeURIComponent(cookieNext) : null));
   const code = searchParams.get("code");
   const tokenHash = searchParams.get("token_hash");
   const type = searchParams.get("type") as EmailOtpType | null;
   const supabase = await supabaseServer();
 
-  if (code) {
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) return NextResponse.redirect(new URL(next, origin));
-    return NextResponse.redirect(new URL("/sign-in?error=confirm_failed", origin));
+  let ok = false;
+  if (!searchParams.get("error") && code) {
+    ok = !(await supabase.auth.exchangeCodeForSession(code)).error;
+  } else if (!searchParams.get("error") && tokenHash && type && type !== "recovery") {
+    ok = !(await supabase.auth.verifyOtp({ type, token_hash: tokenHash })).error;
   }
-  if (tokenHash && type) {
-    const { error } = await supabase.auth.verifyOtp({ type, token_hash: tokenHash });
-    if (!error) return NextResponse.redirect(new URL(next, origin));
-    return NextResponse.redirect(new URL("/sign-in?error=confirm_failed", origin));
-  }
-  return NextResponse.redirect(new URL("/sign-in?error=missing_code", origin));
+  const response = NextResponse.redirect(new URL(ok ? next : "/sign-in?error=confirm_failed", origin));
+  response.cookies.delete("sm_next");
+  return response;
 }

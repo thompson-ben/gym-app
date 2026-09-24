@@ -6,7 +6,7 @@ import { cx } from "../styles";
 import { Spinner } from "../ui";
 
 /** Always tells the truth about where the data is: never "Saved" unless the server has it. */
-export function SyncBadge({ status, onRetry }: { status: SyncStatus; onRetry?: () => void }) {
+export function SyncBadge({ status, onRetry, signInHref }: { status: SyncStatus; onRetry?: () => void; signInHref?: string }) {
   const base = "inline-flex h-9 items-center gap-1.5 rounded-full border border-line px-3.5 text-[13px]";
   switch (status.kind) {
     case "saved":
@@ -33,6 +33,12 @@ export function SyncBadge({ status, onRetry }: { status: SyncStatus; onRetry?: (
         <span role="status" className={cx(base, "border-danger/40 bg-danger-soft text-danger")}>
           <IconAlert size={14} /> Needs review
         </span>
+      );
+    case "signed_out":
+      return (
+        <a href={signInHref ?? "/sign-in"} className={cx(base, "border-warn/40 text-warn")} title="Your sets are kept on this device and sync after you sign in.">
+          <IconAlert size={14} /> Sign in to sync
+        </a>
       );
     case "closed":
       return (

@@ -219,6 +219,50 @@ describe("B/G. sharing and copying splits", () => {
   });
 });
 
+describe("G. variant labels keep gym-specific machines apart", () => {
+  it("never combines results of machines that share a base exercise name", async () => {
+    const me = await newUser("variants");
+    const machine = await catalogueId("machine-chest-press");
+    const [gymA, gymB] = await as(user(me), async (q) => {
+      const a = await q(`insert into exercises (owner_id, name, variant, primary_muscle, equipment) values ($1, 'Chest press', 'Gym A · Hammer Strength', 'chest', 'machine') returning id`, [me]);
+      const b = await q(`insert into exercises (owner_id, name, variant, primary_muscle, equipment) values ($1, 'Chest press', 'Gym B · Technogym', 'chest', 'machine') returning id`, [me]);
+      return [a[0].id, b[0].id];
+    });
+    const split = await createSplit(me, "Two gyms");
+    const { templateId: atA } = await createTemplate(me, split, "Push @ A", [{ exerciseId: gymA }]);
+    const { templateId: atB } = await createTemplate(me, split, "Push @ B", [{ exerciseId: gymB }]);
+    const { templateId: generic } = await createTemplate(me, split, "Push generic", [{ exerciseId: machine }]);
+    await logWorkout(me, atA, [[{ weight: 90, reps: 10, done: true }]]);
+    await logWorkout(me, atB, [[{ weight: 60, reps: 12, done: true }]]);
+    await logWorkout(me, generic, [[{ weight: 75, reps: 8, done: true }]]);
+
+    const prev = await previous(me, [gymA, gymB, machine]);
+    const byId = Object.fromEntries(prev.map((p) => [p.exercise_id, p.sets]));
+    expect(byId[gymA]).toEqual([{ set_type: "working", weight_kg: 90, reps: 10 }]);
+    expect(byId[gymB]).toEqual([{ set_type: "working", weight_kg: 60, reps: 12 }]);
+    expect(byId[machine]).toEqual([{ set_type: "working", weight_kg: 75, reps: 8 }]);
+
+    for (const [id, weight] of [[gymA, 90], [gymB, 60], [machine, 75]] as const) {
+      const history = await as(user(me), (q) => q("select sets from exercise_history($1)", [id]));
+      expect(history.map((h) => h.sets[0].weight_kg)).toEqual([weight]);
+    }
+    // Session snapshots keep the variant in the logged name.
+    const names = await as(user(me), (q) => q("select distinct exercise_name from session_exercises order by 1"));
+    expect(names.map((n) => n.exercise_name)).toEqual(["Chest press · Gym A · Hammer Strength", "Chest press · Gym B · Technogym", "Machine Chest Press"]);
+
+    // Sharing both variants gives a recipient two separate exercises, never one merged by name.
+    const friend = await newUser("variant-friend");
+    const { token } = await as(user(me), async (q) => (await q("select * from upsert_split_share($1, 'Two gyms', null, false)", [split]))[0]);
+    const copy = await as(user(friend), async (q) => (await q("select copy_shared_split($1, '{}'::jsonb) as id", [token]))[0].id);
+    const copied = await as(user(friend), (q) =>
+      q(`select distinct e.id, e.name, e.variant from template_exercises te join workout_templates wt on wt.id = te.template_id
+         join exercises e on e.id = te.exercise_id where wt.split_id = $1 and e.owner_id is not null order by e.variant`, [copy]),
+    );
+    expect(copied.map((c) => [c.name, c.variant])).toEqual([["Chest press", "Gym A · Hammer Strength"], ["Chest press", "Gym B · Technogym"]]);
+    expect(new Set(copied.map((c) => c.id)).size).toBe(2);
+  });
+});
+
 describe("C. template edits never rewrite history", () => {
   it("keeps the session snapshot and sets after renaming the template and removing an exercise", async () => {
     const me = await newUser("c");

@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { completeSet, ensurePlannedSets, toPayload, updateSet, type SyncPayload } from "@/lib/session/doc";
 import { loadRecord, newRecord, reconcile, saveRecord, type LocalRecord } from "@/lib/session/store";
-import { RetryableError, SessionSync, type SyncRequest, type SyncResponse, type SyncStatus } from "@/lib/session/sync";
+import { AuthRequiredError, RetryableError, SessionSync, type SyncRequest, type SyncResponse, type SyncStatus } from "@/lib/session/sync";
 import type { SessionDoc } from "@/lib/types";
 import { exercise, MemoryStorage, seqId, session } from "./fixtures";
 
@@ -177,6 +177,28 @@ describe("SessionSync (scenario E)", () => {
     release();
     await vi.advanceTimersByTimeAsync(20);
     expect(t.record().syncedVersion).toBe(before.syncedVersion);
+  });
+});
+
+describe("SessionSync without the owner's session", () => {
+  it("keeps the pending write, reports signed out, and syncs once the owner is back", async () => {
+    const server = new FakeServer();
+    const t = setup(server);
+    let signedIn = false;
+    t.transport.mockImplementation(async (req) => {
+      if (!signedIn) throw new AuthRequiredError("signed out");
+      return server.handle(req);
+    });
+    t.logSet(0, 72.5, 9);
+    await vi.advanceTimersByTimeAsync(20);
+    expect(t.engine.current).toEqual({ kind: "signed_out" });
+    expect(t.record().pending).not.toBeNull();
+    expect(server.applied).toHaveLength(0);
+
+    signedIn = true;
+    await t.engine.flush();
+    expect(server.applied).toHaveLength(1);
+    expect(t.engine.current.kind).toBe("saved");
   });
 });
 

@@ -119,10 +119,19 @@ export default function Logger({ userId, initial, timeZone }: { userId: string; 
     if (navigator.onLine) await supabaseBrowser().from("profiles").update({ auto_start_rest: value }).eq("id", userId);
   }
 
+  /** Finishing or discarding must only ever act as the account that owns this workout. */
+  async function ownerSignedIn() {
+    const { data } = await supabaseBrowser().auth.getSession();
+    if (data.session?.user.id === userId) return true;
+    setActionError("Sign in to the account that started this workout first. Your sets are kept on this device.");
+    return false;
+  }
+
   async function finish() {
     setBusy(true);
     setActionError(null);
     try {
+      if (!(await ownerSignedIn())) return;
       const sync = engine.current;
       await sync?.flush();
       if (hasUnsyncedChanges(recordRef.current)) {
@@ -155,6 +164,10 @@ export default function Logger({ userId, initial, timeZone }: { userId: string; 
   async function discard() {
     setBusy(true);
     setActionError(null);
+    if (!(await ownerSignedIn())) {
+      setBusy(false);
+      return;
+    }
     const { error } = await supabaseBrowser().rpc("discard_session", { p_session_id: doc.id });
     setBusy(false);
     if (error) {
@@ -181,7 +194,7 @@ export default function Logger({ userId, initial, timeZone }: { userId: string; 
             <Wordmark size="md" className="text-fg" />
           </Link>
           <div className="flex items-center gap-1">
-            <SyncBadge status={status} onRetry={() => engine.current?.flush()} />
+            <SyncBadge status={status} onRetry={() => engine.current?.flush()} signInHref={`/sign-in?next=${encodeURIComponent(`/workout/${doc.id}`)}`} />
             <IconButton label="Workout options" onClick={() => setMenuOpen(true)}>
               <IconMore />
             </IconButton>

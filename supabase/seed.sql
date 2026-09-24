@@ -8,8 +8,9 @@
 --   password: splitmate-demo
 --
 -- The only training history is the real reference workout (Chest & back, 21 September 2026).
--- Nothing else is invented. "Incline press" is mapped to the catalogue's Incline Barbell
--- Bench Press; change the exercise in the app if it was a different variation.
+-- Nothing else is invented. The equipment used for "Incline press" is not confirmed, so it
+-- is a custom exercise labelled "equipment unconfirmed" rather than a catalogue variation.
+-- Once confirmed, rename it (history is kept) or log future sessions on the right exercise.
 
 do $$
 declare
@@ -21,7 +22,7 @@ declare
   v_tpl_fa uuid := '00000000-0000-4000-8000-00000000c0b3';
   v_tpl_fb uuid := '00000000-0000-4000-8000-00000000c0b4';
   v_session uuid := '00000000-0000-4000-8000-00000000ce55';
-  v_incline uuid := md5('splitmate.catalogue:incline-barbell-bench-press')::uuid;
+  v_incline uuid := '00000000-0000-4000-8000-0000000e1c11';
   v_pulldown uuid := md5('splitmate.catalogue:lat-pulldown')::uuid;
   v_dip uuid := md5('splitmate.catalogue:dip')::uuid;
   v_te_incline uuid := gen_random_uuid();
@@ -45,6 +46,9 @@ begin
     'email', now(), now(), now());
 
   update public.profiles set display_name = 'Demo (local seed)' where id = v_user;
+
+  insert into public.exercises (id, owner_id, name, variant, primary_muscle, equipment, tracking_mode)
+  values (v_incline, v_user, 'Incline press', 'equipment unconfirmed', 'chest', 'other', 'weight_reps');
 
   insert into public.splits (id, user_id, name, description) values
     (v_split, v_user, 'My 3-day split', 'Demo data from the local seed.'),
@@ -82,7 +86,7 @@ begin
 
   insert into public.session_exercises (id, user_id, session_id, exercise_id, template_exercise_id, position,
     exercise_name, target_sets, rep_min, rep_max, rest_seconds)
-  values (gen_random_uuid(), v_user, v_session, v_incline, v_te_incline, 0, 'Incline Barbell Bench Press', 2, 8, 12, 150)
+  values (gen_random_uuid(), v_user, v_session, v_incline, v_te_incline, 0, 'Incline press · equipment unconfirmed', 2, 8, 12, 150)
   returning id into v_se;
   insert into public.session_sets (user_id, session_exercise_id, position, weight_kg, reps, completed_at) values
     (v_user, v_se, 0, 72.5, 9, '2026-09-21 17:10:00+01'),
