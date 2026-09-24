@@ -4,10 +4,10 @@ import Link from "next/link";
 import { useRef, useState } from "react";
 import { validateCompletion, type CompleteError } from "@/lib/session/doc";
 import { matchPrevious } from "@/lib/session/previous";
-import { formatDate, formatDuration, formatSet, formatTarget, weightLabel } from "@/lib/format";
+import { formatDate, formatSet, formatShortDate, formatTargetLong, weightLabel } from "@/lib/format";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import type { PreviousPerformance, SessionExercise, SessionSet, SetType } from "@/lib/types";
-import { IconChevronDown, IconHistory, IconMore, IconPlus } from "../icons";
+import { IconArrowUpRight, IconChevronDown, IconHistory, IconMore, IconPlus } from "../icons";
 import { cx } from "../styles";
 import { Button, IconButton, Spinner } from "../ui";
 import { GRID_REPS_ONLY, GRID_WITH_WEIGHT, SetRow, type SetRowHandle } from "./SetRow";
@@ -50,7 +50,7 @@ export function ExerciseCard({
   const rows = useRef(new Map<string, SetRowHandle>());
   const matched = matchPrevious(entry.sets, previous?.sets);
   const mode = entry.tracking_mode;
-  const target = formatTarget(entry.target_sets, entry.rep_min, entry.rep_max);
+  const target = formatTargetLong(entry.target_sets, entry.rep_min, entry.rep_max);
   const done = entry.sets.filter((s) => s.completed_at).length;
   let workingIndex = 0;
   let warmupIndex = 0;
@@ -96,26 +96,28 @@ export function ExerciseCard({
   }
 
   return (
-    <section aria-label={entry.exercise_name} className="rounded-3xl border border-line bg-surface p-3 sm:p-4">
+    <section aria-label={entry.exercise_name} className="rounded-3xl border border-line bg-surface p-3 min-[380px]:p-4 sm:p-5">
       <header className="flex items-start justify-between gap-2 px-1">
-        <div className="min-w-0 pt-1">
-          <h3 className="text-[17px] leading-snug font-semibold">
-            <Link href={`/progress/${entry.exercise_id}`} className="hover:underline underline-offset-4">{entry.exercise_name}</Link>
-          </h3>
-          <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-sm text-muted">
-            {target ? <span className="font-medium text-fg/90">{target}</span> : null}
-            {entry.rest_seconds ? <span>· Rest {formatDuration(entry.rest_seconds)}</span> : null}
-            {entry.skipped ? <span className="text-warn">· Skipped</span> : null}
+        <div className="min-w-0 pt-0.5">
+          <h3 className="text-[20px] leading-snug font-medium tracking-[-0.01em]">{entry.exercise_name}</h3>
+          <p className="mt-0.5 text-[15px] text-muted">
+            {target}
+            {entry.skipped ? <span className="text-warn"> · Skipped</span> : null}
           </p>
-          <p className="mt-1 text-[13px] text-faint">
-            {previous ? (
-              <>Last: {formatDate(previous.completed_at, timeZone, { weekday: "short" })} · {previous.template_name}</>
-            ) : (
-              "First time logging this exercise. No previous sets yet."
-            )}
-          </p>
+          {previous ? (
+            <Link
+              href={`/progress/${entry.exercise_id}`}
+              className="mt-3 inline-flex items-center gap-1 text-[15px] text-accent-text underline-offset-4 hover:underline"
+              aria-label={`Last performed ${formatDate(previous.completed_at, timeZone)} in ${previous.template_name}. Open full history`}
+            >
+              Last: {formatShortDate(previous.completed_at, timeZone)} · {previous.template_name}
+              <IconArrowUpRight size={15} />
+            </Link>
+          ) : (
+            <p className="mt-3 text-[15px] text-faint">First time logging this exercise. No previous sets yet.</p>
+          )}
         </div>
-        <IconButton label={`${entry.exercise_name} options`} onClick={onOpenMenu} className="-mr-1">
+        <IconButton label={`${entry.exercise_name} options`} onClick={onOpenMenu} className="-mt-1 -mr-2">
           <IconMore />
         </IconButton>
       </header>
@@ -123,15 +125,15 @@ export function ExerciseCard({
       {entry.template_notes ? <p className="mx-1 mt-2 rounded-xl bg-surface-2 px-3 py-2 text-sm text-muted">{entry.template_notes}</p> : null}
       {entry.notes ? <p className="mx-1 mt-2 text-sm text-muted italic">Note: {entry.notes}</p> : null}
 
-      <div className="mt-3">
-        <div className={cx(mode === "bodyweight_reps" ? GRID_REPS_ONLY : GRID_WITH_WEIGHT, "px-1 pb-1 text-[11px] font-medium tracking-wide text-faint uppercase")} aria-hidden="true">
+      <div className="mt-5">
+        <div className={cx(mode === "bodyweight_reps" ? GRID_REPS_ONLY : GRID_WITH_WEIGHT, "pb-2 text-[14px] font-medium text-muted")} aria-hidden="true">
           <span className="text-center">Set</span>
           <span className="text-center">Previous</span>
           {mode !== "bodyweight_reps" ? <span className="text-center">{weightLabel(mode)}</span> : null}
           <span className="text-center">Reps</span>
           <span className="text-center">Done</span>
         </div>
-        <div className="space-y-1">
+        <div className="space-y-2">
           {entry.sets.map((set, i) => {
             const isWarmup = set.set_type === "warmup";
             const n = isWarmup ? ++warmupIndex : ++workingIndex;

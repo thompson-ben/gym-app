@@ -169,8 +169,8 @@ export function PageHeader({
         {action}
       </div>
       <div className="pt-1 pb-5">
-        {eyebrow ? <p className="text-sm text-muted">{eyebrow}</p> : null}
-        <h1 className="text-[28px] leading-tight font-semibold tracking-tight">{title}</h1>
+        {eyebrow ? <p className="mb-2 text-xs font-medium tracking-[0.18em] text-muted uppercase">{eyebrow}</p> : null}
+        <h1 className="text-[32px] leading-[1.1] font-semibold tracking-[-0.03em]">{title}</h1>
       </div>
     </header>
   );

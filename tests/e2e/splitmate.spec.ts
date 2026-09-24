@@ -31,7 +31,7 @@ test("A/F: history follows the exercise across splits; prefilled sets are never 
   // The finish bar is hidden while typing (so the keyboard never covers inputs); dismiss it.
   await expect(page.getByRole("button", { name: "Finish workout" })).toBeHidden();
   await pulldownWeight.blur();
-  await expect(page.getByText("2 of 4 sets")).toBeVisible();
+  await expect(page.getByText("2 / 4 sets")).toBeVisible();
   await expect(page.getByRole("status").filter({ hasText: "Saved" })).toBeVisible({ timeout: 10_000 });
 
   await page.getByRole("button", { name: "Finish workout" }).click();

@@ -18,6 +18,7 @@ import {
   uncompleteSet,
   updateSet,
 } from "@/lib/session/doc";
+import { formatDuration, formatTime } from "@/lib/format";
 import { hasUnsyncedChanges, removeRecord, type LocalRecord } from "@/lib/session/store";
 import { adjustTimer, clockNow, startTimer } from "@/lib/timer";
 import { supabaseBrowser } from "@/lib/supabase/client";
@@ -172,12 +173,12 @@ export default function Logger({ userId, initial, timeZone }: { userId: string; 
   const closed = status.kind === "closed";
 
   return (
-    <div className={cx("mx-auto w-full max-w-xl px-4 sm:px-6", record.rest ? "pb-[calc(15rem+env(safe-area-inset-bottom))]" : "pb-[calc(8rem+env(safe-area-inset-bottom))]")}>
-      <div className="sticky top-0 z-20 -mx-4 border-b border-line/60 bg-bg/90 px-4 backdrop-blur-lg pt-safe sm:-mx-6 sm:px-6">
+    <div className={cx("mx-auto w-full max-w-xl px-4 sm:px-6", record.rest ? "pb-[calc(15rem+env(safe-area-inset-bottom))]" : "pb-[calc(11rem+env(safe-area-inset-bottom))]")}>
+      <div className="sticky top-0 z-20 -mx-4 bg-bg/90 px-4 backdrop-blur-lg pt-safe sm:-mx-6 sm:px-6">
         <div className="flex h-14 items-center justify-between gap-2">
-          <Link href="/train" className="-ml-2 inline-flex h-11 items-center gap-0.5 rounded-2xl pr-2 pl-1 text-sm text-muted hover:text-fg" aria-label="Leave workout (it stays in progress)">
+          <Link href="/train" className="-ml-2 inline-flex h-11 items-center gap-0.5 rounded-2xl pr-2 pl-1 text-muted hover:text-fg" aria-label="Leave workout (it stays in progress)">
             <IconChevronLeft size={18} />
-            <Wordmark size="sm" />
+            <Wordmark size="md" className="text-fg" />
           </Link>
           <div className="flex items-center gap-1">
             <SyncBadge status={status} onRetry={() => engine.current?.flush()} />
@@ -188,23 +189,26 @@ export default function Logger({ userId, initial, timeZone }: { userId: string; 
         </div>
       </div>
 
-      <header className="pt-5 pb-4">
-        {doc.split_name ? <p className="text-sm text-muted">{doc.split_name}</p> : null}
-        <h1 className="text-[32px] leading-tight font-semibold tracking-tight">{doc.template_name}</h1>
-        <div className="mt-3 flex items-center gap-3">
-          <p className="shrink-0 text-sm text-muted tabular">
-            <span className="font-semibold text-fg">{summary.completedSets}</span> of {summary.plannedSets} sets
+      <header className="pt-6 pb-6">
+        <p className="text-xs font-medium tracking-[0.18em] text-muted uppercase">
+          {doc.split_name ? `${doc.split_name} · ` : ""}Workout
+        </p>
+        <h1 className="mt-3 text-[36px] leading-[1.1] font-semibold tracking-[-0.03em]">{doc.template_name}</h1>
+        <div className="mt-4 flex items-baseline justify-between gap-3 text-[15px] text-muted">
+          <p>In progress · started {formatTime(doc.started_at, timeZone)}</p>
+          <p className="shrink-0 tabular">
+            <span className="text-fg">{summary.completedSets}</span> / {summary.plannedSets} sets
           </p>
-          <div
-            className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-2"
-            role="progressbar"
-            aria-label="Completed sets"
-            aria-valuemin={0}
-            aria-valuemax={summary.plannedSets}
-            aria-valuenow={summary.completedSets}
-          >
-            <div className="h-full rounded-full bg-accent transition-[width] duration-500" style={{ width: `${progress * 100}%` }} />
-          </div>
+        </div>
+        <div
+          className="mt-3 h-1.5 overflow-hidden rounded-full bg-surface-3"
+          role="progressbar"
+          aria-label="Completed sets"
+          aria-valuemin={0}
+          aria-valuemax={summary.plannedSets}
+          aria-valuenow={summary.completedSets}
+        >
+          <div className="h-full rounded-full bg-accent transition-[width] duration-500" style={{ width: `${progress * 100}%` }} />
         </div>
       </header>
 
@@ -261,7 +265,7 @@ export default function Logger({ userId, initial, timeZone }: { userId: string; 
 
       {/* Bottom action area: rest timer and finish. Hidden while typing. */}
       <div className={cx("fixed inset-x-0 bottom-0 z-30 transition-transform duration-200", inputFocused && "translate-y-full")} aria-hidden={inputFocused || undefined}>
-        <div className="mx-auto max-w-xl space-y-2 bg-gradient-to-t from-bg via-bg/95 to-transparent px-4 pt-6 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:px-6">
+        <div className="mx-auto max-w-xl space-y-3 border-t border-line/70 bg-bg/95 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur-lg sm:rounded-t-3xl sm:border-x sm:px-6">
           {record.rest ? (
             <RestTimerBar
               timer={record.rest}
@@ -270,16 +274,17 @@ export default function Logger({ userId, initial, timeZone }: { userId: string; 
               onRestart={() => startRest(record.rest?.duration ?? lastRest)}
             />
           ) : null}
-          <div className="flex gap-2">
-            {!record.rest ? (
-              <Button variant="secondary" size="lg" onClick={() => startRest(lastRest)} aria-label={`Start rest timer, ${lastRest} seconds`} disabled={closed}>
-                <IconTimer size={20} /> Rest
+          {!record.rest ? (
+            <div className="flex items-center justify-between gap-3 pb-1">
+              <span className="text-[15px] text-muted">Rest timer</span>
+              <Button variant="secondary" size="md" className="bg-surface" onClick={() => startRest(lastRest)} aria-label={`Start rest timer, ${lastRest} seconds`} disabled={closed}>
+                <IconTimer size={18} /> Start {formatDuration(lastRest)}
               </Button>
-            ) : null}
-            <Button variant="primary" size="lg" className="flex-1" onClick={() => { setActionError(null); setFinishOpen(true); }} disabled={closed}>
-              Finish workout
-            </Button>
-          </div>
+            </div>
+          ) : null}
+          <Button variant="primary" size="lg" className="w-full text-[17px]" onClick={() => { setActionError(null); setFinishOpen(true); }} disabled={closed}>
+            Finish workout
+          </Button>
         </div>
       </div>
 

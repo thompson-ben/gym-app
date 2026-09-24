@@ -21,11 +21,13 @@ type Props = {
   onOpenMenu: () => void;
 };
 
-export const GRID_WITH_WEIGHT = "grid grid-cols-[2.25rem_minmax(0,1fr)_4.25rem_3.75rem_2.75rem] items-center gap-1.5 sm:gap-2";
-export const GRID_REPS_ONLY = "grid grid-cols-[2.25rem_minmax(0,1fr)_3.75rem_2.75rem] items-center gap-1.5 sm:gap-2";
+export const GRID_WITH_WEIGHT =
+  "grid grid-cols-[1.5rem_minmax(0,1fr)_3.75rem_3.25rem_2.75rem] min-[380px]:grid-cols-[2rem_minmax(0,1fr)_4.5rem_4rem_3rem] items-center gap-1 min-[380px]:gap-2";
+export const GRID_REPS_ONLY =
+  "grid grid-cols-[1.5rem_minmax(0,1fr)_3.75rem_2.75rem] min-[380px]:grid-cols-[2rem_minmax(0,1fr)_4.5rem_3rem] items-center gap-1 min-[380px]:gap-2";
 
 const numberInput =
-  "h-11 w-full rounded-xl border bg-surface-2 text-center text-[17px] font-medium tabular text-fg outline-none transition placeholder:text-faint placeholder:font-normal focus:ring-2 focus:ring-[var(--ring)]";
+  "h-12 w-full rounded-xl border bg-field text-center text-[18px] font-medium tabular text-fg outline-none transition placeholder:text-faint placeholder:font-normal focus:border-accent-text/70 focus:ring-2 focus:ring-[var(--ring)]";
 
 /** Edits a numeric value while typing; only valid values reach the session document. */
 function useNumberField(value: number | null, parse: (s: string) => number | null, format: (n: number | null) => string) {
@@ -66,7 +68,7 @@ export const SetRow = forwardRef<SetRowHandle, Props>(function SetRow(
 
   return (
     <div
-      className={cx(showWeight ? GRID_WITH_WEIGHT : GRID_REPS_ONLY, "rounded-2xl px-1 py-1 transition-colors", done && "bg-accent-soft")}
+      className={cx(showWeight ? GRID_WITH_WEIGHT : GRID_REPS_ONLY, "-mx-1 rounded-2xl px-1 py-1 transition-colors", done && "bg-accent-soft")}
       role="group"
       aria-label={setName}
     >
@@ -74,14 +76,14 @@ export const SetRow = forwardRef<SetRowHandle, Props>(function SetRow(
         type="button"
         onClick={onOpenMenu}
         className={cx(
-          "h-11 rounded-xl text-sm font-semibold tabular transition hover:bg-surface-3",
-          set.set_type === "warmup" ? "text-warn" : done ? "text-accent-text" : "text-muted",
+          "h-12 rounded-xl text-[15px] tabular transition hover:bg-surface-2",
+          set.set_type === "warmup" ? "font-medium text-warn" : done ? "font-semibold text-accent-text" : "text-fg/90",
         )}
         aria-label={`${ordinal} options`}
       >
         {label}
       </button>
-      <div className="min-w-0 truncate text-center text-[13px] text-muted tabular" aria-label={previous ? `Previous: ${formatSet(mode, previous.weight_kg, previous.reps)}` : "No previous set"}>
+      <div className="min-w-0 truncate text-center text-[13px] text-fg/85 tabular min-[380px]:text-[14px]" aria-label={previous ? `Previous: ${formatSet(mode, previous.weight_kg, previous.reps)}` : "No previous set"}>
         {previous ? formatSet(mode, previous.weight_kg, previous.reps) : <span className="text-faint">—</span>}
       </div>
       {showWeight ? (
@@ -110,7 +112,7 @@ export const SetRow = forwardRef<SetRowHandle, Props>(function SetRow(
               repsRef.current?.focus();
             }
           }}
-          className={cx(numberInput, weight.invalid ? "border-danger" : "border-transparent")}
+          className={cx(numberInput, weight.invalid ? "border-danger" : "border-line")}
         />
       ) : null}
       <input
@@ -139,7 +141,7 @@ export const SetRow = forwardRef<SetRowHandle, Props>(function SetRow(
             e.currentTarget.blur();
           }
         }}
-        className={cx(numberInput, reps.invalid ? "border-danger" : "border-transparent")}
+        className={cx(numberInput, reps.invalid ? "border-danger" : "border-line")}
       />
       <button
         type="button"
@@ -150,12 +152,12 @@ export const SetRow = forwardRef<SetRowHandle, Props>(function SetRow(
         aria-pressed={done}
         aria-label={done ? `${setName} completed. Tap to undo` : `Confirm ${setName}`}
         className={cx(
-          "flex h-11 w-11 items-center justify-center rounded-xl border-2 transition",
-          done ? "border-accent bg-accent text-accent-ink" : "border-surface-3 text-faint hover:border-muted hover:text-muted",
+          "flex h-12 w-full items-center justify-center rounded-xl border transition",
+          done ? "border-accent bg-accent text-accent-ink" : "border-line bg-surface text-fg/80 hover:border-muted hover:text-fg",
           flash && "scale-105",
         )}
       >
-        <IconCheck size={20} strokeWidth={done ? 3 : 2} />
+        <IconCheck size={20} strokeWidth={done ? 2.75 : 1.75} />
       </button>
     </div>
   );

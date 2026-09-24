@@ -73,3 +73,4 @@ export const IconPlay = (p: IconProps) => <Icon {...p}><path d="m7 4 13 8-13 8V4
 export const IconArchive = (p: IconProps) => (
   <Icon {...p}><rect x="2" y="3" width="20" height="5" rx="1" /><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8M10 12h4" /></Icon>
 );
+export const IconArrowUpRight = (p: IconProps) => <Icon {...p}><path d="M7 17 17 7M8 7h9v9" /></Icon>;

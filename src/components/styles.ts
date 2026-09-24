@@ -29,5 +29,5 @@ export function buttonClass(variant: ButtonVariant = "secondary", size: ButtonSi
 }
 
 export const inputClass =
-  "w-full rounded-2xl border border-line bg-surface-2 px-4 h-12 text-fg placeholder:text-faint outline-none transition focus:border-accent-text/60 focus:ring-2 focus:ring-[var(--ring)]";
+  "w-full rounded-2xl border border-line bg-field px-4 h-12 text-fg placeholder:text-faint outline-none transition focus:border-accent-text/60 focus:ring-2 focus:ring-[var(--ring)]";
 

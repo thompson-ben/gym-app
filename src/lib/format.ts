@@ -96,3 +96,24 @@ export function fromLocalInput(value: string, timeZone: string): string {
   }
   return new Date(ts).toISOString();
 }
+
+/** "2 working sets · Target 8–12 reps" as used on exercise cards. */
+export function formatTargetLong(sets: number | null, repMin: number | null, repMax: number | null): string {
+  const parts: string[] = [];
+  if (sets) parts.push(`${sets} working ${sets === 1 ? "set" : "sets"}`);
+  const reps = formatTarget(null, repMin, repMax);
+  if (reps) parts.push(`Target ${reps}`);
+  return parts.join(" · ");
+}
+
+/** "21 Sep", with the year only when it differs from the current one. */
+export function formatShortDate(iso: string, timeZone?: string, now: Date = new Date()): string {
+  const year = (d: Date) => new Intl.DateTimeFormat("en-GB", { year: "numeric", timeZone }).format(d);
+  const sameYear = year(new Date(iso)) === year(now);
+  return formatDate(iso, timeZone, sameYear ? { year: undefined } : {});
+}
+
+/** "17:02" in the given time zone. */
+export function formatTime(iso: string, timeZone?: string): string {
+  return new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", timeZone }).format(new Date(iso));
+}

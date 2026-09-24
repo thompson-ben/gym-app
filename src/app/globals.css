@@ -1,44 +1,47 @@
 @import "tailwindcss";
 
 /* Splitmate design tokens. Dark is the primary experience; light follows the system. */
+/* Splitmate design tokens (PM look-and-feel concept). Dark is the primary experience. */
 :root {
-  --bg: #0f1011;
-  --surface: #18191b;
-  --surface-2: #222326;
-  --surface-3: #2c2d31;
-  --border: #2b2c30;
-  --text: #ecebe6;
-  --muted: #9a9ca2;
-  --faint: #6b6d73;
-  --accent: #c8f53c;
-  --accent-ink: #141a00;
-  --accent-text: #c8f53c;
-  --accent-soft: rgb(200 245 60 / 0.12);
-  --danger: #ff7a6b;
-  --danger-soft: rgb(255 122 107 / 0.12);
-  --warn: #f5c04a;
-  --ring: rgb(200 245 60 / 0.55);
+  --bg: #131416;
+  --surface: #1c2023;
+  --surface-2: #24292d;
+  --surface-3: #2e3337;
+  --field: #131416;
+  --border: #383d41;
+  --text: #eaebed;
+  --muted: #a8afb5;
+  --faint: #80878d;
+  --accent: #c3ed89;
+  --accent-ink: #172009;
+  --accent-text: #c3ed89;
+  --accent-soft: rgb(195 237 137 / 0.1);
+  --danger: #ff8a7a;
+  --danger-soft: rgb(255 138 122 / 0.12);
+  --warn: #f0c46a;
+  --ring: rgb(195 237 137 / 0.55);
   color-scheme: dark;
 }
 
 @media (prefers-color-scheme: light) {
   :root {
-    --bg: #f3f3ef;
+    --bg: #f3f4f2;
     --surface: #ffffff;
-    --surface-2: #eeeee9;
-    --surface-3: #e3e3dd;
-    --border: #e1e1db;
-    --text: #17181a;
-    --muted: #5f6167;
-    --faint: #8a8c91;
-    --accent: #c8f53c;
-    --accent-ink: #141a00;
-    --accent-text: #4a6a00;
-    --accent-soft: rgb(120 170 0 / 0.14);
+    --surface-2: #eceeeb;
+    --surface-3: #e0e3df;
+    --field: #f3f4f2;
+    --border: #d9ddd8;
+    --text: #16191b;
+    --muted: #5b6268;
+    --faint: #737a80;
+    --accent: #c3ed89;
+    --accent-ink: #172009;
+    --accent-text: #45700f;
+    --accent-soft: rgb(120 180 40 / 0.14);
     --danger: #c7362a;
     --danger-soft: rgb(199 54 42 / 0.1);
-    --warn: #9a6a00;
-    --ring: rgb(90 130 0 / 0.55);
+    --warn: #8a5f00;
+    --ring: rgb(69 112 15 / 0.5);
     color-scheme: light;
   }
 }
@@ -48,6 +51,7 @@
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
   --color-surface-3: var(--surface-3);
+  --color-field: var(--field);
   --color-line: var(--border);
   --color-fg: var(--text);
   --color-muted: var(--muted);

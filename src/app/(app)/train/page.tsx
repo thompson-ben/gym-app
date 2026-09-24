@@ -53,7 +53,7 @@ export default async function TrainPage() {
   return (
     <div className="pt-safe">
       <div className="flex h-14 items-center">
-        <Wordmark size="sm" />
+        <Wordmark />
       </div>
 
       {open ? (
@@ -76,8 +76,8 @@ export default async function TrainPage() {
       {split && period ? (
         <>
           <section className="pt-6 pb-5">
-            <p className="text-sm text-muted">Active split</p>
-            <h1 className="text-[32px] leading-tight font-semibold tracking-tight">
+            <p className="mb-2 text-xs font-medium tracking-[0.18em] text-muted uppercase">Active split</p>
+            <h1 className="text-[36px] leading-[1.1] font-semibold tracking-[-0.03em]">
               <Link href={`/splits/${split.id}`} className="hover:underline underline-offset-4">{split.name}</Link>
             </h1>
             <dl className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm">

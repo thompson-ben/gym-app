@@ -7,7 +7,7 @@ import { Spinner } from "../ui";
 
 /** Always tells the truth about where the data is: never "Saved" unless the server has it. */
 export function SyncBadge({ status, onRetry }: { status: SyncStatus; onRetry?: () => void }) {
-  const base = "inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-medium";
+  const base = "inline-flex h-9 items-center gap-1.5 rounded-full border border-line px-3.5 text-[13px]";
   switch (status.kind) {
     case "saved":
       return (
@@ -24,13 +24,13 @@ export function SyncBadge({ status, onRetry }: { status: SyncStatus; onRetry?: (
       );
     case "offline":
       return (
-        <span role="status" className={cx(base, "bg-surface-2 text-warn")} title="Stored on this device. It will sync when you're back online.">
+        <span role="status" className={cx(base, "border-warn/40 text-warn")} title="Stored on this device. It will sync when you're back online.">
           <IconCloudOff size={14} /> Offline · on this device
         </span>
       );
     case "conflict":
       return (
-        <span role="status" className={cx(base, "bg-danger-soft text-danger")}>
+        <span role="status" className={cx(base, "border-danger/40 bg-danger-soft text-danger")}>
           <IconAlert size={14} /> Needs review
         </span>
       );
@@ -42,7 +42,7 @@ export function SyncBadge({ status, onRetry }: { status: SyncStatus; onRetry?: (
       );
     case "error":
       return (
-        <button type="button" onClick={onRetry} className={cx(base, "bg-danger-soft text-danger")} title={status.message}>
+        <button type="button" onClick={onRetry} className={cx(base, "border-danger/40 bg-danger-soft text-danger")} title={status.message}>
           <IconAlert size={14} /> Sync failed · Retry
         </button>
       );
