@@ -60,6 +60,7 @@ test("password reset: neutral request, email link, new password, invalid and reu
   expect(link).toContain("/auth/reset?token_hash=");
   expect(await emailCount(nobody)).toBe(0);
 
+  await page.goto("about:blank");
   await page.context().clearCookies();
   await page.goto(link);
   await page.waitForURL("**/reset-password");
@@ -72,6 +73,7 @@ test("password reset: neutral request, email link, new password, invalid and reu
   await page.waitForURL("**/train");
 
   // Old password no longer works; the new one does.
+  await page.goto("about:blank");
   await page.context().clearCookies();
   await page.goto("/sign-in");
   await page.getByLabel("Email").fill(user.email);
@@ -81,6 +83,7 @@ test("password reset: neutral request, email link, new password, invalid and reu
   await signIn(page, { ...user, password: "new-horse-battery" });
 
   // A used link, a forged link and Supabase's own expiry redirect all ask for a new link.
+  await page.goto("about:blank");
   await page.context().clearCookies();
   for (const bad of [link, "/auth/reset?token_hash=forged-token-hash", "/auth/reset?error=access_denied&error_code=otp_expired"]) {
     await page.goto(bad);
@@ -107,6 +110,9 @@ test("cross-account privacy in the app: another account's pages are not found", 
   await expect(page.getByText("Private split")).toHaveCount(0);
 });
 
+test.describe(() => {
+// Requests from service-worker-controlled pages cannot be intercepted in every engine.
+test.use({ serviceWorkers: "block" });
 test("signing out with unsynced workout data warns first and then clears it from the device", async ({ page }) => {
   const user = await newUser("signout");
   await seedSplit(user, "Sign-out split", "Push", ["dip"]);
@@ -134,8 +140,10 @@ test("signing out with unsynced workout data warns first and then clears it from
   const leftovers = await page.evaluate((id) => Object.keys(localStorage).filter((k) => k.includes(id)), user.id);
   expect(leftovers).toEqual([]);
 });
+});
 
-test("the app is installable: manifest, icons and an active service worker", async ({ page }) => {
+test("the app is installable: manifest, icons and an active service worker", async ({ page, browserName }) => {
+  test.skip(browserName !== "chromium", "Installability errors are reported through a Chromium-only DevTools API");
   await page.goto("/sign-in");
   await page.evaluate(async () => {
     await navigator.serviceWorker.ready;

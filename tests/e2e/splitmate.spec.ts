@@ -67,7 +67,7 @@ test("A/F: history follows the exercise across splits; prefilled sets are never 
   await expect(reps).toHaveAttribute("placeholder", "9");
 });
 
-test("E: offline edits survive a reload and sync exactly once", async ({ page, context }) => {
+test("E: offline edits survive a reload and sync exactly once", async ({ page, context, browserName }) => {
   const user = await newUser("offline");
   await seedSplit(user, "Offline split", "Chest & back", ["incline-barbell-bench-press"]);
   await signIn(page, user);
@@ -88,12 +88,15 @@ test("E: offline edits survive a reload and sync exactly once", async ({ page, c
   await logSet(page, INCLINE, 2, 6, 72.5);
   await expect(page.getByText("Offline · on this device")).toBeVisible();
 
-  // Reload without a connection: the offline shell restores the session from this device.
-  await page.reload();
-  await expect(page.getByRole("heading", { name: "Chest & back" })).toBeVisible();
-  const row2 = page.getByRole("group", { name: `${INCLINE}, set 2` });
-  await expect(row2.getByRole("button", { name: /completed/ })).toBeVisible();
-  await expect(page.getByText("Offline · on this device")).toBeVisible();
+  if (browserName === "chromium") {
+    // Reload without a connection: the offline shell restores the session from this device.
+    // (Playwright's WebKit cannot reload through a service worker while emulating offline.)
+    await page.reload();
+    await expect(page.getByRole("heading", { name: "Chest & back" })).toBeVisible();
+    const row2 = page.getByRole("group", { name: `${INCLINE}, set 2` });
+    await expect(row2.getByRole("button", { name: /completed/ })).toBeVisible();
+    await expect(page.getByText("Offline · on this device")).toBeVisible();
+  }
 
   await context.setOffline(false);
   await page.evaluate(() => window.dispatchEvent(new Event("online")));

@@ -69,6 +69,9 @@ export async function signIn(page: Page, user: TestUser) {
   await page.getByLabel("Password").fill(user.password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await page.waitForURL("**/train");
+  // The first page load stores the time-zone cookie and refreshes once; let that settle.
+  await page.waitForFunction(() => document.cookie.includes("sm_tz="));
+  await page.waitForLoadState("networkidle");
 }
 
 export async function expectNoHorizontalScroll(page: Page) {

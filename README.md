@@ -42,7 +42,7 @@ Emails sent by the local stack (sign-up confirmation, password reset) are caught
 | `npm run lint` / `typecheck` | ESLint / TypeScript |
 | `npm run test:unit` | Pure logic: previous-set matching, session edits, sync engine, storage isolation, timer, formatting |
 | `npm run test:db` | Migrations, functions and RLS against the local database (needs `db:start`) |
-| `npm run test:e2e` | Playwright against a production build and local Supabase (run `npm run build` first; reads the local stack's keys from `supabase status`) |
+| `npm run test:e2e` | Playwright against a production build and local Supabase (run `npm run build` first; reads the local stack's keys from `supabase status`). Default project is Chromium; `--project=iphone-webkit` runs Safari's engine with an iPhone profile where WebKit is installed (e.g. inside `mcr.microsoft.com/playwright`) |
 | `npm run db:reset` | Re-apply all migrations and the local seed |
 | `npm run icons` | Regenerate PWA icons |
 

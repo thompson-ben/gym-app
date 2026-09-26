@@ -80,7 +80,7 @@ export function ExercisePicker({
         />
       ) : (
         <div className="space-y-3">
-          <div className="sticky top-0 z-10 -mx-5 space-y-3 bg-surface px-5 pb-2">
+          <div className="sticky top-[4.25rem] z-[5] -mx-5 space-y-3 bg-surface px-5 pb-2">
             <div className="relative">
               <IconSearch size={18} className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-faint" />
               <Input

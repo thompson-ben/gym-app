@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { forwardRef, useEffect, useId, useRef, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode } from "react";
+import { forwardRef, useEffect, useId, useRef, useSyncExternalStore, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { IconChevronLeft, IconX } from "./icons";
 import { buttonClass, cx, inputClass, type ButtonSize, type ButtonVariant } from "./styles";
 
@@ -91,7 +92,14 @@ export function Field({
   );
 }
 
-/** Bottom sheet built on <dialog>, which provides focus trapping, Escape and backdrop semantics. */
+const noopSubscribe = () => () => {};
+
+/**
+ * Bottom sheet (centred on wider screens). Rendered in a portal on <body> as a plain fixed
+ * overlay rather than <dialog>, so layout is identical in every browser (iOS Safari included)
+ * and nothing inherits styles from where the sheet is declared. Provides modal semantics:
+ * focus moves in and is trapped, Escape closes, the page behind is inert and focus returns.
+ */
 export function Sheet({
   open,
   onClose,
@@ -105,42 +113,84 @@ export function Sheet({
   children: ReactNode;
   footer?: ReactNode;
 }) {
-  const ref = useRef<HTMLDialogElement>(null);
+  const panel = useRef<HTMLDivElement>(null);
+  const host = useRef<HTMLDivElement>(null);
   const titleId = useId();
+  const isClient = useSyncExternalStore(noopSubscribe, () => true, () => false);
+  const onCloseRef = useRef(onClose);
   useEffect(() => {
-    const dialog = ref.current;
-    if (!dialog) return;
-    if (open && !dialog.open) dialog.showModal();
-    if (!open && dialog.open) dialog.close();
-  }, [open]);
-  return (
-    <dialog
-      ref={ref}
-      className="sheet"
-      aria-labelledby={titleId}
-      onCancel={(e) => {
+    onCloseRef.current = onClose;
+  });
+
+  useEffect(() => {
+    if (!open) return;
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    const node = panel.current;
+    const focusables = () =>
+      [...(node?.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])') ?? [])];
+    const first = focusables().find((el) => el.hasAttribute("autofocus")) ?? focusables()[1] ?? focusables()[0];
+    (first ?? node)?.focus({ preventScroll: true });
+
+    const siblings = [...document.body.children].filter((el) => el !== host.current && !el.hasAttribute("inert"));
+    siblings.forEach((el) => el.setAttribute("inert", ""));
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
         e.preventDefault();
-        onClose();
-      }}
-      onClick={(e) => {
-        if (e.target === ref.current) onClose();
-      }}
-    >
-      {open ? (
-        <div className="flex max-h-[inherit] flex-col">
-          <div className="flex items-center justify-between gap-2 px-5 pt-4 pb-2">
-            <h2 id={titleId} className="text-lg font-semibold">
-              {title}
-            </h2>
-            <IconButton label="Close" onClick={onClose} className="-mr-2">
-              <IconX />
-            </IconButton>
-          </div>
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-4">{children}</div>
-          {footer ? <div className="border-t border-line px-5 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">{footer}</div> : <div className="pb-safe" />}
+        onCloseRef.current();
+      } else if (e.key === "Tab") {
+        const items = focusables();
+        if (!items.length) return;
+        const [a, z] = [items[0], items[items.length - 1]];
+        if (e.shiftKey && document.activeElement === a) {
+          e.preventDefault();
+          z.focus();
+        } else if (!e.shiftKey && document.activeElement === z) {
+          e.preventDefault();
+          a.focus();
+        }
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      siblings.forEach((el) => el.removeAttribute("inert"));
+      document.body.style.overflow = overflow;
+      previouslyFocused?.focus?.({ preventScroll: true });
+    };
+  }, [open]);
+
+  if (!open || !isClient) return null;
+  return createPortal(
+    <div ref={host} className="fixed inset-0 z-50 flex items-end justify-center text-left sm:items-center sm:p-6">
+      <div className="absolute inset-0 bg-black/60" aria-hidden="true" onClick={onClose} />
+      <div
+        ref={panel}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+        className="relative max-h-[calc(100%-1.5rem)] w-full max-w-[34rem] overflow-y-auto overscroll-contain rounded-t-3xl border border-b-0 border-line bg-surface text-fg outline-none sm:max-h-full sm:rounded-3xl sm:border-b"
+      >
+        <div className="sticky top-0 z-10 flex items-center justify-between gap-2 bg-surface px-5 pt-4 pb-2">
+          <h2 id={titleId} className="text-lg font-semibold">
+            {title}
+          </h2>
+          <IconButton label="Close" onClick={onClose} className="-mr-2">
+            <IconX />
+          </IconButton>
         </div>
-      ) : null}
-    </dialog>
+        <div className="px-5 pb-4">{children}</div>
+        {footer ? (
+          <div className="sticky bottom-0 z-10 border-t border-line bg-surface px-5 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">{footer}</div>
+        ) : (
+          <div className="pb-safe" />
+        )}
+      </div>
+    </div>,
+    document.body,
   );
 }
 

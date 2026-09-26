@@ -36,7 +36,12 @@ export default defineConfig({
     trace: "retain-on-failure",
     launchOptions: process.env.CHROME_PATH ? { executablePath: process.env.CHROME_PATH } : undefined,
   },
-  projects: [{ name: "mobile", use: { ...devices["Pixel 7"], browserName: "chromium", colorScheme: "dark" } }],
+  projects: [
+    { name: "mobile", use: { ...devices["Pixel 7"], browserName: "chromium", colorScheme: "dark" } },
+    // Safari's engine with an iPhone profile. Run with `npx playwright test --project=iphone-webkit`
+    // where WebKit is installed (e.g. the mcr.microsoft.com/playwright Docker image).
+    { name: "iphone-webkit", use: { ...devices["iPhone 15 Pro"], colorScheme: "dark" } },
+  ],
   webServer: {
     command: `npx next start -p ${PORT}`,
     url: `http://localhost:${PORT}/sign-in`,
