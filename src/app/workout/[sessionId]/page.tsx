@@ -23,7 +23,7 @@ export default async function WorkoutPage({ params }: { params: Promise<{ sessio
   const [{ data: prev, error: prevError }, { data: profile }] = await Promise.all([
     // A past workout compares with the workout before its date, not the latest one.
     supabase.rpc("previous_performance", { p_exercise_ids: ids, p_before: session.is_backdated ? session.started_at : null }),
-    supabase.from("profiles").select("default_rest_seconds, auto_start_rest").eq("id", userId).single(),
+    supabase.from("profiles").select("default_rest_seconds, auto_start_rest").eq("id", userId).maybeSingle(),
   ]);
   if (prevError) throw prevError;
   const previous: PreviousMap = Object.fromEntries((prev as PreviousPerformance[]).map((p) => [p.exercise_id, p]));

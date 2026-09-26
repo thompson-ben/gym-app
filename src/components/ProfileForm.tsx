@@ -26,8 +26,10 @@ export function ProfileForm({ userId, email, profile }: { userId: string; email:
     setSaved(false);
     const { error } = await supabaseBrowser()
       .from("profiles")
-      .update({ display_name: displayName.trim() || null, default_rest_seconds: rest, auto_start_rest: autoRest })
-      .eq("id", userId);
+      .upsert(
+        { id: userId, display_name: displayName.trim() || null, default_rest_seconds: rest, auto_start_rest: autoRest },
+        { onConflict: "id" },
+      );
     setBusy(false);
     if (error) return setError(friendlyError(error));
     setError(null);

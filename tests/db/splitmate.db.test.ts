@@ -536,6 +536,19 @@ describe("E/F. session writes are idempotent and never record unperformed sets",
   });
 });
 
+describe("profiles for accounts created before the schema", () => {
+  it("a user can recreate only their own missing profile", async () => {
+    const me = await newUser("noprofile");
+    const other = await newUser("noprofile-other");
+    await pool.query("delete from profiles where id = any($1)", [[me, other]]);
+
+    await as(user(me), (q) => q("insert into profiles (id) values ($1) on conflict (id) do nothing", [me]));
+    const [row] = await as(user(me), (q) => q("select default_rest_seconds from profiles where id = $1", [me]));
+    expect(row.default_rest_seconds).toBe(120);
+    await expect(as(user(me), (q) => q("insert into profiles (id) values ($1)", [other]))).rejects.toThrow(/row-level security/);
+  });
+});
+
 describe("H. access control", () => {
   it("unrelated users cannot read or mutate private records, even by submitting ids", async () => {
     const owner = await newUser("owner");

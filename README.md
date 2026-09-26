@@ -59,7 +59,7 @@ Use a **dedicated** Supabase project for Splitmate: the migrations create tables
    ```bash
    npx supabase login                       # opens a browser; no token goes in the repo
    npx supabase link --project-ref <ref>    # confirm the prompt names the Splitmate project
-   npx supabase db push                     # applies supabase/migrations/* (schema, functions, catalogue, past workouts)
+   npx supabase db push                     # applies supabase/migrations/* (schema, functions, catalogue, past workouts, profile backfill)
    ```
    `db push` never runs `supabase/seed.sql`, so no demo data reaches the hosted project.
 3. **Authentication → Sign In / Providers → Email**: email + password on, **Confirm email on**, minimum password length **8**.

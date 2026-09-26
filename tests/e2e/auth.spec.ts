@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { emailCount, emailLink, newUser, seedSplit, signIn, uniqueEmail } from "./helpers";
+import { db, emailCount, emailLink, newUser, seedSplit, signIn, uniqueEmail } from "./helpers";
 
 test("sign-up requires email confirmation and continues to the original destination", async ({ page, browser }) => {
   const owner = await newUser("confirm-owner");
@@ -156,4 +156,17 @@ test("the app is installable: manifest, icons and an active service worker", asy
   expect(installabilityErrors.filter((e) => e.errorId !== "in-incognito")).toEqual([]);
   const manifest = await (await page.request.get("/manifest.webmanifest")).json();
   expect(manifest).toMatchObject({ name: "Splitmate: Workout Planner & Tracker", display: "standalone", start_url: "/train" });
+});
+
+test("profile works for an account whose profile row is missing (signed up before the schema)", async ({ page }) => {
+  const user = await newUser("noprofile");
+  await db.query("delete from profiles where id = $1", [user.id]);
+  await signIn(page, user);
+  await page.goto("/profile");
+  await expect(page.getByRole("heading", { name: "Profile" })).toBeVisible();
+  await page.getByLabel("Display name (optional)").fill("Ben");
+  await page.getByRole("button", { name: "Save changes" }).click();
+  await expect(page.getByRole("button", { name: "Saved" })).toBeVisible();
+  const { rows } = await db.query("select display_name from profiles where id = $1", [user.id]);
+  expect(rows).toEqual([{ display_name: "Ben" }]);
 });

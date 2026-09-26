@@ -122,7 +122,7 @@ export default function Logger({ userId, initial, timeZone }: { userId: string; 
 
   async function setAutoRest(value: boolean) {
     patch({ settings: { ...recordRef.current.settings, autoStartRest: value } });
-    if (navigator.onLine) await supabaseBrowser().from("profiles").update({ auto_start_rest: value }).eq("id", userId);
+    if (navigator.onLine) await supabaseBrowser().from("profiles").upsert({ id: userId, auto_start_rest: value }, { onConflict: "id" });
   }
 
   /** Moves this workout to the date it was actually performed and refreshes Previous for it. */
