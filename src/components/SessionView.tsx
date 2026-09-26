@@ -12,6 +12,7 @@ import { isValidNumber, parseReps, parseWeight } from "@/lib/validation";
 import { IconCheck, IconPlus, IconTrash } from "./icons";
 import { cx } from "./styles";
 import { Button, ErrorNote, IconButton, PageHeader } from "./ui";
+import { WorkoutDateSheet } from "./WorkoutDateSheet";
 
 export function SessionView({ doc: initial, timeZone, justFinished }: { doc: SessionDoc; timeZone: string; justFinished: boolean }) {
   const router = useRouter();
@@ -19,8 +20,18 @@ export function SessionView({ doc: initial, timeZone, justFinished }: { doc: Ses
   const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [dateOpen, setDateOpen] = useState(false);
   const duration = doc.completed_at ? (new Date(doc.completed_at).getTime() - new Date(doc.started_at).getTime()) / 1000 : 0;
   const totalSets = doc.exercises.reduce((n, e) => n + e.sets.length, 0);
+
+  async function changeDate(iso: string): Promise<string | null> {
+    const { data, error } = await supabaseBrowser().rpc("set_session_date", { p_session_id: doc.id, p_performed_at: iso });
+    if (error) return friendlyError(error, "Could not change the date.");
+    setDoc((d) => ({ ...d, started_at: data.started_at, completed_at: data.completed_at }));
+    setDateOpen(false);
+    router.refresh();
+    return null;
+  }
 
   async function save() {
     for (const ex of doc.exercises) {
@@ -83,12 +94,28 @@ export function SessionView({ doc: initial, timeZone, justFinished }: { doc: Ses
           <span className="flex h-10 w-10 items-center justify-center rounded-full bg-accent text-accent-ink"><IconCheck /></span>
           <div>
             <p className="font-semibold">Workout saved</p>
-            <p className="text-sm text-muted">{totalSets} sets · {Math.round(duration / 60)} min</p>
+            <p className="text-sm text-muted">
+              {totalSets} sets
+              {doc.is_backdated && doc.completed_at
+                ? ` · saved for ${formatDate(doc.completed_at, timeZone, { weekday: "long", year: undefined })}`
+                : ` · ${Math.round(duration / 60)} min`}
+            </p>
           </div>
         </div>
       ) : (
-        <p className="-mt-3 mb-5 text-sm text-muted">{totalSets} sets · {Math.round(duration / 60)} min</p>
+        <p className="-mt-3 mb-5 text-sm text-muted">
+          {totalSets} sets{doc.is_backdated ? " · logged afterwards" : ` · ${Math.round(duration / 60)} min`}
+        </p>
       )}
+      {editing ? (
+        <div className="mb-4 flex items-center justify-between gap-3 rounded-2xl border border-line bg-surface px-4 py-3">
+          <div>
+            <p className="text-sm text-muted">Workout date</p>
+            <p className="font-medium">{doc.completed_at ? formatDate(doc.completed_at, timeZone, { weekday: "long", hour: "2-digit", minute: "2-digit" }) : ""}</p>
+          </div>
+          <Button size="sm" variant="secondary" onClick={() => setDateOpen(true)}>Change date</Button>
+        </div>
+      ) : null}
       <ErrorNote>{error}</ErrorNote>
       {doc.notes ? <p className="mb-4 rounded-2xl bg-surface-2 px-4 py-3 text-sm text-muted">{doc.notes}</p> : null}
 
@@ -153,6 +180,15 @@ export function SessionView({ doc: initial, timeZone, justFinished }: { doc: Ses
         })}
       </div>
       {editing ? null : <p className="mt-6 text-center text-xs text-faint">Names and targets are as they were when this workout was logged.</p>}
+      <WorkoutDateSheet
+        open={dateOpen}
+        onClose={() => setDateOpen(false)}
+        title="Workout date"
+        description="Move this workout to the date and time it was performed. History and Previous follow the new date."
+        initialIso={doc.completed_at ?? doc.started_at}
+        confirmLabel="Save date"
+        onConfirm={changeDate}
+      />
     </>
   );
 }

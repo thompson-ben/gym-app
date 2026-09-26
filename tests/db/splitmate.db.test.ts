@@ -263,6 +263,73 @@ describe("G. variant labels keep gym-specific machines apart", () => {
   });
 });
 
+describe("past workouts (backdating)", () => {
+  const at = (iso: string) => new Date(iso);
+  async function logOn(uid: string, templateId: string, iso: string, weight: number) {
+    const doc = await as(user(uid), async (q) =>
+      (await q("select start_session($1, $2, $3) as d", [randomUUID(), templateId, at(iso)]))[0].d,
+    );
+    const r = await sync(uid, withSets(doc, [[{ weight, reps: 8, done: true }]]), doc.revision);
+    await finish(uid, doc.id, r.revision);
+    return doc.id as string;
+  }
+
+  it("records the date the workout was performed and orders history by it, not by entry order", async () => {
+    const me = await newUser("backdate");
+    const split = await createSplit(me, "S");
+    const { templateId } = await createTemplate(me, split, "Push", [{ exerciseId: incline }]);
+
+    // Entered out of order: Thursday first, then Monday.
+    const thu = await logOn(me, templateId, "2026-09-17T18:00:00Z", 75);
+    const mon = await logOn(me, templateId, "2026-09-14T18:00:00Z", 70);
+
+    const rows = await as(user(me), (q) => q("select id, started_at, completed_at, is_backdated from workout_sessions order by completed_at"));
+    expect(rows.map((r) => [r.id, r.completed_at.toISOString(), r.is_backdated])).toEqual([
+      [mon, "2026-09-14T18:00:00.000Z", true],
+      [thu, "2026-09-17T18:00:00.000Z", true],
+    ]);
+    // Latest by performed date wins, whatever order they were typed in.
+    expect((await previous(me, [incline]))[0].session_id).toBe(thu);
+    // Logging something for Tuesday compares against Monday, the workout before it.
+    const beforeTue = await as(user(me), (q) => q("select session_id from previous_performance($1, $2)", [[incline], at("2026-09-15T18:00:00Z")]));
+    expect(beforeTue[0].session_id).toBe(mon);
+  });
+
+  it("rejects future dates and lets the owner move a workout, keeping its duration", async () => {
+    const me = await newUser("backdate2");
+    const intruder = await newUser("backdate-intruder");
+    const split = await createSplit(me, "S");
+    const { templateId } = await createTemplate(me, split, "Push", [{ exerciseId: incline }]);
+
+    await expect(
+      as(user(me), (q) => q("select start_session(gen_random_uuid(), $1, now() + interval '1 day')", [templateId])),
+    ).rejects.toThrow(/workout_date_in_future/);
+
+    // Started normally, then moved to yesterday while logging.
+    const doc = await startSession(me, templateId);
+    await as(user(me), (q) => q("select set_session_date($1, now() - interval '1 day')", [doc.id]));
+    const r = await sync(me, withSets(doc, [[{ weight: 60, reps: 10, done: true }]]), doc.revision);
+    expect(r.status).toBe("ok"); // the date change did not force a sync conflict
+    await finish(me, doc.id, r.revision);
+    const [done] = await as(user(me), (q) => q("select completed_at, started_at from workout_sessions where id = $1", [doc.id]));
+    expect(Date.now() - done.completed_at.getTime()).toBeGreaterThan(23 * 3600e3);
+
+    // A finished (non-backdated) workout keeps its duration when moved.
+    const normal = await startSession(me, templateId);
+    const r2 = await sync(me, withSets(normal, [[{ weight: 60, reps: 10, done: true }]]), normal.revision);
+    await finish(me, normal.id, r2.revision);
+    await as(user(me), (q) => q("update workout_sessions set started_at = completed_at - interval '50 minutes' where id = $1", [normal.id]));
+    await as(user(me), (q) => q("select set_session_date($1, $2)", [normal.id, at("2026-09-10T19:00:00Z")]));
+    const [moved] = await as(user(me), (q) => q("select started_at, completed_at from workout_sessions where id = $1", [normal.id]));
+    expect(moved.completed_at.toISOString()).toBe("2026-09-10T19:00:00.000Z");
+    expect(moved.started_at.toISOString()).toBe("2026-09-10T18:10:00.000Z");
+    await expect(as(user(me), (q) => q("select set_session_date($1, now() + interval '2 hours')", [normal.id]))).rejects.toThrow(/workout_date_in_future/);
+
+    // Nobody else can move it.
+    await expect(as(user(intruder), (q) => q("select set_session_date($1, now() - interval '3 days')", [normal.id]))).rejects.toThrow(/session_not_found/);
+  });
+});
+
 describe("C. template edits never rewrite history", () => {
   it("keeps the session snapshot and sets after renaming the template and removing an exercise", async () => {
     const me = await newUser("c");

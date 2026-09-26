@@ -180,3 +180,40 @@ test("layout: key screens fit a 320px phone without horizontal scrolling", async
   await expect(page.getByLabel("Dip, set 1 added weight in kg")).toBeVisible();
   await expect(page.getByLabel(/Push-Up, set 1 weight/)).toHaveCount(0);
 });
+
+test("a past workout is recorded on the date it was performed", async ({ page }) => {
+  const user = await newUser("past");
+  await seedSplit(user, "Past split", "Chest & back", ["incline-barbell-bench-press"]);
+  await signIn(page, user);
+
+  const day = new Date(Date.now() - 3 * 86_400_000).toISOString().slice(0, 10);
+  await page.getByRole("button", { name: "Log past workout" }).click();
+  await page.getByLabel("Date and time performed").fill(`${day}T18:00`);
+  await page.getByRole("button", { name: "Start logging" }).click();
+  await page.waitForURL("**/workout/**");
+  const sessionId = page.url().split("/workout/")[1];
+  await expect(page.getByText("Logging a past workout.")).toBeVisible();
+
+  await logSet(page, INCLINE, 1, 8, 70);
+  await expect(page.getByRole("status").filter({ hasText: "Saved" })).toBeVisible({ timeout: 10_000 });
+  await page.getByRole("button", { name: "Finish workout" }).click();
+  await expect(page.getByText(/^Saved for /)).toBeVisible();
+  await page.getByRole("button", { name: "Finish & save" }).click();
+  await page.waitForURL("**/sessions/**");
+  await expect(page.getByText("Workout saved")).toBeVisible();
+  await expect(page.getByText(/sets · saved for /)).toBeVisible();
+
+  const { rows } = await db.query("select completed_at, is_backdated from workout_sessions where id = $1", [sessionId]);
+  expect(rows[0].is_backdated).toBe(true);
+  expect(Date.now() - rows[0].completed_at.getTime()).toBeGreaterThan(2 * 86_400_000);
+  const localDay = await page.evaluate((iso) => new Date(iso).toLocaleDateString("en-CA"), rows[0].completed_at.toISOString());
+  expect(localDay).toBe(day);
+
+  // Future dates are refused in the picker.
+  await page.goto("/train");
+  await page.getByRole("button", { name: "Log past workout" }).click();
+  const tomorrow = new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
+  await page.getByLabel("Date and time performed").fill(`${tomorrow}T18:00`);
+  await page.getByRole("button", { name: "Start logging" }).click();
+  await expect(page.getByText("The date cannot be in the future.")).toBeVisible();
+});

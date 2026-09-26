@@ -18,13 +18,14 @@ import {
   uncompleteSet,
   updateSet,
 } from "@/lib/session/doc";
-import { formatDuration, formatTime } from "@/lib/format";
+import { formatDate, formatDuration, formatTime } from "@/lib/format";
 import { hasUnsyncedChanges, removeRecord, type LocalRecord } from "@/lib/session/store";
 import { adjustTimer, clockNow, startTimer } from "@/lib/timer";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { friendlyError } from "@/lib/supabase/errors";
 import type { Exercise, PreviousPerformance, SessionSet } from "@/lib/types";
 import { ExercisePicker } from "../ExercisePicker";
+import { WorkoutDateSheet } from "../WorkoutDateSheet";
 import { IconAlert, IconChevronLeft, IconMore, IconPlus, IconTimer } from "../icons";
 import { cx } from "../styles";
 import { Button, ErrorNote, IconButton, Sheet, Toggle } from "../ui";
@@ -47,6 +48,7 @@ export default function Logger({ userId, initial, timeZone }: { userId: string; 
   const [setMenu, setSetMenu] = useState<SetMenu>(null);
   const [notesFor, setNotesFor] = useState<string | "session" | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [dateOpen, setDateOpen] = useState(false);
   const [finishOpen, setFinishOpen] = useState(false);
   const [discardOpen, setDiscardOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -70,7 +72,11 @@ export default function Logger({ userId, initial, timeZone }: { userId: string; 
 
   async function fetchPrevious(exerciseId: string) {
     if (!navigator.onLine || recordRef.current.previous[exerciseId]) return;
-    const { data } = await supabaseBrowser().rpc("previous_performance", { p_exercise_ids: [exerciseId] });
+    const current = recordRef.current.doc;
+    const { data } = await supabaseBrowser().rpc("previous_performance", {
+      p_exercise_ids: [exerciseId],
+      p_before: current.is_backdated ? current.started_at : null,
+    });
     const row = (data as PreviousPerformance[] | null)?.[0];
     if (row) patch({ previous: { ...recordRef.current.previous, [exerciseId]: row } });
     return row;
@@ -117,6 +123,25 @@ export default function Logger({ userId, initial, timeZone }: { userId: string; 
   async function setAutoRest(value: boolean) {
     patch({ settings: { ...recordRef.current.settings, autoStartRest: value } });
     if (navigator.onLine) await supabaseBrowser().from("profiles").update({ auto_start_rest: value }).eq("id", userId);
+  }
+
+  /** Moves this workout to the date it was actually performed and refreshes Previous for it. */
+  async function changeDate(iso: string): Promise<string | null> {
+    if (!navigator.onLine) return "Changing the date needs a connection.";
+    if (!(await ownerSignedIn())) return "Sign in to the account that started this workout first.";
+    const supabase = supabaseBrowser();
+    const { data, error } = await supabase.rpc("set_session_date", { p_session_id: doc.id, p_performed_at: iso });
+    if (error) return friendlyError(error, "Could not change the date.");
+    const ids = [...new Set(recordRef.current.doc.exercises.map((e) => e.exercise_id))];
+    const prev = await supabase.rpc("previous_performance", { p_exercise_ids: ids, p_before: data.started_at });
+    const previous = { ...recordRef.current.previous };
+    if (!prev.error) {
+      for (const id of ids) delete previous[id];
+      for (const row of prev.data as PreviousPerformance[]) previous[row.exercise_id] = row;
+    }
+    patch({ doc: { ...recordRef.current.doc, started_at: data.started_at, is_backdated: true }, previous });
+    setDateOpen(false);
+    return null;
   }
 
   /** Finishing or discarding must only ever act as the account that owns this workout. */
@@ -208,7 +233,11 @@ export default function Logger({ userId, initial, timeZone }: { userId: string; 
         </p>
         <h1 className="mt-3 text-[36px] leading-[1.1] font-semibold tracking-[-0.03em]">{doc.template_name}</h1>
         <div className="mt-4 flex items-baseline justify-between gap-3 text-[15px] text-muted">
-          <p>In progress · started {formatTime(doc.started_at, timeZone)}</p>
+          <p>
+            {doc.is_backdated
+              ? `Past workout · ${formatDate(doc.started_at, timeZone, { weekday: "short", year: undefined })}, ${formatTime(doc.started_at, timeZone)}`
+              : `In progress · started ${formatTime(doc.started_at, timeZone)}`}
+          </p>
           <p className="shrink-0 tabular">
             <span className="text-fg">{summary.completedSets}</span> / {summary.plannedSets} sets
           </p>
@@ -226,6 +255,15 @@ export default function Logger({ userId, initial, timeZone }: { userId: string; 
       </header>
 
       <div className="space-y-3">
+        {doc.is_backdated ? (
+          <div className="flex items-center justify-between gap-3 rounded-2xl border border-accent-text/30 bg-accent-soft px-4 py-3 text-sm">
+            <p>
+              Logging a past workout. It will be saved for{" "}
+              <span className="font-medium">{formatDate(doc.started_at, timeZone, { weekday: "long" })}</span>.
+            </p>
+            <Button size="sm" variant="ghost" className="shrink-0" onClick={() => setDateOpen(true)}>Change</Button>
+          </div>
+        ) : null}
         {storageFailed ? (
           <Banner>This browser is not keeping a local copy (private mode or storage full). Stay online while logging so nothing is lost.</Banner>
         ) : null}
@@ -358,6 +396,11 @@ export default function Logger({ userId, initial, timeZone }: { userId: string; 
           <MenuList
             items={[
               { label: doc.notes ? "Edit workout note" : "Add workout note", onClick: () => setNotesFor("session") },
+              {
+                label: "Change workout date",
+                hint: doc.is_backdated ? undefined : "For a workout you did on an earlier day",
+                onClick: () => setDateOpen(true),
+              },
               { label: "Add exercise", onClick: () => setPicker({ mode: "add" }) },
               { label: "Discard workout", danger: true, onClick: () => setDiscardOpen(true) },
             ]}
@@ -365,6 +408,16 @@ export default function Logger({ userId, initial, timeZone }: { userId: string; 
           />
         </div>
       </Sheet>
+
+      <WorkoutDateSheet
+        open={dateOpen}
+        onClose={() => setDateOpen(false)}
+        title="Workout date"
+        description="When did you do this workout? It will be saved for that date, and Previous will compare with the workout before it."
+        initialIso={doc.started_at}
+        confirmLabel="Save date"
+        onConfirm={changeDate}
+      />
 
       <NotesSheet
         key={notesFor ?? "none"}
@@ -399,6 +452,11 @@ export default function Logger({ userId, initial, timeZone }: { userId: string; 
       >
         {summary.completedSets ? (
           <div className="space-y-4">
+            {doc.is_backdated ? (
+              <p className="text-sm text-muted">
+                Saved for <span className="text-fg">{formatDate(doc.started_at, timeZone, { weekday: "long" })}, {formatTime(doc.started_at, timeZone)}</span>
+              </p>
+            ) : null}
             <ul className="divide-y divide-line">
               {summary.exercises.map((e) => (
                 <li key={e.id} className="flex items-center justify-between gap-3 py-2.5">

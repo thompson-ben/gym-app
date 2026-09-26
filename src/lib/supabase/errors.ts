@@ -22,6 +22,9 @@ const MESSAGES: Record<string, string> = {
   completed_set_requires_weight: "Enter a weight before confirming the set.",
   share_not_found: "This share link is no longer available.",
   mapped_exercise_not_available: "The chosen exercise is not available to you.",
+  workout_date_in_future: "The workout date cannot be in the future.",
+  workout_date_too_old: "That date is too far in the past.",
+  workout_date_required: "Choose the date the workout was performed.",
   catalogue_exercise_missing: "An exercise in this split is no longer in the catalogue.",
 };
 

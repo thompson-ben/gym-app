@@ -53,6 +53,8 @@ export type SessionDoc = {
   template_name: string;
   started_at: string;
   completed_at: string | null;
+  /** Logged for an earlier date: started_at is when it was performed. */
+  is_backdated?: boolean;
   notes: string | null;
   exercises: SessionExercise[];
 };

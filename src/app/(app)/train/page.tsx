@@ -22,7 +22,7 @@ export default async function TrainPage() {
 
   const [{ data: period, error: periodError }, { data: open, error: openError }] = await Promise.all([
     supabase.from("split_active_periods").select("id, started_at, split_id, splits(id, name, description)").is("ended_at", null).maybeSingle(),
-    supabase.from("workout_sessions").select("id, template_name, split_name, started_at").eq("status", "in_progress").maybeSingle(),
+    supabase.from("workout_sessions").select("id, template_name, split_name, started_at, is_backdated").eq("status", "in_progress").maybeSingle(),
   ]);
   if (periodError) throw periodError;
   if (openError) throw openError;
@@ -67,7 +67,10 @@ export default async function TrainPage() {
           <span className="min-w-0 flex-1">
             <span className="block text-sm font-medium opacity-80">Workout in progress</span>
             <span className="block truncate text-lg font-semibold">Resume {open.template_name}</span>
-            <span className="block text-sm opacity-80">Started {formatDate(open.started_at, tz, { weekday: "short", hour: "2-digit", minute: "2-digit" })}</span>
+            <span className="block text-sm opacity-80">
+              {open.is_backdated ? "Past workout for " : "Started "}
+              {formatDate(open.started_at, tz, { weekday: "short", hour: "2-digit", minute: "2-digit" })}
+            </span>
           </span>
           <IconChevronRight />
         </Link>
@@ -113,7 +116,7 @@ export default async function TrainPage() {
                       {open ? (
                         <span className="text-right text-xs text-faint">Finish current<br />workout first</span>
                       ) : (
-                        <StartWorkoutButton templateId={t.id} disabled={names.length === 0} />
+                        <StartWorkoutButton templateId={t.id} templateName={t.name} disabled={names.length === 0} />
                       )}
                     </div>
                     {names.length ? <p className="mt-2 line-clamp-2 text-sm text-faint">{names.join(" · ")}</p> : (
