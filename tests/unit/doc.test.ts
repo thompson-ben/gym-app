@@ -113,3 +113,54 @@ describe("planned sets (scenario F)", () => {
     expect(substituteExercise(done.doc, doc.exercises[0].id, replacement, {}, seqId)).toEqual({ error: "has_completed_sets" });
   });
 });
+
+describe("weight carries forward to following sets", () => {
+  const fresh = () => ensurePlannedSets(session([exercise({ exercise_id: "hack", target_sets: 3 })]), {}, seqId);
+  const weights = (d: ReturnType<typeof fresh>) => d.exercises[0].sets.map((s) => s.weight_kg);
+
+  it("fills later empty sets as set 1 is typed, keystroke by keystroke", () => {
+    let d = fresh();
+    const [s1] = d.exercises[0].sets;
+    expect(weights(d)).toEqual([null, null, null]);
+    d = updateSet(d, d.exercises[0].id, s1.id, { weight_kg: 5 });
+    d = updateSet(d, d.exercises[0].id, s1.id, { weight_kg: 50 });
+    expect(weights(d)).toEqual([50, 50, 50]);
+  });
+
+  it("keeps a weight the user set on a later set, and never changes confirmed sets", () => {
+    let d = fresh();
+    const [s1, s2, s3] = d.exercises[0].sets;
+    const ex = d.exercises[0].id;
+    d = updateSet(d, ex, s1.id, { weight_kg: 50 });
+    d = updateSet(d, ex, s3.id, { weight_kg: 45 }); // deliberate drop set
+    d = updateSet(d, ex, s1.id, { weight_kg: 55 });
+    expect(weights(d)).toEqual([55, 55, 45]);
+
+    d = updateSet(d, ex, s2.id, { reps: 10 });
+    const done = completeSet(d, ex, s2.id, new Date());
+    if (!("doc" in done)) throw new Error();
+    d = updateSet(done.doc, ex, s1.id, { weight_kg: 60 });
+    expect(weights(d)).toEqual([60, 55, 45]);
+  });
+
+  it("follows prefilled weights from last time and leaves warm-ups alone", () => {
+    let d = ensurePlannedSets(session([exercise({ exercise_id: "incline", target_sets: 2 })]), previous, seqId);
+    const ex = d.exercises[0].id;
+    d = addSet(d, ex, "warmup", previous, seqId);
+    const working = d.exercises[0].sets.filter((s) => s.set_type === "working");
+    d = updateSet(d, ex, working[0].id, { weight_kg: 75 });
+    expect(d.exercises[0].sets.map((s) => [s.set_type, s.weight_kg])).toEqual([
+      ["warmup", null],
+      ["working", 75],
+      ["working", 75],
+    ]);
+  });
+
+  it("a new set starts from the set above it in this session", () => {
+    let d = fresh();
+    const ex = d.exercises[0].id;
+    d = updateSet(d, ex, d.exercises[0].sets[2].id, { weight_kg: 40 });
+    d = addSet(d, ex, "working", {}, seqId);
+    expect(weights(d).at(-1)).toBe(40);
+  });
+});

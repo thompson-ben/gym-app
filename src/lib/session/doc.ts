@@ -14,11 +14,21 @@ function plannedSet(ex: SessionExercise, sets: SessionSet[], setType: SetType, p
   const prev = previous[ex.exercise_id]?.sets;
   const rows = [...sets, { set_type: setType }];
   const matched = matchPrevious(rows, prev)[rows.length - 1];
+  // Without a matching set from last time, continue from the set above it in this session.
+  const above = sets.at(-1)?.weight_kg;
+  const weight =
+    ex.tracking_mode === "bodyweight_reps"
+      ? null
+      : matched
+        ? matched.weight_kg
+        : isValidNumber(above ?? null)
+          ? (above as number)
+          : suggestWeight(ex.tracking_mode, null, prev, setType);
   return {
     id: id(),
     position: sets.length,
     set_type: setType,
-    weight_kg: suggestWeight(ex.tracking_mode, matched, prev, setType),
+    weight_kg: weight,
     reps: null,
     completed_at: null,
   };
@@ -38,11 +48,30 @@ export function ensurePlannedSets(doc: SessionDoc, previous: PreviousMap, id: Id
   return changed ? { ...doc, exercises } : doc;
 }
 
+/**
+ * Edits a set. A new weight also carries forward to the later, unconfirmed sets of the same
+ * type that were following it (empty, or still showing the old weight). Sets given their own
+ * weight, and confirmed sets, are left alone.
+ */
 export function updateSet(doc: SessionDoc, exId: string, setId: string, patch: Partial<Pick<SessionSet, "weight_kg" | "reps">>): SessionDoc {
-  return mapExercise(doc, exId, (ex) => ({
-    ...ex,
-    sets: ex.sets.map((s) => (s.id === setId ? { ...s, ...patch } : s)),
-  }));
+  return mapExercise(doc, exId, (ex) => {
+    const index = ex.sets.findIndex((s) => s.id === setId);
+    if (index < 0) return ex;
+    const target = ex.sets[index];
+    const sets = ex.sets.map((s) => (s.id === setId ? { ...s, ...patch } : s));
+    if ("weight_kg" in patch && patch.weight_kg !== target.weight_kg) {
+      let following = target.weight_kg;
+      for (let i = index + 1; i < sets.length; i++) {
+        const s = sets[i];
+        if (s.set_type !== target.set_type) continue;
+        if (s.completed_at) break;
+        if (s.weight_kg !== null && s.weight_kg !== following) break;
+        following = s.weight_kg ?? following;
+        sets[i] = { ...s, weight_kg: patch.weight_kg ?? null };
+      }
+    }
+    return { ...ex, sets };
+  });
 }
 
 export type CompleteError = "reps_required" | "weight_required" | "invalid";

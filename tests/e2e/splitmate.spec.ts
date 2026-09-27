@@ -251,3 +251,20 @@ test("a split's start date can be moved back so earlier workouts count towards i
   const { rows } = await db.query("select started_at from split_active_periods where split_id = $1", [splitId]);
   expect(await page.evaluate((iso) => new Date(iso).toLocaleDateString("en-CA"), rows[0].started_at.toISOString())).toBe(day);
 });
+
+test("typing set 1's weight fills the following sets", async ({ page }) => {
+  const user = await newUser("carry");
+  await seedSplit(user, "Carry split", "Legs", ["hack-squat"]);
+  await signIn(page, user);
+  await page.getByRole("button", { name: "Start" }).click();
+  await page.waitForURL("**/workout/**");
+  const weight = (n: number) => page.getByLabel(`Hack Squat, set ${n} weight in kg`);
+  await weight(1).fill("50");
+  await expect(weight(2)).toHaveValue("50");
+  await weight(2).fill("45");
+  await weight(1).fill("55");
+  await expect(weight(2)).toHaveValue("45");
+  await weight(1).blur();
+  await page.getByRole("button", { name: "Add set" }).click();
+  await expect(weight(3)).toHaveValue("45");
+});
