@@ -403,6 +403,39 @@ describe("D. active split periods", () => {
     }
   });
 
+  it("activates from an earlier date, closing the previous split at that date", async () => {
+    const me = await newUser("d-backdate");
+    const a = await createSplit(me, "A");
+    const b = await createSplit(me, "B");
+    const daysAgo = (n: number) => new Date(Date.now() - n * 86400e3);
+    const act = (id: string, at?: Date) => as(user(me), (q) => q("select * from activate_split($1, $2)", [id, at ?? null]));
+
+    await act(a, daysAgo(30));
+    // Split A actually started 40 days ago: re-activating it with a date moves its start.
+    await act(a, daysAgo(40));
+    await act(b, daysAgo(10));
+    const periods = await as(user(me), (q) => q("select split_id, started_at, ended_at from split_active_periods order by started_at"));
+    expect(periods.map((p) => p.split_id)).toEqual([a, b]);
+    expect(Math.round((Date.now() - periods[0].started_at.getTime()) / 86400e3)).toBe(40);
+    expect(periods[0].ended_at.getTime()).toBe(periods[1].started_at.getTime());
+    expect(Math.round((Date.now() - periods[1].started_at.getTime()) / 86400e3)).toBe(10);
+    expect(periods[1].ended_at).toBeNull();
+
+    // A past workout inside the backdated period counts for it.
+    const { templateId } = await createTemplate(me, b, "W", [{ exerciseId: squat }]);
+    const doc = await as(user(me), async (q) => (await q("select start_session($1, $2, $3) as d", [randomUUID(), templateId, daysAgo(5)]))[0].d);
+    const r = await sync(me, withSets(doc, [[{ weight: 100, reps: 5, done: true }]]), doc.revision);
+    await finish(me, doc.id, r.revision);
+    const [open] = await as(user(me), (q) => q("select completed_workouts from split_periods($1) where ended_at is null", [b]));
+    expect(open.completed_workouts).toBe("1");
+
+    // Cannot start before the split it replaces, overlap another period, or start in the future.
+    await expect(act(a, daysAgo(20))).rejects.toThrow(/period_overlaps/);
+    await expect(act(a, new Date(Date.now() + 86400e3))).rejects.toThrow(/period_starts_in_future/);
+    const still = await as(user(me), (q) => q("select count(*)::int as n from split_active_periods"));
+    expect(still[0].n).toBe(2);
+  });
+
   it("rejects overlapping or impossible corrections and a second open period", async () => {
     const me = await newUser("d2");
     const a = await createSplit(me, "A");

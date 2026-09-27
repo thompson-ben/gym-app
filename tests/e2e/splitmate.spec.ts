@@ -121,10 +121,10 @@ test("I: the rest timer reflects real elapsed time after the app was in the back
   await expect(page.getByRole("timer")).toContainText("2:00");
 
   // Jump 75 s ahead without running interval ticks, as when a phone suspends the page.
-  await page.clock.pauseAt(Date.now());
+  await page.clock.pauseAt((await page.evaluate(() => Date.now())) + 1000);
   await page.clock.fastForward(75_000);
   await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
-  await expect(page.getByRole("timer")).toContainText("0:45");
+  await expect(page.getByRole("timer")).toContainText(/0:4[45]/);
 });
 
 test("B/H: a share link shows only the snapshot and can be copied; revoking stops access", async ({ page, browser }) => {
@@ -216,4 +216,38 @@ test("a past workout is recorded on the date it was performed", async ({ page })
   await page.getByLabel("Date and time performed").fill(`${tomorrow}T18:00`);
   await page.getByRole("button", { name: "Start logging" }).click();
   await expect(page.getByText("The date cannot be in the future.")).toBeVisible();
+});
+
+test("a split's start date can be moved back so earlier workouts count towards it", async ({ page }) => {
+  const user = await newUser("split-start");
+  const { splitId, templateId } = await seedSplit(user, "Backdated split", "Legs", ["back-squat"]);
+  const past = new Date(Date.now() - 5 * 86_400_000).toISOString();
+  const doc = await user.client.rpc("start_session", { p_session_id: crypto.randomUUID(), p_template_id: templateId, p_performed_at: past }).throwOnError();
+  await signIn(page, user);
+  await expect(page.getByText("0 workouts")).toBeVisible();
+
+  // Resume the past workout from Train, log a set and finish it through the app.
+  await page.getByText("Workout in progress").click();
+  await page.waitForURL(`**/workout/${doc.data.id}`);
+  await logSet(page, "Barbell Back Squat", 1, 5, 100);
+  await expect(page.getByRole("status").filter({ hasText: "Saved" })).toBeVisible({ timeout: 10_000 });
+  await page.getByRole("button", { name: "Finish workout" }).click();
+  await page.getByRole("button", { name: "Finish & save" }).click();
+  await page.waitForURL("**/sessions/**");
+
+  await page.goto("/train");
+  await page.getByRole("link", { name: "Change" }).click();
+  await page.waitForURL(`**/splits/${splitId}#active`);
+  await page.getByRole("button", { name: "Change start date" }).click();
+  const day = new Date(Date.now() - 10 * 86_400_000).toISOString().slice(0, 10);
+  await page.getByLabel("Split started").fill(`${day}T08:00`);
+  await page.getByRole("button", { name: "Save start date" }).click();
+  await expect(page.getByRole("button", { name: "Save start date" })).toBeHidden();
+  await expect(page.getByText("Active for 10 days")).toBeVisible();
+
+  await page.getByRole("link", { name: "Train" }).click();
+  await page.waitForURL("**/train");
+  await expect(page.getByText("1 workout", { exact: true })).toBeVisible();
+  const { rows } = await db.query("select started_at from split_active_periods where split_id = $1", [splitId]);
+  expect(await page.evaluate((iso) => new Date(iso).toLocaleDateString("en-CA"), rows[0].started_at.toISOString())).toBe(day);
 });

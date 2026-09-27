@@ -59,7 +59,7 @@ Use a **dedicated** Supabase project for Splitmate: the migrations create tables
    ```bash
    npx supabase login                       # opens a browser; no token goes in the repo
    npx supabase link --project-ref <ref>    # confirm the prompt names the Splitmate project
-   npx supabase db push                     # applies supabase/migrations/* (schema, functions, catalogue, past workouts, profile backfill)
+   npx supabase db push                     # applies supabase/migrations/* (schema, functions, catalogue, past workouts, profile backfill, backdated activation)
    ```
    `db push` never runs `supabase/seed.sql`, so no demo data reaches the hosted project.
 3. **Authentication → Sign In / Providers → Email**: email + password on, **Confirm email on**, minimum password length **8**.
@@ -165,7 +165,7 @@ So "not cached by the service worker" does **not** mean "not stored locally": th
 
 Every workout card on **Train** has **Log past workout**: pick the date and time it was performed, then log as usual. The logger shows "Logging a past workout" and, on finishing, the workout is saved for that date (not the day it was typed in). You can also move a workout later: **Change workout date** in the logger menu, or **Edit → Change date** on a finished workout (moving keeps its duration). Future dates are rejected.
 
-History, the Previous column and charts are ordered by the performed date, so past workouts can be entered in any order; while logging a past workout the Previous column compares with the workout *before* its date. The active-period "workouts completed" count includes a past workout only if its date falls inside the period; correct the period's start date (split page → Active periods) if you activated the split after you started training on it.
+History, the Previous column and charts are ordered by the performed date, so past workouts can be entered in any order; while logging a past workout the Previous column compares with the workout *before* its date. The active-period "workouts completed" count includes a past workout only if its date falls inside the period; set the split's start date (split page → **Change start date**, or **Activate from an earlier date**; Train → Since → **Change**) if you activated the split after you started training on it.
 
 ### Rest timer
 

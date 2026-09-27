@@ -86,7 +86,10 @@ export default async function TrainPage() {
             <dl className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm">
               <div className="flex gap-1.5">
                 <dt className="text-muted">Since</dt>
-                <dd>{formatDate(period.started_at, tz)}</dd>
+                <dd>
+                  {formatDate(period.started_at, tz)}{" "}
+                  <Link href={`/splits/${split.id}#active`} className="text-accent-text underline-offset-4 hover:underline">Change</Link>
+                </dd>
               </div>
               <div className="flex gap-1.5">
                 <dt className="text-muted">Running</dt>

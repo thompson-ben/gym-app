@@ -23,7 +23,9 @@ export function WorkoutDateSheet({
   initialIso,
   confirmLabel,
   onConfirm,
+  fieldLabel = "Date and time performed",
 }: {
+  fieldLabel?: string;
   open: boolean;
   onClose: () => void;
   title: string;
@@ -33,11 +35,12 @@ export function WorkoutDateSheet({
   onConfirm: (iso: string) => Promise<string | null>;
 }) {
   return open ? (
-    <Inner title={title} description={description} initialIso={initialIso} confirmLabel={confirmLabel} onClose={onClose} onConfirm={onConfirm} />
+    <Inner title={title} description={description} initialIso={initialIso} confirmLabel={confirmLabel} onClose={onClose} onConfirm={onConfirm} fieldLabel={fieldLabel} />
   ) : null;
 }
 
 function Inner({
+  fieldLabel,
   title,
   description,
   initialIso,
@@ -45,6 +48,7 @@ function Inner({
   onClose,
   onConfirm,
 }: {
+  fieldLabel: string;
   title: string;
   description?: string;
   initialIso: string;
@@ -72,7 +76,7 @@ function Inner({
     <Sheet open onClose={onClose} title={title}>
       <form onSubmit={submit} noValidate className="space-y-4 pb-2">
         {description ? <p className="text-muted">{description}</p> : null}
-        <Field label="Date and time performed">
+        <Field label={fieldLabel}>
           {(id) => <input id={id} type="datetime-local" className={inputClass} value={value} max={max} onChange={(e) => setValue(e.target.value)} required />}
         </Field>
         <ErrorNote>{error}</ErrorNote>
