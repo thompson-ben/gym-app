@@ -9,17 +9,23 @@ export const metadata: Metadata = { title: "Profile" };
 export default async function ProfilePage() {
   const { supabase, userId, email } = await requireUser();
   const columns = "display_name, default_rest_seconds, auto_start_rest, weight_unit";
-  let { data, error } = await supabase.from("profiles").select(columns).eq("id", userId).maybeSingle();
-  if (error) throw error;
+  const defaults = { display_name: null, default_rest_seconds: 120, auto_start_rest: false, weight_unit: "kg" };
+  let { data } = await supabase.from("profiles").select(columns).eq("id", userId).maybeSingle();
   if (!data) {
     // Accounts created before the database was set up have no profile row yet: create it.
-    ({ data, error } = await supabase.from("profiles").upsert({ id: userId }, { onConflict: "id" }).select(columns).single());
-    if (error) throw error;
+    ({ data } = await supabase.from("profiles").upsert({ id: userId }, { onConflict: "id" }).select(columns).maybeSingle());
   }
+  // Never block the page on profile settings; they only affect defaults.
+  const unavailable = !data;
   return (
     <>
       <PageHeader title="Profile" />
-      <ProfileForm userId={userId} email={email} profile={data!} />
+      {unavailable ? (
+        <p role="status" className="mb-5 rounded-2xl bg-surface-2 px-4 py-3 text-sm text-muted">
+          Your profile settings could not be loaded, so defaults are shown. Your splits and workouts are not affected.
+        </p>
+      ) : null}
+      <ProfileForm userId={userId} email={email} profile={data ?? defaults} />
       <div className="mt-12 text-center">
         <Wordmark size="sm" className="text-muted" />
         <p className="text-xs text-faint">Workout Planner &amp; Tracker</p>
