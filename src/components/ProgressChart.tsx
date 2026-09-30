@@ -1,26 +1,17 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { niceTicks } from "@/lib/chart";
 import { formatDate, formatKg } from "@/lib/format";
-import type { ProgressPoint } from "@/lib/progress";
-import type { TrackingMode } from "@/lib/types";
+import type { SeriesPoint } from "@/lib/progress";
 
 const H = 200;
 const PAD = { top: 16, right: 16, bottom: 28, left: 40 };
 
-function niceTicks(min: number, max: number, count = 4): number[] {
-  const span = Math.max(max - min, 1);
-  const raw = span / count;
-  const mag = 10 ** Math.floor(Math.log10(raw));
-  const step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((s) => span / s <= count) ?? 10 * mag;
-  const start = Math.floor(min / step) * step;
-  const ticks: number[] = [];
-  for (let v = start; v <= max + step * 0.001; v += step) ticks.push(Math.round(v * 100) / 100);
-  return ticks;
-}
 
 /** Single-series line chart of the heaviest completed working set per session. */
-export function ProgressChart({ points, mode, timeZone }: { points: ProgressPoint[]; mode: TrackingMode; timeZone: string }) {
+/** Single-series line chart of one metric per session. Tooltips show the real set(s) behind each value. */
+export function ProgressChart({ points, title, unit, timeZone }: { points: SeriesPoint[]; title: string; unit: string; timeZone: string }) {
   const ref = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(340);
   const [active, setActive] = useState<number | null>(null);
@@ -33,7 +24,6 @@ export function ProgressChart({ points, mode, timeZone }: { points: ProgressPoin
     return () => ro.disconnect();
   }, []);
 
-  const unit = mode === "bodyweight_reps" ? "reps" : mode === "added_weight_reps" ? "kg added" : "kg";
   const values = points.map((p) => p.value);
   const lo = Math.min(...values);
   const hi = Math.max(...values);
@@ -49,9 +39,8 @@ export function ProgressChart({ points, mode, timeZone }: { points: ProgressPoin
   const y = (v: number) => PAD.top + plotH - ((v - yMin) / (yMax - yMin || 1)) * plotH;
   const coords = points.map((p, i) => ({ x: x(times[i]), y: y(p.value) }));
   const path = coords.map((c, i) => `${i ? "L" : "M"}${c.x.toFixed(1)},${c.y.toFixed(1)}`).join(" ");
-  const fmt = (v: number) => (mode === "bodyweight_reps" ? `${v}` : formatKg(v));
-  const label = (p: ProgressPoint) =>
-    mode === "bodyweight_reps" ? `${p.value} reps` : `${mode === "added_weight_reps" ? "+" : ""}${formatKg(p.value)} kg × ${p.reps}`;
+  const fmt = (v: number) => formatKg(v);
+  const label = (p: SeriesPoint) => `${fmt(p.value)} ${unit}`;
 
   function nearest(clientX: number) {
     const rect = ref.current?.getBoundingClientRect();
@@ -81,7 +70,7 @@ export function ProgressChart({ points, mode, timeZone }: { points: ProgressPoin
         width={width}
         height={H}
         role="img"
-        aria-label={`Heaviest working set per session, ${points.length} sessions, from ${label(points[0])} to ${label(points[points.length - 1])}. Use arrow keys to inspect sessions.`}
+        aria-label={`${title}, ${points.length} sessions, from ${label(points[0])} to ${label(points[points.length - 1])}. Use arrow keys to inspect sessions.`}
         tabIndex={0}
         onKeyDown={(e) => {
           if (e.key === "ArrowRight") setActive((i) => Math.min(points.length - 1, (i ?? -1) + 1));
@@ -116,6 +105,7 @@ export function ProgressChart({ points, mode, timeZone }: { points: ProgressPoin
           style={{ left: Math.min(Math.max(ac.x - 80, 0), width - 170) }}
         >
           <p className="font-semibold text-fg tabular">{label(a)}</p>
+          <p className="text-muted tabular">{a.detail}</p>
           <p className="text-muted">{formatDate(a.date, timeZone)} · {a.workout}</p>
         </div>
       ) : null}

@@ -268,3 +268,37 @@ test("typing set 1's weight fills the following sets", async ({ page }) => {
   await page.getByRole("button", { name: "Add set" }).click();
   await expect(weight(3)).toHaveValue("45");
 });
+
+test("progress compares sets across rep ranges with an estimated 1RM, plus volume and heaviest", async ({ page }) => {
+  const user = await newUser("metrics");
+  const { templateId } = await seedSplit(user, "Arms", "Arms", ["ez-bar-curl"]);
+  const log = async (daysAgo: number, sets: [number, number][]) => {
+    const { data: doc } = await user.client
+      .rpc("start_session", { p_session_id: crypto.randomUUID(), p_template_id: templateId, p_performed_at: new Date(Date.now() - daysAgo * 86_400_000).toISOString() })
+      .throwOnError();
+    const payload = {
+      notes: null,
+      exercises: doc.exercises.map((ex: { id: string }, i: number) => ({
+        ...ex,
+        position: i,
+        sets: sets.map(([w, r], j) => ({ id: crypto.randomUUID(), position: j, set_type: "working", weight_kg: w, reps: r, completed_at: new Date().toISOString() })),
+      })),
+    };
+    const { data: synced } = await user.client.rpc("sync_session", { p_session_id: doc.id, p_base_revision: 0, p_write_id: crypto.randomUUID(), p_doc: payload }).throwOnError();
+    await user.client.rpc("finish_session", { p_session_id: doc.id, p_expected_revision: synced.revision }).throwOnError();
+  };
+  await log(7, [[30, 12], [30, 12]]);
+  await log(1, [[40, 8], [35, 10]]);
+
+  await signIn(page, user);
+  await page.goto("/progress");
+  await page.getByRole("link", { name: /EZ-Bar Curl/ }).first().click();
+  await expect(page.getByRole("heading", { name: "Estimated 1-rep max, best set per session" })).toBeVisible();
+  await expect(page.getByText("40 kg × 8")).toBeVisible();
+  await expect(page.getByText("≈ 50.7 kg est. 1RM").first()).toBeVisible();
+  await page.getByRole("link", { name: "Volume" }).click();
+  await expect(page.getByRole("heading", { name: "Session volume" })).toBeVisible();
+  await page.getByRole("link", { name: "Heaviest" }).click();
+  await expect(page.getByRole("heading", { name: "Heaviest working set per session" })).toBeVisible();
+  await expectNoHorizontalScroll(page);
+});

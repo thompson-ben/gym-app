@@ -7,7 +7,9 @@ export function HistoryFilter({
   splits,
   periods,
   value,
+  metric = null,
 }: {
+  metric?: string | null;
   splits: { id: string; name: string }[];
   periods: { id: string; label: string }[];
   value: string;
@@ -23,7 +25,11 @@ export function HistoryFilter({
         value={value}
         onChange={(e) => {
           const [kind, id] = e.target.value.split(":");
-          router.replace(kind ? `${pathname}?${kind}=${id}` : pathname, { scroll: false });
+          const q = new URLSearchParams();
+          if (kind) q.set(kind, id);
+          if (metric) q.set("metric", metric);
+          const str = q.toString();
+          router.replace(str ? `${pathname}?${str}` : pathname, { scroll: false });
         }}
       >
         <option value="">All history</option>

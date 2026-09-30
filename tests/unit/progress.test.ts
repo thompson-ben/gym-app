@@ -27,3 +27,43 @@ describe("heaviestSetPerSession", () => {
     expect(p.value).toBe(15);
   });
 });
+
+describe("chart metrics", () => {
+  const w = (weight_kg: number, reps: number) => ({ set_type: "working" as const, weight_kg, reps });
+  const history = [
+    session("a", "2026-09-17T18:00:00Z", [w(30, 12), w(30, 12), { set_type: "warmup", weight_kg: 60, reps: 3 }]),
+    session("b", "2026-09-24T18:00:00Z", [w(40, 8), w(35, 10)]),
+  ];
+
+  it("estimates 1RM with Epley and treats a single as its own max", async () => {
+    const { estimate1RM } = await import("@/lib/progress");
+    expect(estimate1RM(30, 12)).toBeCloseTo(42);
+    expect(estimate1RM(100, 1)).toBe(100);
+  });
+
+  it("makes different rep ranges comparable, ignoring warm-ups", async () => {
+    const { progressSeries } = await import("@/lib/progress");
+    expect(progressSeries(history, "weight_reps", "e1rm").map((p) => [p.value, p.detail])).toEqual([
+      [42, "30 kg × 12"],
+      [50.7, "40 kg × 8"], // 40 × 8 beats 35 × 10 (46.7)
+    ]);
+    // Weight × reps alone would rank 30 × 12 (360) above 40 × 8 (320); e1RM does not.
+    expect(progressSeries(history, "weight_reps", "volume").map((p) => p.value)).toEqual([720, 670]);
+    expect(progressSeries(history, "weight_reps", "heaviest").map((p) => p.value)).toEqual([30, 40]);
+  });
+
+  it("offers no 1RM estimate for bodyweight movements", async () => {
+    const { metricsFor, progressSeries } = await import("@/lib/progress");
+    expect(metricsFor("weight_reps").map((m) => m.id)).toEqual(["e1rm", "volume", "heaviest"]);
+    expect(metricsFor("added_weight_reps").map((m) => m.id)).toEqual(["heaviest", "reps"]);
+    expect(metricsFor("bodyweight_reps").map((m) => m.id)).toEqual(["heaviest", "reps"]);
+    const dips = [session("d", "2026-09-24T18:00:00Z", [w(10, 10), w(10, 8)])];
+    expect(progressSeries(dips, "added_weight_reps", "reps")[0].value).toBe(18);
+    expect(progressSeries(dips, "added_weight_reps", "heaviest")[0].detail).toBe("+10 kg × 10");
+  });
+
+  it("reports the best set overall with its real numbers", async () => {
+    const { bestSetOverall } = await import("@/lib/progress");
+    expect(bestSetOverall(history, "weight_reps")).toMatchObject({ text: "40 kg × 8", e1rm: 50.7, workout: "Chest & back" });
+  });
+});

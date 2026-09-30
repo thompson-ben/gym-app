@@ -167,6 +167,16 @@ Every workout card on **Train** has **Log past workout**: pick the date and time
 
 History, the Previous column and charts are ordered by the performed date, so past workouts can be entered in any order; while logging a past workout the Previous column compares with the workout *before* its date. The active-period "workouts completed" count includes a past workout only if its date falls inside the period; set the split's start date (split page → **Change start date**, or **Activate from an earlier date**; Train → Since → **Change**) if you activated the split after you started training on it.
 
+### Progress metrics
+
+Each exercise's Progress page shows a **Best set** (the real weight × reps, with its estimated 1RM) and a chart with a metric switch:
+
+- **Est. 1RM** (default for loaded lifts): the best working set of each session, estimated with the Epley formula `weight × (1 + reps ÷ 30)` so sets in different rep ranges are comparable. Labelled as an estimate; most reliable up to ~12 reps.
+- **Volume**: weight × reps summed over the session's working sets (total work, not strength).
+- **Heaviest**: top weight in a working set, regardless of reps.
+
+Reps-only and added-weight exercises (push-ups, weighted dips) show heaviest/most reps and total reps only: bodyweight is not tracked, so a 1RM estimate would be misleading. Warm-up sets never count.
+
 ### Rest timer
 
 Remaining time is derived from the start timestamp (`Date.now()`), not from counting ticks, so it stays correct after the phone locks or the app is backgrounded. It uses the exercise's rest target or your default. Auto-start after confirming a set is optional, and it needs no notification permission (it vibrates briefly where supported).
