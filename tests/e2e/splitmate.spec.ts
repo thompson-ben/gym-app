@@ -302,3 +302,35 @@ test("progress compares sets across rep ranges with an estimated 1RM, plus volum
   await expect(page.getByRole("heading", { name: "Heaviest working set per session" })).toBeVisible();
   await expectNoHorizontalScroll(page);
 });
+
+test("a quick workout takes exercises picked on the spot and lands in history without a split", async ({ page }) => {
+  const user = await newUser("quick");
+  await seedSplit(user, "Main split", "Push", ["dip"]);
+  await signIn(page, user);
+
+  await page.getByRole("button", { name: /Quick workout/ }).click();
+  await page.getByLabel("Name (optional)").fill("Hybrid");
+  await page.getByRole("button", { name: "Start and choose exercises" }).click();
+  await page.waitForURL("**/workout/**");
+
+  // The picker opens straight away; tick several exercises, then add them together.
+  await expect(page.getByRole("heading", { name: "Choose exercises" })).toBeVisible();
+  for (const name of ["Incline Barbell Bench Press", "Lat Pulldown", "EZ-Bar Curl", "Triceps Pushdown"]) {
+    await page.getByLabel("Search exercises").fill(name);
+    await page.getByRole("button", { name: new RegExp(`^${name.replace(/[-]/g, "\\-")}`) }).first().click();
+  }
+  await page.getByRole("button", { name: "Add 4 exercises" }).click();
+  await expect(page.getByRole("heading", { name: "Hybrid" })).toBeVisible();
+  await expect(page.getByRole("region")).toHaveCount(4);
+
+  await logSet(page, "Lat Pulldown", 1, 12, 70);
+  await expect(page.getByRole("status").filter({ hasText: "Saved" })).toBeVisible({ timeout: 10_000 });
+  await page.getByRole("button", { name: "Finish workout" }).click();
+  await page.getByRole("button", { name: "Finish & save" }).click();
+  await page.waitForURL("**/sessions/**");
+
+  await page.goto("/progress");
+  await expect(page.getByRole("link", { name: /Hybrid/ })).toBeVisible();
+  await page.goto("/train");
+  await expect(page.getByText("0 workouts")).toBeVisible(); // not counted towards the split
+});

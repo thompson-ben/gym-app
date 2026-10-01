@@ -43,12 +43,16 @@ export default function Logger({ userId, initial, timeZone }: { userId: string; 
   const { record, recordRef, status, online, storageFailed, edit, patch, engine } = useSessionRecord(userId, initial);
   const doc = record.doc;
   const summary = useMemo(() => summarize(doc), [doc]);
-  const [picker, setPicker] = useState<Picker>(null);
+  // An empty workout (e.g. a quick workout) opens straight into choosing exercises.
+  const [picker, setPicker] = useState<Picker>(() =>
+    initial.doc.exercises.length === 0 && initial.doc.status === "in_progress" ? { mode: "add" } : null,
+  );
   const [exerciseMenu, setExerciseMenu] = useState<string | null>(null);
   const [setMenu, setSetMenu] = useState<SetMenu>(null);
   const [notesFor, setNotesFor] = useState<string | "session" | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [dateOpen, setDateOpen] = useState(false);
+  const [renameOpen, setRenameOpen] = useState(false);
   const [finishOpen, setFinishOpen] = useState(false);
   const [discardOpen, setDiscardOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -80,6 +84,28 @@ export default function Logger({ userId, initial, timeZone }: { userId: string; 
     const row = (data as PreviousPerformance[] | null)?.[0];
     if (row) patch({ previous: { ...recordRef.current.previous, [exerciseId]: row } });
     return row;
+  }
+
+  /** Adds several exercises to this session, in the order they were chosen. */
+  async function addExercises(exercises: Exercise[]) {
+    setPicker(null);
+    const fetched = await Promise.all(exercises.map((e) => fetchPrevious(e.id)));
+    const previousMap = { ...recordRef.current.previous };
+    exercises.forEach((e, i) => {
+      const prev = fetched[i] ?? previousMap[e.id];
+      if (prev) previousMap[e.id] = prev;
+    });
+    edit((d) => exercises.reduce((acc, e) => addExercise(acc, e, previousMap, newId), d));
+    setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" }), 50);
+  }
+
+  async function renameWorkout(name: string): Promise<string | null> {
+    if (!navigator.onLine) return "Renaming needs a connection.";
+    const { error } = await supabaseBrowser().rpc("rename_session", { p_session_id: doc.id, p_name: name });
+    if (error) return friendlyError(error, "Could not rename the workout.");
+    patch({ doc: { ...recordRef.current.doc, template_name: name.trim().slice(0, 60) } });
+    setRenameOpen(false);
+    return null;
   }
 
   async function pickExercise(exercise: Exercise) {
@@ -305,7 +331,7 @@ export default function Logger({ userId, initial, timeZone }: { userId: string; 
         ))}
 
         {doc.exercises.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-line px-6 py-10 text-center text-muted">This workout has no exercises yet. Add one to start logging.</div>
+          <div className="rounded-3xl border border-dashed border-line px-6 py-10 text-center text-muted">No exercises yet. Add the ones you are doing today.</div>
         ) : null}
 
         <Button variant="secondary" size="lg" className="w-full" onClick={() => setPicker({ mode: "add" })} disabled={closed}>
@@ -342,8 +368,9 @@ export default function Logger({ userId, initial, timeZone }: { userId: string; 
       <ExercisePicker
         open={picker !== null}
         onClose={() => setPicker(null)}
-        onPick={pickExercise}
-        title={picker?.mode === "substitute" ? "Substitute for this session" : "Add exercise to this session"}
+        onPick={picker?.mode === "substitute" ? pickExercise : undefined}
+        onPickMany={picker?.mode === "substitute" ? undefined : addExercises}
+        title={picker?.mode === "substitute" ? "Substitute for this session" : doc.template_id ? "Add exercises to this session" : "Choose exercises"}
       />
 
       <Sheet open={menuEntry !== undefined} onClose={() => setExerciseMenu(null)} title={menuEntry?.exercise_name ?? ""}>
@@ -396,6 +423,7 @@ export default function Logger({ userId, initial, timeZone }: { userId: string; 
           <MenuList
             items={[
               { label: doc.notes ? "Edit workout note" : "Add workout note", onClick: () => setNotesFor("session") },
+              { label: "Rename workout", onClick: () => setRenameOpen(true) },
               {
                 label: "Change workout date",
                 hint: doc.is_backdated ? undefined : "For a workout you did on an earlier day",
@@ -408,6 +436,14 @@ export default function Logger({ userId, initial, timeZone }: { userId: string; 
           />
         </div>
       </Sheet>
+
+      <NameSheet
+        key={renameOpen ? "rename-open" : "rename-closed"}
+        open={renameOpen}
+        initial={doc.template_name}
+        onClose={() => setRenameOpen(false)}
+        onSave={renameWorkout}
+      />
 
       <WorkoutDateSheet
         open={dateOpen}
@@ -560,6 +596,38 @@ function NotesSheet({ open, title, initial, onClose, onSave }: { open: boolean; 
         className="w-full rounded-2xl border border-line bg-surface-2 p-4 text-fg outline-none focus:ring-2 focus:ring-[var(--ring)]"
         placeholder="e.g. Seat position 4, felt strong"
       />
+    </Sheet>
+  );
+}
+
+function NameSheet({ open, initial, onClose, onSave }: { open: boolean; initial: string; onClose: () => void; onSave: (name: string) => Promise<string | null> }) {
+  const [name, setName] = useState(initial);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  return (
+    <Sheet open={open} onClose={onClose} title="Rename workout">
+      <form
+        className="space-y-4 pb-2"
+        onSubmit={async (e) => {
+          e.preventDefault();
+          if (!name.trim()) return setError("Give the workout a name.");
+          setBusy(true);
+          setError(await onSave(name));
+          setBusy(false);
+        }}
+      >
+        <input
+          aria-label="Workout name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          maxLength={60}
+          autoFocus
+          className="h-12 w-full rounded-2xl border border-line bg-field px-4 text-fg outline-none focus:ring-2 focus:ring-[var(--ring)]"
+        />
+        <p className="text-sm text-muted">Only this workout is renamed; your templates stay the same.</p>
+        <ErrorNote>{error}</ErrorNote>
+        <Button type="submit" variant="primary" size="lg" className="w-full" busy={busy}>Save name</Button>
+      </form>
     </Sheet>
   );
 }

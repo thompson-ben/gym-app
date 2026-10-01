@@ -28,13 +28,26 @@ export function ExercisePicker({
   open,
   onClose,
   onPick,
+  onPickMany,
   title = "Add exercise",
 }: {
   open: boolean;
   onClose: () => void;
-  onPick: (exercise: Exercise) => void;
+  onPick?: (exercise: Exercise) => void;
+  /** Multi-select mode: tick several exercises, then add them in one go (in the order ticked). */
+  onPickMany?: (exercises: Exercise[]) => void;
   title?: string;
 }) {
+  const multiple = Boolean(onPickMany);
+  const [selected, setSelected] = useState<Exercise[]>([]);
+  const choose = (e: Exercise) => {
+    if (multiple) {
+      setSelected((list) => (list.some((x) => x.id === e.id) ? list.filter((x) => x.id !== e.id) : [...list, e]));
+    } else {
+      onPick?.(e);
+      close();
+    }
+  };
   const [all, setAll] = useState<Exercise[] | null>(cache);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
@@ -57,6 +70,7 @@ export function ExercisePicker({
   const catalogue = results.filter((e) => !e.owner_id);
 
   function close() {
+    setSelected([]);
     setCreating(false);
     setQuery("");
     setMuscle(null);
@@ -64,18 +78,45 @@ export function ExercisePicker({
   }
 
   return (
-    <Sheet open={open} onClose={close} title={creating ? "New custom exercise" : title}>
+    <Sheet
+      open={open}
+      onClose={close}
+      title={creating ? "New custom exercise" : title}
+      footer={
+        multiple && !creating ? (
+          <Button
+            variant="primary"
+            size="lg"
+            className="w-full"
+            disabled={selected.length === 0}
+            onClick={() => {
+              onPickMany?.(selected);
+              close();
+            }}
+          >
+            {selected.length ? `Add ${selected.length} ${selected.length === 1 ? "exercise" : "exercises"}` : "Select exercises"}
+          </Button>
+        ) : undefined
+      }
+    >
       {creating ? (
         <CustomExerciseForm
           initialName={query}
           existing={all ?? []}
           onCancel={() => setCreating(false)}
-          onPickExisting={(e) => { onPick(e); close(); }}
+          onPickExisting={(e) => {
+            if (multiple) {
+              setSelected((list) => (list.some((x) => x.id === e.id) ? list : [...list, e]));
+              setCreating(false);
+            } else choose(e);
+          }}
           onCreated={(e) => {
             cache = cache ? [...cache, e].sort((a, b) => a.name.localeCompare(b.name)) : null;
             setAll(cache);
-            onPick(e);
-            close();
+            if (multiple) {
+              setSelected((list) => [...list, e]);
+              setCreating(false);
+            } else choose(e);
           }}
         />
       ) : (
@@ -121,8 +162,8 @@ export function ExercisePicker({
               <Button variant="secondary" className="w-full justify-start" onClick={() => setCreating(true)}>
                 <IconPlus size={18} /> Create custom exercise{query ? ` “${query}”` : ""}
               </Button>
-              {custom.length ? <ExerciseList label="Your exercises" items={custom} onPick={(e) => { onPick(e); close(); }} /> : null}
-              {catalogue.length ? <ExerciseList label="Catalogue" items={catalogue} onPick={(e) => { onPick(e); close(); }} /> : null}
+              {custom.length ? <ExerciseList label="Your exercises" items={custom} onPick={choose} selected={multiple ? selected : undefined} /> : null}
+              {catalogue.length ? <ExerciseList label="Catalogue" items={catalogue} onPick={choose} selected={multiple ? selected : undefined} /> : null}
               {!results.length ? <p className="py-6 text-center text-sm text-muted">No matching exercises. Create a custom one above.</p> : null}
             </>
           ) : null}
@@ -132,14 +173,29 @@ export function ExercisePicker({
   );
 }
 
-function ExerciseList({ label, items, onPick }: { label: string; items: Exercise[]; onPick: (e: Exercise) => void }) {
+function ExerciseList({
+  label,
+  items,
+  onPick,
+  selected,
+}: {
+  label: string;
+  items: Exercise[];
+  onPick: (e: Exercise) => void;
+  selected?: Exercise[];
+}) {
   return (
     <section>
       <h3 className="py-2 text-xs font-medium tracking-wide text-faint uppercase">{label}</h3>
       <ul className="divide-y divide-line">
         {items.map((e) => (
           <li key={e.id}>
-            <button type="button" onClick={() => onPick(e)} className="flex min-h-14 w-full items-center justify-between gap-3 py-2 text-left hover:bg-surface-2/50">
+            <button
+              type="button"
+              onClick={() => onPick(e)}
+              aria-pressed={selected ? selected.some((x) => x.id === e.id) : undefined}
+              className="flex min-h-14 w-full items-center justify-between gap-3 py-2 text-left hover:bg-surface-2/50"
+            >
               <span className="min-w-0">
                 <span className="block truncate font-medium">{exerciseLabel(e)}</span>
                 <span className="block truncate text-sm text-muted">
@@ -147,7 +203,20 @@ function ExerciseList({ label, items, onPick }: { label: string; items: Exercise
                   {e.tracking_mode === "added_weight_reps" ? " · added weight" : e.tracking_mode === "bodyweight_reps" ? " · reps only" : ""}
                 </span>
               </span>
-              {e.owner_id ? <span className="shrink-0 rounded-full bg-surface-2 px-2 py-0.5 text-xs text-muted">Custom</span> : null}
+              <span className="flex shrink-0 items-center gap-2">
+                {e.owner_id ? <span className="rounded-full bg-surface-2 px-2 py-0.5 text-xs text-muted">Custom</span> : null}
+                {selected ? (
+                  <span
+                    aria-hidden="true"
+                    className={cx(
+                      "flex h-7 w-7 items-center justify-center rounded-full border",
+                      selected.some((x) => x.id === e.id) ? "border-accent bg-accent text-accent-ink" : "border-line text-transparent",
+                    )}
+                  >
+                    {selected.some((x) => x.id === e.id) ? <span className="text-xs font-semibold">{selected.findIndex((x) => x.id === e.id) + 1}</span> : null}
+                  </span>
+                ) : null}
+              </span>
             </button>
           </li>
         ))}

@@ -59,7 +59,7 @@ Use a **dedicated** Supabase project for Splitmate: the migrations create tables
    ```bash
    npx supabase login                       # opens a browser; no token goes in the repo
    npx supabase link --project-ref <ref>    # confirm the prompt names the Splitmate project
-   npx supabase db push                     # applies supabase/migrations/* (schema, functions, catalogue, past workouts, profile backfill, backdated activation)
+   npx supabase db push                     # applies supabase/migrations/* (schema, functions, catalogue, past workouts, profile backfill, backdated activation, quick workouts)
    ```
    `db push` never runs `supabase/seed.sql`, so no demo data reaches the hosted project.
 3. **Authentication → Sign In / Providers → Email**: email + password on, **Confirm email on**, minimum password length **8**.
@@ -166,6 +166,10 @@ So "not cached by the service worker" does **not** mean "not stored locally": th
 Every workout card on **Train** has **Log past workout**: pick the date and time it was performed, then log as usual. The logger shows "Logging a past workout" and, on finishing, the workout is saved for that date (not the day it was typed in). You can also move a workout later: **Change workout date** in the logger menu, or **Edit → Change date** on a finished workout (moving keeps its duration). Future dates are rejected.
 
 History, the Previous column and charts are ordered by the performed date, so past workouts can be entered in any order; while logging a past workout the Previous column compares with the workout *before* its date. The active-period "workouts completed" count includes a past workout only if its date falls inside the period; set the split's start date (split page → **Change start date**, or **Activate from an earlier date**; Train → Since → **Change**) if you activated the split after you started training on it.
+
+### Quick workouts
+
+**Train → Quick workout** starts a one-off session with no template: give it an optional name, then tick the exercises you're doing (the picker allows several at once, added in the order ticked). It isn't part of any split, so it doesn't count towards a split's active period, but every set counts towards each exercise's history and Previous column. "Log a past quick workout" works like Log past workout. Any workout can be renamed from the logger menu (the template is not affected).
 
 ### Progress metrics
 

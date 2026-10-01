@@ -25,6 +25,7 @@ const MESSAGES: Record<string, string> = {
   workout_date_in_future: "The workout date cannot be in the future.",
   workout_date_too_old: "That date is too far in the past.",
   workout_date_required: "Choose the date the workout was performed.",
+  workout_name_required: "Give the workout a name.",
   catalogue_exercise_missing: "An exercise in this split is no longer in the catalogue.",
 };
 

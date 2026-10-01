@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { IconChevronRight, IconPlay } from "@/components/icons";
 import { buttonClass } from "@/components/styles";
+import { QuickWorkoutButton } from "@/components/QuickWorkoutButton";
 import { StartWorkoutButton } from "@/components/StartWorkoutButton";
 import { Wordmark } from "@/components/Wordmark";
 import { formatDate, formatElapsed } from "@/lib/format";
@@ -137,6 +138,9 @@ export default async function TrainPage() {
               <Link href={`/splits/${split.id}`} className={buttonClass("primary", "md", "mt-4")}>Add a workout</Link>
             </div>
           )}
+          <div className="mt-3">
+            <QuickWorkoutButton disabled={Boolean(open)} />
+          </div>
         </>
       ) : (
         <section className="pt-6">
@@ -145,6 +149,9 @@ export default async function TrainPage() {
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             <Link href="/splits?new=1" className={buttonClass("primary", "lg")}>Create a split</Link>
             <Link href="/splits" className={buttonClass("secondary", "lg")}>Choose a split</Link>
+          </div>
+          <div className="mt-6">
+            <QuickWorkoutButton disabled={Boolean(open)} />
           </div>
         </section>
       )}

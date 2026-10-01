@@ -569,6 +569,38 @@ describe("E/F. session writes are idempotent and never record unperformed sets",
   });
 });
 
+describe("quick workouts", () => {
+  it("starts without a template, takes exercises added while logging, and counts in history", async () => {
+    const me = await newUser("quick");
+    const intruder = await newUser("quick-intruder");
+    const id = randomUUID();
+    const doc = await as(user(me), async (q) => (await q("select start_quick_session($1, 'Hybrid') as d", [id]))[0].d);
+    expect(doc).toMatchObject({ template_name: "Hybrid", split_id: null, template_id: null, exercises: [] });
+    // Idempotent on retry; a second concurrent workout is refused.
+    expect((await as(user(me), async (q) => (await q("select start_quick_session($1, 'Hybrid') as d", [id]))[0].d)).id).toBe(id);
+    await expect(as(user(me), (q) => q("select start_quick_session(gen_random_uuid())"))).rejects.toThrow(/session_in_progress/);
+
+    const withExercises = {
+      ...doc,
+      exercises: [incline, pulldown].map((exerciseId, i) => ({
+        id: randomUUID(), exercise_id: exerciseId, template_exercise_id: null, position: i, exercise_name: i ? "Lat Pulldown" : "Incline Barbell Bench Press",
+        target_sets: 2, rep_min: null, rep_max: null, rest_seconds: null, template_notes: null, notes: null, skipped: false, sets: [],
+      })),
+    };
+    const r = await sync(me, withSets(withExercises, [[{ weight: 60, reps: 10, done: true }], [{ weight: 65, reps: 12, done: true }]]), doc.revision);
+    expect(r.status).toBe("ok");
+    await as(user(me), (q) => q("select rename_session($1, 'Push/pull hybrid')", [id]));
+    await finish(me, id, r.revision);
+
+    const [prev] = await previous(me, [pulldown]);
+    expect(prev).toMatchObject({ session_id: id, template_name: "Push/pull hybrid", split_name: null });
+    await expect(as(user(intruder), (q) => q("select rename_session($1, 'x')", [id]))).rejects.toThrow(/session_not_found/);
+    // A quick workout is not part of any split, so it never counts towards a split's period.
+    const [{ n }] = await as(user(me), (q) => q("select count(*)::int as n from workout_sessions where split_id is not null"));
+    expect(n).toBe(0);
+  });
+});
+
 describe("profiles for accounts created before the schema", () => {
   it("a user can recreate only their own missing profile", async () => {
     const me = await newUser("noprofile");
