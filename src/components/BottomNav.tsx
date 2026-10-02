@@ -15,7 +15,7 @@ const ITEMS = [
 export function BottomNav() {
   const pathname = usePathname();
   return (
-    <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-bg/90 backdrop-blur-lg pb-safe">
+    <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-bg pb-safe">
       <ul className="mx-auto grid max-w-2xl grid-cols-4">
         {ITEMS.map(({ href, label, Icon }) => {
           const active = pathname === href || pathname.startsWith(`${href}/`) || (href === "/progress" && (pathname.startsWith("/sessions") || pathname.startsWith("/history")));

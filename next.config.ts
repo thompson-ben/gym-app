@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Versions the service worker per deployment (see public/sw.js).
+  env: { NEXT_PUBLIC_BUILD_ID: process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.VERCEL_DEPLOYMENT_ID ?? `local-${Date.now()}` },
   // Lets the local Supabase auth redirect (http://127.0.0.1:3000) use the dev server.
   allowedDevOrigins: ["127.0.0.1"],
   async headers() {

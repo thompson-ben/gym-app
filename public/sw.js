@@ -7,7 +7,11 @@
  * already open can be recovered from this device's local storage after a reload without
  * a connection.
  */
-const CACHE = "splitmate-shell-v1";
+// Each deployment registers this script with its own ?v=<build id>, which installs a fresh
+// copy with a fresh cache and deletes the previous one, so an old offline shell (pointing at
+// assets from an earlier deployment) is never kept around.
+const VERSION = new URL(self.location.href).searchParams.get("v") || "dev";
+const CACHE = `splitmate-shell-${VERSION}`;
 const SHELL = "/offline";
 
 async function cacheShell() {
