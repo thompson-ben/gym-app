@@ -63,7 +63,7 @@ export default async function SplitPage({ params }: { params: Promise<{ splitId:
         {!s.archived_at ? <ActivationCard splitId={s.id} open={open} timeZone={tz} /> : null}
         <WorkoutList splitId={s.id} templates={tpl} />
         <ShareCard splitId={s.id} splitName={s.name} splitDescription={s.description} share={share.data ?? null} timeZone={tz} />
-        <PeriodsList periods={periodRows} timeZone={tz} />
+        <PeriodsList splitId={s.id} periods={periodRows} timeZone={tz} />
       </div>
     </>
   );

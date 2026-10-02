@@ -205,22 +205,32 @@ export function PageHeader({
   back?: { href: string; label: string };
   action?: ReactNode;
 }) {
+  // Without a back link the action sits on the title row, aligned with the title.
+  if (!back) {
+    return (
+      <header className="pt-safe">
+        <div className="flex items-end justify-between gap-3 pt-6 pb-5">
+          <div className="min-w-0">
+            {eyebrow ? <p className="mb-2 text-xs font-medium tracking-[0.18em] text-muted uppercase">{eyebrow}</p> : null}
+            <h1 className="text-[32px] leading-[1.1] font-semibold tracking-[-0.03em] break-words">{title}</h1>
+          </div>
+          {action ? <div className="shrink-0 pb-0.5">{action}</div> : null}
+        </div>
+      </header>
+    );
+  }
   return (
     <header className="pt-safe">
       <div className="flex min-h-14 items-center justify-between gap-2 pt-2">
-        {back ? (
-          <Link href={back.href} className="-ml-2 inline-flex h-11 items-center gap-1 rounded-2xl pr-3 pl-1 text-sm text-muted hover:text-fg">
-            <IconChevronLeft size={18} />
-            {back.label}
-          </Link>
-        ) : (
-          <span />
-        )}
+        <Link href={back.href} className="-ml-2 inline-flex h-11 items-center gap-1 rounded-2xl pr-3 pl-1 text-sm text-muted hover:text-fg">
+          <IconChevronLeft size={18} />
+          {back.label}
+        </Link>
         {action}
       </div>
       <div className="pt-1 pb-5">
         {eyebrow ? <p className="mb-2 text-xs font-medium tracking-[0.18em] text-muted uppercase">{eyebrow}</p> : null}
-        <h1 className="text-[32px] leading-[1.1] font-semibold tracking-[-0.03em]">{title}</h1>
+        <h1 className="text-[32px] leading-[1.1] font-semibold tracking-[-0.03em] break-words">{title}</h1>
       </div>
     </header>
   );

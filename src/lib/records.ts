@@ -1,5 +1,5 @@
 import { formatKg } from "./format";
-import { estimate1RM } from "./progress";
+import { E1RM_REP_LIMIT, estimate1RM } from "./progress";
 import type { PreviousSet, TrackingMode } from "./types";
 
 /**
@@ -21,7 +21,7 @@ import type { PreviousSet, TrackingMode } from "./types";
  * - Ties are never records: the new value must be strictly greater.
  */
 
-export const E1RM_MAX_REPS = 12;
+export const E1RM_MAX_REPS = E1RM_REP_LIMIT;
 
 export type DatedSets = { sessionId: string; performedAt: string; sets: PreviousSet[] };
 

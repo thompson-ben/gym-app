@@ -3,14 +3,14 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { exerciseLabel } from "@/lib/exercises";
-import { formatDuration, formatTarget, humanize } from "@/lib/format";
+import { formatDuration, formatKg, formatTarget, humanize } from "@/lib/format";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { friendlyError } from "@/lib/supabase/errors";
 import type { Exercise } from "@/lib/types";
 import { ExercisePicker } from "../ExercisePicker";
 import { IconArrowDown, IconArrowUp, IconEdit, IconMinus, IconPlus, IconSwap, IconTrash } from "../icons";
 import { cx } from "../styles";
-import { Button, ErrorNote, Field, IconButton, Input, PageHeader, Sheet, inputClass } from "../ui";
+import { Button, ErrorNote, Field, IconButton, Input, PageHeader, Sheet, Toggle, inputClass } from "../ui";
 
 export type Entry = {
   id: string;
@@ -20,6 +20,8 @@ export type Entry = {
   rep_max: number | null;
   rest_seconds: number | null;
   notes: string | null;
+  progression_enabled: boolean;
+  progression_increment_kg: number | null;
   exercise: Exercise;
 };
 
@@ -83,13 +85,13 @@ export function TemplateBuilder({
       supabase
         .from("template_exercises")
         .insert({ template_id: template.id, exercise_id: exercise.id, position: entries.length, target_sets: 2, rep_min: 8, rep_max: 12 })
-        .select("id, position, target_sets, rep_min, rep_max, rest_seconds, notes")
+        .select("id, position, target_sets, rep_min, rep_max, rest_seconds, notes, progression_enabled, progression_increment_kg")
         .single(),
     );
     if (data && data !== true) setEntries((list) => [...list, { ...(data as Entry), exercise }]);
   }
 
-  async function update(id: string, patch: Partial<Pick<Entry, "target_sets" | "rep_min" | "rep_max" | "rest_seconds" | "notes">>) {
+  async function update(id: string, patch: Partial<Pick<Entry, "target_sets" | "rep_min" | "rep_max" | "rest_seconds" | "notes" | "progression_enabled" | "progression_increment_kg">>) {
     const before = entries;
     setEntries((list) => list.map((e) => (e.id === id ? { ...e, ...patch } : e)));
     await run(supabase.from("template_exercises").update(patch).eq("id", id), () => setEntries(before));
@@ -166,6 +168,11 @@ export function TemplateBuilder({
                 <button type="button" onClick={() => setEditing(entry)} className="h-11 rounded-2xl bg-surface-2 px-4 text-sm text-muted hover:bg-surface-3">
                   Rest {formatDuration(entry.rest_seconds ?? defaultRest)}{entry.rest_seconds ? "" : " (default)"}
                 </button>
+                {entry.progression_enabled ? (
+                  <button type="button" onClick={() => setEditing(entry)} className="h-11 rounded-2xl border border-accent-text/40 px-3 text-sm text-accent-text hover:bg-surface-2">
+                    Targets on · +{formatKg(entry.progression_increment_kg)} kg
+                  </button>
+                ) : null}
               </div>
               {entry.notes ? <p className="mt-3 text-sm text-muted italic">{entry.notes}</p> : null}
 
@@ -227,7 +234,10 @@ function TargetsSheet({
   const [max, setMax] = useState(entry.rep_max?.toString() ?? "");
   const [rest, setRest] = useState<number | null>(entry.rest_seconds);
   const [notes, setNotes] = useState(entry.notes ?? "");
+  const [progress, setProgress] = useState(entry.progression_enabled);
+  const [increment, setIncrement] = useState(entry.progression_increment_kg?.toString() ?? "");
   const [error, setError] = useState<string | null>(null);
+  const canProgress = entry.exercise.tracking_mode === "weight_reps";
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -236,7 +246,19 @@ function TargetsSheet({
     const valid = (n: number | null) => n === null || (Number.isInteger(n) && n >= 1 && n <= 100);
     if (!valid(rmin) || !valid(rmax)) return setError("Reps must be whole numbers from 1 to 100.");
     if (rmin !== null && rmax !== null && rmin > rmax) return setError("The minimum cannot exceed the maximum.");
-    void onSave({ rep_min: rmin, rep_max: rmax, rest_seconds: rest, notes: notes.trim() || null });
+    const inc = increment ? Number(increment.replace(",", ".")) : null;
+    if (progress) {
+      if (rmin === null || rmax === null) return setError("Targets need a rep range with a minimum and a maximum.");
+      if (inc === null || !Number.isFinite(inc) || inc <= 0 || inc > 50) return setError("Choose a weight increment between 0.25 and 50 kg.");
+    }
+    void onSave({
+      rep_min: rmin,
+      rep_max: rmax,
+      rest_seconds: rest,
+      notes: notes.trim() || null,
+      progression_enabled: progress && canProgress,
+      progression_increment_kg: inc !== null && Number.isFinite(inc) && inc > 0 && inc <= 50 ? Math.round(inc * 100) / 100 : null,
+    });
   }
 
   return (
@@ -264,6 +286,28 @@ function TargetsSheet({
             <textarea id={id} aria-describedby={d} value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={500} rows={3} className={cx(inputClass, "h-auto py-3")} />
           )}
         </Field>
+        <fieldset className="rounded-2xl border border-line p-3">
+          <legend className="px-1 text-sm font-medium text-muted">Next-session targets (optional)</legend>
+          {canProgress ? (
+            <>
+              <Toggle
+                checked={progress}
+                onChange={setProgress}
+                label="Suggest targets"
+                description="When every working set reaches the top of the rep range, the next target adds your increment. Otherwise it keeps the weight and aims for more reps."
+              />
+              {progress ? (
+                <Field label="Weight increment (kg)" hint="What you add when you move up, e.g. 2.5 for a barbell or the next pin on a stack.">
+                  {(id, d) => (
+                    <Input id={id} aria-describedby={d} inputMode="decimal" value={increment} onChange={(e) => setIncrement(e.target.value.replace(/[^\d.,]/g, ""))} placeholder="2.5" />
+                  )}
+                </Field>
+              ) : null}
+            </>
+          ) : (
+            <p className="text-sm text-muted">Available for weight × reps exercises. Bodyweight and added-weight exercises are not progressed automatically.</p>
+          )}
+        </fieldset>
         <ErrorNote>{error}</ErrorNote>
         <Button type="submit" variant="primary" size="lg" className="w-full">Save</Button>
       </form>
