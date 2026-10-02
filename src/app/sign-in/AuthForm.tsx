@@ -109,6 +109,13 @@ export function AuthForm({ initialMode, next, error }: { initialMode: Mode; next
         )}
       </Field>
       <ErrorNote>{message}</ErrorNote>
+      {mode === "sign-up" ? (
+        <p className="text-sm text-faint">
+          By creating an account you agree to the{" "}
+          <Link href="/terms" className="text-muted underline underline-offset-4">Terms</Link> and{" "}
+          <Link href="/privacy" className="text-muted underline underline-offset-4">Privacy</Link> notice.
+        </p>
+      ) : null}
       <Button type="submit" variant="primary" size="lg" className="w-full" busy={busy}>
         {mode === "sign-in" ? "Sign in" : "Create account"}
       </Button>

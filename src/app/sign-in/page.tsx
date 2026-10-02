@@ -19,6 +19,11 @@ export default async function SignInPage({ searchParams }: { searchParams: Promi
         <Wordmark />
         <p className="mt-1 text-sm text-muted">Workout Planner &amp; Tracker</p>
       </div>
+      {params.deleted === "1" ? (
+        <p role="status" className="mb-6 rounded-2xl bg-surface-2 px-4 py-3 text-sm text-muted">
+          Your account and all its data have been deleted.
+        </p>
+      ) : null}
       <AuthForm initialMode={params.mode === "sign-up" ? "sign-up" : "sign-in"} next={next} error={params.error ?? null} />
     </main>
   );

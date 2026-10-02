@@ -5,7 +5,15 @@ import pg from "pg";
 
 const URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54321";
 const KEY = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
-export const db = new pg.Pool({ connectionString: process.env.SUPABASE_DB_URL ?? "postgresql://postgres:postgres@127.0.0.1:54322/postgres", max: 2 });
+const pool = new pg.Pool({
+  connectionString: process.env.SUPABASE_DB_URL ?? "postgresql://postgres:postgres@127.0.0.1:54322/postgres",
+  max: 2,
+  // Shared by every spec file in a worker: idle connections close on their own instead of a
+  // spec ending the pool for the files that run after it.
+  idleTimeoutMillis: 1000,
+  allowExitOnIdle: true,
+});
+export const db = { query: pool.query.bind(pool) as pg.Pool["query"], end: async () => {} };
 
 export type TestUser = { email: string; password: string; id: string; client: SupabaseClient };
 

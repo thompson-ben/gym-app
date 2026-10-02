@@ -751,3 +751,68 @@ describe("next-session targets (migration 8)", () => {
     expect(await candidates(me, [incline])).toHaveLength(1);
   });
 });
+
+describe("memberships and account deletion (migration 9)", () => {
+  const membership = (uid: string) => as(user(uid), (q) => q("select status, trial_ends_at from memberships"));
+
+  it("makes new sign-ups founders while the founding phase is open, and trials afterwards", async () => {
+    const founder = await newUser("founder");
+    expect(await membership(founder)).toEqual([{ status: "founder", trial_ends_at: null }]);
+    await pool.query("update app_settings set auto_founder = false");
+    try {
+      const trial = await newUser("trial");
+      const [row] = await membership(trial);
+      expect(row.status).toBe("trial");
+      const days = (new Date(row.trial_ends_at).getTime() - Date.now()) / 86_400_000;
+      expect(days).toBeGreaterThan(13.9);
+      expect(days).toBeLessThan(14.1);
+    } finally {
+      await pool.query("update app_settings set auto_founder = true");
+    }
+  });
+
+  it("lets users read only their own membership and never change it", async () => {
+    const me = await newUser("member-me");
+    const other = await newUser("member-other");
+    const rows = await as(user(me), (q) => q("select user_id from memberships"));
+    expect(rows).toEqual([{ user_id: me }]);
+    await expect(as(user(me), (q) => q("update memberships set status = 'paid' where user_id = $1", [me]))).rejects.toThrow();
+    await expect(as(user(me), (q) => q("insert into memberships (user_id, status) values ($1, 'founder')", [other]))).rejects.toThrow();
+    await expect(as(user(me), (q) => q("delete from memberships where user_id = $1", [me]))).rejects.toThrow();
+    await expect(as(user(me), (q) => q("select * from app_settings"))).rejects.toThrow();
+    await expect(as(anon, (q) => q("select * from memberships"))).rejects.toThrow();
+    expect(await membership(me)).toEqual([{ status: "founder", trial_ends_at: null }]);
+  });
+
+  it("deletes the caller's account and every row they own, and nobody else's", async () => {
+    const me = await newUser("delete-me");
+    const friend = await newUser("delete-friend");
+    for (const uid of [me, friend]) {
+      const split = await createSplit(uid, "S");
+      const [custom] = await as(user(uid), (q) => q("insert into exercises (owner_id, name, primary_muscle, equipment) values ($1, 'Press', 'chest', 'machine') returning id", [uid]));
+      const { templateId } = await createTemplate(uid, split, "A", [{ exerciseId: custom.id }, { exerciseId: dip }]);
+      await logWorkout(uid, templateId, [[{ weight: 50, reps: 10, done: true }], [{ weight: 10, reps: 8, done: true }]]);
+      await as(user(uid), (q) => q("select activate_split($1)", [split]));
+      await as(user(uid), (q) => q("select upsert_split_share($1, 'S', null, false)", [split]));
+    }
+    await expect(as(anon, (q) => q("select delete_my_account()"))).rejects.toThrow();
+    await as(user(me), (q) => q("select delete_my_account()"));
+
+    const count = async (uid: string) => {
+      const { rows } = await pool.query(
+        `select (select count(*) from auth.users where id = $1)::int as users,
+                (select count(*) from profiles where id = $1)::int as profiles,
+                (select count(*) from memberships where user_id = $1)::int as memberships,
+                (select count(*) from exercises where owner_id = $1)::int as exercises,
+                (select count(*) from splits where user_id = $1)::int as splits,
+                (select count(*) from split_shares where user_id = $1)::int as shares,
+                (select count(*) from workout_sessions where user_id = $1)::int as sessions,
+                (select count(*) from session_sets where user_id = $1)::int as sets`,
+        [uid],
+      );
+      return rows[0];
+    };
+    expect(await count(me)).toEqual({ users: 0, profiles: 0, memberships: 0, exercises: 0, splits: 0, shares: 0, sessions: 0, sets: 0 });
+    expect(await count(friend)).toEqual({ users: 1, profiles: 1, memberships: 1, exercises: 1, splits: 1, shares: 1, sessions: 1, sets: 2 });
+  });
+});
