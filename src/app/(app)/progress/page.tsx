@@ -51,7 +51,7 @@ export default async function ProgressPage() {
         </EmptyState>
       ) : (
         <div className="space-y-8">
-          <nav aria-label="Reviews" className="grid gap-2 sm:grid-cols-2">
+          <nav aria-label="Reviews" className="grid grid-cols-[minmax(0,1fr)] gap-2 sm:grid-cols-2">
             <Link href="/history" className="flex items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3 hover:bg-surface-2/60">
               <span className="min-w-0 flex-1">
                 <span className="block font-medium">Workout history</span>

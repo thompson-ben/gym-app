@@ -147,15 +147,20 @@ export function SessionView({
           <h2 id="records-title" className="text-sm font-medium tracking-wide text-muted uppercase">Records</h2>
           {prs.length ? (
             <ul className="mt-2 space-y-2">
-              {prs.map((r) => (
-                <li key={r.id + r.kind} className="flex items-start gap-2">
-                  <span aria-hidden="true" className="mt-0.5 text-accent-text">★</span>
-                  <span>
-                    <span className="font-medium">{r.exercise}</span>
-                    <span className="block text-sm text-muted">{r.label}: {r.detail}</span>
-                  </span>
-                </li>
-              ))}
+              {[...new Set(prs.map((r) => r.id))].map((id) => {
+                const mine = prs.filter((r) => r.id === id);
+                return (
+                  <li key={id} className="flex items-start gap-2">
+                    <span aria-hidden="true" className="mt-0.5 text-accent-text">★</span>
+                    <span>
+                      <span className="font-medium">{mine[0].exercise}</span>
+                      {mine.map((r) => (
+                        <span key={r.kind} className="block text-sm text-muted">{r.label}: {r.detail}</span>
+                      ))}
+                    </span>
+                  </li>
+                );
+              })}
             </ul>
           ) : null}
           {baselines.length ? (

@@ -99,15 +99,26 @@ test("cross-account privacy in the app: another account's pages are not found", 
   const { splitId, templateId } = await seedSplit(owner, "Private split", "Push", ["dip"]);
   const doc = await owner.client.rpc("start_session", { p_session_id: crypto.randomUUID(), p_template_id: templateId }).throwOnError();
 
+  const { data: period } = await owner.client.from("split_active_periods").select("id").eq("split_id", splitId).single().throwOnError();
+
   const intruder = await newUser("private-intruder");
   await signIn(page, intruder);
-  for (const path of [`/splits/${splitId}`, `/splits/${splitId}/workouts/${templateId}`, `/workout/${doc.data.id}`, `/sessions/${doc.data.id}`]) {
+  for (const path of [
+    `/splits/${splitId}`,
+    `/splits/${splitId}/workouts/${templateId}`,
+    `/splits/${splitId}/review/${period!.id}`,
+    `/train/workout/${templateId}`,
+    `/workout/${doc.data.id}`,
+    `/sessions/${doc.data.id}`,
+  ]) {
     await page.goto(path);
     await expect(page.getByRole("heading", { name: "Not found" })).toBeVisible();
     await expect(page.getByText("Private split")).toHaveCount(0);
   }
   await page.goto("/splits");
   await expect(page.getByText("Private split")).toHaveCount(0);
+  await page.goto("/history");
+  await expect(page.getByText("Push")).toHaveCount(0);
 });
 
 test.describe(() => {
@@ -165,8 +176,8 @@ test("profile works for an account whose profile row is missing (signed up befor
   await page.goto("/profile");
   await expect(page.getByRole("heading", { name: "Profile" })).toBeVisible();
   await page.getByLabel("Display name (optional)").fill("Ben");
-  await page.getByRole("button", { name: "Save changes" }).click();
-  await expect(page.getByRole("button", { name: "Saved" })).toBeVisible();
+  await page.getByLabel("Display name (optional)").press("Enter");
+  await expect(page.getByText("Saved", { exact: true })).toBeVisible();
   const { rows } = await db.query("select display_name from profiles where id = $1", [user.id]);
   expect(rows).toEqual([{ display_name: "Ben" }]);
 });

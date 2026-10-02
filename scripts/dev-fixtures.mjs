@@ -21,7 +21,7 @@ const PASSWORD = "splitmate-fixture";
 const DAY = 86_400_000;
 
 async function account(email, name) {
-  const { data: list } = await admin.auth.admin.listUsers();
+  const { data: list } = await admin.auth.admin.listUsers({ perPage: 1000 });
   const existing = list.users.find((u) => u.email === email);
   if (existing) await admin.auth.admin.deleteUser(existing.id);
   const { data, error } = await admin.auth.admin.createUser({ email, password: PASSWORD, email_confirm: true });

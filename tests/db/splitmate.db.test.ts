@@ -692,3 +692,62 @@ describe("H. access control", () => {
     expect(await as(anon, async (q) => (await q("select get_shared_split('not-a-real-token') as s"))[0].s)).toBeNull();
   });
 });
+
+describe("next-session targets (migration 8)", () => {
+  const candidates = (uid: string, ids: string[]) =>
+    as(user(uid), (q) => q("select * from progression_candidates($1::uuid[]) order by completed_at desc", [ids]));
+
+  it("is opt-in, stores only settings, and never creates sets", async () => {
+    const me = await newUser("targets-optin");
+    const split = await createSplit(me, "S");
+    const { entryIds } = await createTemplate(me, split, "A", [{ exerciseId: incline, sets: 2, repMin: 8, repMax: 12 }]);
+    const [row] = await as(user(me), (q) => q("select progression_enabled, progression_increment_kg from template_exercises where id = $1", [entryIds[0]]));
+    expect(row).toEqual({ progression_enabled: false, progression_increment_kg: null });
+    await as(user(me), (q) => q("update template_exercises set progression_enabled = true, progression_increment_kg = 2.5 where id = $1", [entryIds[0]]));
+    await expect(
+      as(user(me), (q) => q("update template_exercises set progression_increment_kg = 0 where id = $1", [entryIds[0]])),
+    ).rejects.toThrow();
+    const [{ n }] = await as(user(me), (q) => q("select count(*)::int as n from session_sets"));
+    expect(n).toBe(0);
+  });
+
+  it("returns completed, non-skipped performances with the prescription snapshot, privately", async () => {
+    const me = await newUser("targets-basis");
+    const other = await newUser("targets-other");
+    const split = await createSplit(me, "S");
+    const { templateId, entryIds } = await createTemplate(me, split, "A", [{ exerciseId: incline, sets: 2, repMin: 8, repMax: 12 }]);
+    await logWorkout(me, templateId, [[
+      { weight: 30, reps: 12, done: true },
+      { weight: 30, reps: 11, done: true },
+      { weight: 30, reps: 12, done: false },
+      { weight: 20, reps: 10, done: true, type: "warmup" },
+    ]]);
+    // Changing the template afterwards does not rewrite what the basis was performed under.
+    await as(user(me), (q) => q("update template_exercises set rep_min = 6, rep_max = 8, target_sets = 3 where id = $1", [entryIds[0]]));
+
+    const rows = await candidates(me, [incline]);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ template_exercise_id: entryIds[0], target_sets: 2, rep_min: 8, rep_max: 12 });
+    // Only confirmed sets; the unconfirmed one is absent.
+    expect(rows[0].sets).toEqual([
+      { set_type: "working", weight_kg: 30, reps: 12 },
+      { set_type: "working", weight_kg: 30, reps: 11 },
+      { set_type: "warmup", weight_kg: 20, reps: 10 },
+    ]);
+    expect(await candidates(other, [incline])).toHaveLength(0);
+    await expect(as(anon, (q) => q("select * from progression_candidates($1::uuid[])", [[incline]]))).rejects.toThrow();
+  });
+
+  it("excludes skipped entries", async () => {
+    const me = await newUser("targets-skip");
+    const split = await createSplit(me, "S");
+    const { templateId } = await createTemplate(me, split, "A", [{ exerciseId: incline }, { exerciseId: dip }]);
+    const doc = await startSession(me, templateId);
+    const filled = withSets(doc, [[{ weight: 30, reps: 10, done: true }], []]);
+    filled.exercises[1].skipped = true;
+    const res = await sync(me, filled, doc.revision);
+    await finish(me, doc.id, res.revision);
+    expect(await candidates(me, [dip])).toHaveLength(0);
+    expect(await candidates(me, [incline])).toHaveLength(1);
+  });
+});

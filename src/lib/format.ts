@@ -97,12 +97,12 @@ export function fromLocalInput(value: string, timeZone: string): string {
   return new Date(ts).toISOString();
 }
 
-/** "2 working sets · Target 8–12 reps" as used on exercise cards. */
+/** "2 working sets · 8–12 reps" as used on exercise cards ("Target" is reserved for suggestions). */
 export function formatTargetLong(sets: number | null, repMin: number | null, repMax: number | null): string {
   const parts: string[] = [];
   if (sets) parts.push(`${sets} working ${sets === 1 ? "set" : "sets"}`);
   const reps = formatTarget(null, repMin, repMax);
-  if (reps) parts.push(`Target ${reps}`);
+  if (reps) parts.push(reps);
   return parts.join(" · ");
 }
 

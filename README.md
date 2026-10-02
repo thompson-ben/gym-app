@@ -45,6 +45,7 @@ Emails sent by the local stack (sign-up confirmation, password reset) are caught
 | `npm run test:e2e` | Playwright against a production build and local Supabase (run `npm run build` first; reads the local stack's keys from `supabase status`). Default project is Chromium; `--project=iphone-webkit` runs Safari's engine with an iPhone profile where WebKit is installed (e.g. inside `mcr.microsoft.com/playwright`) |
 | `npm run db:reset` | Re-apply all migrations and the local seed |
 | `npm run icons` | Regenerate PWA icons |
+| `node scripts/dev-fixtures.mjs` | **Local only.** Creates three fixture accounts (`new@`, `one@`, `active@fixtures.splitmate.test`, password `splitmate-fixture`): no data, one session, and a realistic active user with an old split, long names, high-rep sets, a custom variant and a quick workout. Refuses to run against anything but localhost |
 
 ---
 
@@ -146,9 +147,9 @@ user ─┬─ splits ── workout_templates ── template_exercises ──>
 
 | Store | What is in it | Scope |
 |---|---|---|
-| `localStorage` key `splitmate:v1:<user-id>:session:<session-id>` | The in-progress workout: exercises, sets (confirmed and draft), the pending write and its write id, server revision, conflict copy, last-session sets for the Previous column, rest-timer start, logger settings | Per browser profile and origin; namespaced by the signed-in user's id; every read checks that the stored user id matches |
+| `localStorage` key `splitmate:v1:<user-id>:session:<session-id>` | The in-progress workout: exercises, sets (confirmed and draft), the pending write and its write id, server revision, conflict copy, last-session sets for the Previous column, cached next-session targets and which ones you hid (suggestions only, never synced), rest-timer start, logger settings | Per browser profile and origin; namespaced by the signed-in user's id; every read checks that the stored user id matches |
 | `localStorage` key `splitmate:v1:last-user` | Only the id of the last signed-in account (lets the offline shell find that account's workout) | Per browser profile |
-| Cache Storage `splitmate-shell-v1` (service worker) | The static `/offline` page and content-hashed JS/CSS, icons and manifest. **No user data**: no authenticated page, RSC payload or API response is ever cached | Per origin |
+| Cache Storage `splitmate-shell-<build id>` (service worker; replaced on each deployment) | The static `/offline` page and content-hashed JS/CSS, icons and manifest. **No user data**: no authenticated page, RSC payload or API response is ever cached | Per origin |
 | Cookies `sb-<ref>-auth-token*` (set by Supabase) | The auth session | Per origin |
 | Cookie `sm_tz` | Browser time zone, so the server formats dates correctly | Per origin |
 
@@ -163,23 +164,57 @@ So "not cached by the service worker" does **not** mean "not stored locally": th
 
 ### Logging past workouts
 
-Every workout card on **Train** has **Log past workout**: pick the date and time it was performed, then log as usual. The logger shows "Logging a past workout" and, on finishing, the workout is saved for that date (not the day it was typed in). You can also move a workout later: **Change workout date** in the logger menu, or **Edit → Change date** on a finished workout (moving keeps its duration). Future dates are rejected.
+**Train → Log past workout** (top right, also on each workout preview): choose the workout, pick the date and time it was performed, then log as usual. The logger shows "Logging a past workout" and, on finishing, the workout is saved for that date (not the day it was typed in). You can also move a workout later: **Change workout date** in the logger menu, or **Edit → Change date** on a finished workout (moving keeps its duration). Future dates are rejected.
 
-History, the Previous column and charts are ordered by the performed date, so past workouts can be entered in any order; while logging a past workout the Previous column compares with the workout *before* its date. The active-period "workouts completed" count includes a past workout only if its date falls inside the period; set the split's start date (split page → **Change start date**, or **Activate from an earlier date**; Train → Since → **Change**) if you activated the split after you started training on it.
+History, the Previous column and charts are ordered by the performed date, so past workouts can be entered in any order; while logging a past workout the Previous column compares with the workout *before* its date. The active-period "workouts completed" count includes a past workout only if its date falls inside the period; set the split's start date (split page → **Change start date**, or **Activate from an earlier date**; Train → tap the active split summary) if you activated the split after you started training on it.
 
 ### Quick workouts
 
 **Train → Quick workout** starts a one-off session with no template: give it an optional name, then tick the exercises you're doing (the picker allows several at once, added in the order ticked). It isn't part of any split, so it doesn't count towards a split's active period, but every set counts towards each exercise's history and Previous column. "Log a past quick workout" works like Log past workout. Any workout can be renamed from the logger menu (the template is not affected).
 
-### Progress metrics
+### Train: what comes next
 
-Each exercise's Progress page shows a **Best set** (the real weight × reps, with its estimated 1RM) and a chart with a metric switch:
+Train leads with one decision. If a workout is in progress, **Resume** replaces everything else (a second session cannot be started). Otherwise it shows a compact summary of the active split (one tap to its page, where dates are managed), the **suggested next** workout, the other workouts as compact rows (tap for a preview, or Start), Quick workout, and the last three workouts. "Log past workout" sits in the header.
 
-- **Est. 1RM** (default for loaded lifts): the best working set of each session, estimated with the Epley formula `weight × (1 + reps ÷ 30)` so sets in different rep ranges are comparable. Labelled as an estimate; most reliable up to ~12 reps.
-- **Volume**: weight × reps summed over the session's working sets (total work, not strength).
-- **Heaviest**: top weight in a working set, regardless of reps.
+The suggestion is a *sequence* hint, never a readiness judgement (`src/lib/next-workout.ts`, unit-tested):
 
-Reps-only and added-weight exercises (push-ups, weighted dips) show heaviest/most reps and total reps only: bodyweight is not tracked, so a 1RM estimate would be misleading. Warm-up sets never count.
+- Candidates are the active split's current workouts in their saved order; empty workouts are passed over.
+- Only completed sessions of those workouts in the current active period count, ordered by the date performed, so a past workout logged today lands on its own date. Quick workouts, other splits and workouts removed from the split are ignored.
+- Next = the workout after the most recently performed one, wrapping round. Out-of-order or skipped workouts simply continue from the latest.
+- Nothing yet this period: the first workout, unless the split was trained in an earlier period. Then Train says **Choose a workout** rather than guess.
+
+Tapping a workout opens a **preview** (`/train/workout/[id]`): exercise order, sets and rep ranges, last performance, notes and any target. Starting never requires the preview.
+
+### Next-session targets (optional)
+
+Off by default. Switch on per exercise in a workout (**Edit workout → exercise → Next-session targets**) and choose the weight you add when moving up (no default increment). Rules (`src/lib/progression.ts`, unit-tested):
+
+| Rule | Detail |
+|---|---|
+| Eligible | Weight × reps exercises with a rep range (min and max) and a working-set count. Bodyweight and added-weight exercises are never progressed automatically: bodyweight is not recorded |
+| Comparable basis | Same exercise identity (each gym variant is its own exercise) and the **same prescription** as now: identical rep range and set count in that session's snapshot. The same workout entry is preferred; otherwise the latest comparable performance from another workout is used and named ("Based on Upper B, 3 Oct") |
+| Sets used | The first *N* completed working sets (*N* = working-set count). Warm-ups, unconfirmed and skipped sets never count; extra sets are ignored |
+| No target | Fewer than *N* working sets completed, working sets at different weights, no comparable session, or settings incomplete. A short note says why |
+| Increase | Every working set reached the top of the range → weight + your increment, aim for the bottom of the range ("You reached the top of your rep range on all working sets.") |
+| Repeat | Otherwise → same weight, one more rep per set up to the top of the range. The weight is never lowered automatically |
+
+In the logger a target sits in a dashed **Target** box, apart from the Previous column. "Use 102.5 kg for remaining sets" only changes unconfirmed working-set weights; reps stay empty and nothing counts until each set is confirmed. **Hide** dismisses it for that session (stored on the device only). Targets are computed when needed and never stored as sets or in the session, so they cannot become, or be mistaken for, results.
+
+### Workout summary and records
+
+After finishing (and whenever a workout is opened later) the summary shows exercises and working sets, duration only for workouts logged live and between 5 minutes and 6 hours, a factual change per exercise against its previous session ("2 more reps at 30 kg"; only sets both sessions have are compared, so extra sets are never "better"), records, and next targets where this workout is their basis. Records (`src/lib/records.ts`) are recomputed from current history every time, so editing, re-dating or deleting a workout updates them:
+
+- **First recorded performance**: no earlier working set of the exercise. Shown as "Your baseline is set"; no other record is claimed.
+- **Heaviest load**: more weight (or added weight) than any earlier working set.
+- **Rep record at a load**: more reps at a weight lifted before.
+- **Estimated 1RM record**: Epley estimate from sets of 1–12 reps beats every earlier eligible set; always labelled as an estimate.
+- Ties are never records. Warm-ups never count.
+
+### Progress, history and split review
+
+- **Exercise progress**: identity → latest session and its change → chart (or "Your baseline is set" with one session, or "Not enough comparable data" when a metric has fewer than two points) → full history → "How these numbers are calculated" on demand. **Best set** is the completed working set with the highest estimated 1RM *among sets of 12 reps or fewer* (high-rep sets only win when nothing else exists, by load). Chart points can be inspected by touch, mouse or arrow keys, and the same data is available as a table. Metrics: **Est. 1RM** (Epley `weight × (1 + reps ÷ 30)`, sets of 1–12 reps), **Volume** (weight × reps over working sets), **Heaviest**; reps-only and added-weight exercises show heaviest/most reps and total reps only.
+- **Workout history** (`/history`): every completed workout by month performed.
+- **Split review** (`/splits/[id]/review/[period]`, linked from each active period and from Progress): sessions performed during the period (half-open: start ≤ performed < end), working sets per Monday–Sunday week in your time zone, a breakdown by workout, and first-vs-latest best set for exercises done at least twice. It describes what was logged only: no adherence scores, no causal claims, and names appear as they were logged, so later template edits do not rewrite it.
 
 ### Rest timer
 
@@ -204,6 +239,20 @@ Remaining time is derived from the start timestamp (`Date.now()`), not from coun
 | Sign-up confirmation, password reset | `tests/e2e/auth.spec.ts` (real emails through local Mailpit: neutral response, reset, reused/forged/expired links) |
 | Account switching and sign-out | `tests/unit/store.test.ts`, `tests/unit/sync.test.ts`, `tests/e2e/auth.spec.ts` |
 | Installable PWA | `tests/e2e/auth.spec.ts` (Chrome installability check, manifest) |
+| Next-workout order, overrides, retrospective entries | `tests/unit/next-workout.test.ts`, `tests/e2e/daily-training.spec.ts` |
+| Target eligibility and suppression | `tests/unit/progression.test.ts`, `tests/db` (opt-in, snapshot prescription, skipped entries, privacy) |
+| Targets never become sets | `tests/unit/doc.test.ts` (`applyTargetWeight`), `tests/e2e/daily-training.spec.ts` (database holds only confirmed sets) |
+| Records after edits, ties, warm-ups, high-rep sets | `tests/unit/records.test.ts`, `tests/unit/progress.test.ts` |
+| Split-period boundaries, weekly sets | `tests/unit/split-review.test.ts` |
+| Cross-account privacy of new pages | `tests/e2e/auth.spec.ts` (preview, split review, history) |
+
+### Upgrading an existing deployment
+
+Migrations are additive and versioned; never reset a deployed database.
+
+1. **Apply `supabase/migrations/20261002000008_progression_targets.sql` first** (`npx supabase db push`, or paste it into the SQL Editor). It adds `template_exercises.progression_enabled` (default `false`) and `progression_increment_kg` (nullable), re-creates `duplicate_split`/`duplicate_template` so copies keep those settings, and adds the read-only `progression_candidates` function. It does not touch sessions, sets, snapshots or exercise identities.
+2. **Then deploy the app.** Old app versions keep working against the migrated database (they ignore the new columns). If the app were deployed first, the workout editor would fail to load until the migration runs, while the logger and summaries simply show no targets.
+3. Offline compatibility: workouts already open on a device keep working; local records saved by the previous version have no `targets` field and load normally. The service worker is now registered per build (`/sw.js?v=<commit>`), so each deployment installs a fresh offline shell and removes the old cache; pages themselves are always fetched from the network first.
 
 ## Known limitations (V1)
 

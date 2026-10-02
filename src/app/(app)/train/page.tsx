@@ -149,7 +149,7 @@ export default async function TrainPage() {
               <p className="text-[15px] text-muted">{suggested.lastPerformed ? `Last performed ${formatShortDate(suggested.lastPerformed, tz)}` : "Not performed yet"}</p>
               <p className="mt-3 text-sm text-faint">{next.reason}</p>
               <div className="mt-4 flex gap-2">
-                <StartWorkoutButton templateId={suggested.id} size="lg" label={`Start ${suggested.name}`} className="flex-1" />
+                <StartWorkoutButton templateId={suggested.id} size="lg" label="Start" ariaLabel={`Start ${suggested.name}`} className="min-w-0 flex-1" />
                 <Link href={`/train/workout/${suggested.id}`} className={buttonClass("secondary", "lg")}>Preview</Link>
               </div>
             </section>

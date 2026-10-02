@@ -91,7 +91,7 @@ export default async function WorkoutPreviewPage({ params }: { params: Promise<{
                   <span className="tabular w-5 shrink-0 text-sm text-faint">{i + 1}</span>
                   <div className="min-w-0 flex-1">
                     <Link href={`/progress/${e.id}`} className="font-medium break-words underline-offset-4 hover:underline">{exerciseLabel(e)}</Link>
-                    <p className="text-sm text-muted">{formatTargetLong(r.target_sets, r.rep_min, r.rep_max) || "No target set"}</p>
+                    <p className="text-sm text-muted">{formatTargetLong(r.target_sets, r.rep_min, r.rep_max) || "No sets or reps set"}</p>
                     <p className="mt-1 text-sm">
                       <span className="text-faint">Last: </span>
                       {working.length ? (
