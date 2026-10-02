@@ -117,3 +117,20 @@ export function formatShortDate(iso: string, timeZone?: string, now: Date = new 
 export function formatTime(iso: string, timeZone?: string): string {
   return new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", timeZone }).format(new Date(iso));
 }
+
+/**
+ * Workout length in minutes, only when it is meaningful: logged live (not a past workout)
+ * and between 5 minutes and 6 hours. Otherwise null and no duration is shown.
+ */
+export function meaningfulDurationMinutes(startedAt: string, completedAt: string | null, isBackdated: boolean | undefined): number | null {
+  if (isBackdated || !completedAt) return null;
+  const minutes = Math.round((new Date(completedAt).getTime() - new Date(startedAt).getTime()) / 60_000);
+  return minutes >= 5 && minutes <= 360 ? minutes : null;
+}
+
+/** "1 h 5 min", "48 min". */
+export function formatMinutes(minutes: number): string {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return h ? `${h} h${m ? ` ${m} min` : ""}` : `${m} min`;
+}
