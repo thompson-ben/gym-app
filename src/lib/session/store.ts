@@ -1,3 +1,4 @@
+import type { TargetMap } from "../targets";
 import type { PreviousMap, SessionDoc } from "../types";
 import type { SyncPayload } from "./doc";
 
@@ -30,6 +31,14 @@ export type LocalRecord = {
   previous: PreviousMap;
   rest: { startedAt: number; duration: number } | null;
   settings: LoggerSettings;
+  /**
+   * Optional next-session targets, keyed by session exercise id. Cached for offline reloads,
+   * never synced and never part of the session document. Absent in records saved by older
+   * app versions, which simply show no targets.
+   */
+  targets?: TargetMap;
+  /** Session exercise ids whose target the user hid for this session. */
+  hiddenTargets?: string[];
   updatedAt: number;
 };
 

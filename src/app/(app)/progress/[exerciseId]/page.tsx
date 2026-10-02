@@ -8,7 +8,8 @@ import { Card, EmptyState, PageHeader } from "@/components/ui";
 import { cx } from "@/components/styles";
 import { EXERCISE_COLUMNS, exerciseLabel } from "@/lib/exercises";
 import { formatDate, formatSet, humanize } from "@/lib/format";
-import { bestSetOverall, metricsFor, progressSeries, sessionE1RM, type HistorySession } from "@/lib/progress";
+import { bestSet, bestSetOverall, metricsFor, progressSeries, sessionE1RM, type HistorySession } from "@/lib/progress";
+import { compareWithPrevious } from "@/lib/records";
 import { requireUser, viewerTimeZone } from "@/lib/supabase/server";
 import type { Exercise } from "@/lib/types";
 
@@ -44,6 +45,17 @@ export default async function ExercisePage({
   const metric = metrics.find((m) => m.id === metricParam) ?? metrics[0];
   const points = progressSeries(sessions, exercise.tracking_mode, metric.id);
   const best = bestSetOverall(sessions, exercise.tracking_mode);
+  const chronological = [...sessions].sort((a, b) => a.completed_at.localeCompare(b.completed_at));
+  const latest = chronological.at(-1);
+  const before = chronological.at(-2);
+  const latestBest = latest ? bestSet(latest.sets, exercise.tracking_mode) : null;
+  const change = latest ? compareWithPrevious(exercise.tracking_mode, latest.sets, before?.sets) : null;
+  const bestDefinition =
+    exercise.tracking_mode === "weight_reps"
+      ? "Best set = the completed working set with the highest estimated 1RM, from sets of 12 reps or fewer."
+      : exercise.tracking_mode === "bodyweight_reps"
+        ? "Best set = the completed working set with the most reps."
+        : "Best set = the completed working set with the most added weight, then the most reps.";
   const query = (extra: Record<string, string | null>) => {
     const q = new URLSearchParams();
     if (uuid(split)) q.set("split", split!);
@@ -79,17 +91,33 @@ export default async function ExercisePage({
           </EmptyState>
         ) : (
           <>
-            {best ? (
+            {latest ? (
               <Card className="p-4">
-                <p className="text-sm text-muted">Best set{filtered ? " in this view" : ""}</p>
-                <p className="mt-0.5 text-lg font-semibold tabular">
-                  {best.text}
-                  {best.e1rm !== null ? <span className="ml-2 text-base font-normal text-muted">≈ {best.e1rm} kg est. 1RM</span> : null}
+                <p className="text-sm text-muted">
+                  Latest · {formatDate(latest.completed_at, tz, { weekday: "short" })} · {latest.template_name}
                 </p>
-                <p className="text-sm text-faint">{formatDate(best.date, tz, { weekday: "short" })} · {best.workout}</p>
+                <p className="mt-0.5 text-lg font-semibold tabular">
+                  {latest.sets.filter((x) => x.set_type === "working").map((x) => formatSet(exercise.tracking_mode, x.weight_kg, x.reps)).join(", ")}
+                </p>
+                {change ? <p className="text-sm text-muted">vs previous session: {change}</p> : null}
+                {latestBest && sessions.length > 1 && best ? (
+                  <p className="mt-2 border-t border-line pt-2 text-sm">
+                    <span className="text-muted">Best set{filtered ? " in this view" : ""}: </span>
+                    <span className="font-medium tabular">{best.text}</span>
+                    {best.e1rm !== null ? <span className="text-muted tabular"> (≈ {best.e1rm} kg est. 1RM)</span> : null}
+                    <span className="text-faint"> · {formatDate(best.date, tz, { year: undefined })}</span>
+                  </p>
+                ) : null}
               </Card>
             ) : null}
-            {points.length ? (
+            {sessions.length === 1 ? (
+              <Card className="p-4">
+                <h2 className="font-medium">Your baseline is set</h2>
+                <p className="mt-1 text-sm text-muted">
+                  This is the first recorded session{filtered ? " in this view" : ""}. Log it again and a chart appears here, comparing like with like.
+                </p>
+              </Card>
+            ) : points.length >= 2 ? (
               <Card className="p-4">
                 {metrics.length > 1 ? (
                   <nav aria-label="Chart metric" className="mb-4 flex gap-1 rounded-2xl bg-field p-1">
@@ -114,7 +142,28 @@ export default async function ExercisePage({
                 <p className="mb-3 text-sm text-muted">{metric.description}</p>
                 <ProgressChart points={points} title={metric.title} unit={metric.unit} timeZone={tz} />
               </Card>
-            ) : null}
+            ) : (
+              <Card className="p-4">
+                <h2 className="font-medium">Not enough comparable data for this chart</h2>
+                <p className="mt-1 text-sm text-muted">
+                  {metric.id === "e1rm"
+                    ? "Estimated 1RM uses sets of 12 reps or fewer, and fewer than two sessions have one."
+                    : "Fewer than two sessions have working sets for this metric."}
+                </p>
+                {metrics.length > 1 ? (
+                  <p className="mt-2 text-sm">
+                    Try{" "}
+                    {metrics.filter((m) => m.id !== metric.id).map((m, i) => (
+                      <span key={m.id}>
+                        {i ? " or " : ""}
+                        <Link href={query({ metric: m.id === metrics[0].id ? null : m.id })} replace scroll={false} className="text-accent-text underline underline-offset-4">{m.label}</Link>
+                      </span>
+                    ))}
+                    .
+                  </p>
+                ) : null}
+              </Card>
+            )}
             {filtered ? (
               <p className="text-sm text-faint">Showing a subset of sessions. Differences between periods are observations, not proof that a split caused them.</p>
             ) : null}
@@ -128,8 +177,8 @@ export default async function ExercisePage({
                     <Link href={`/sessions/${s.session_id}`} className="block rounded-3xl border border-line bg-surface p-4 hover:bg-surface-2/50">
                       <div className="flex items-baseline justify-between gap-3">
                         <p className="font-medium">{formatDate(s.completed_at, tz, { weekday: "short" })}</p>
-                        {exercise.tracking_mode === "weight_reps" && sessionE1RM(s.sets) !== null ? (
-                          <p className="shrink-0 text-sm text-muted tabular">≈ {sessionE1RM(s.sets)} kg est. 1RM</p>
+                        {exercise.tracking_mode === "weight_reps" && sessionE1RM(s.sets.filter((x) => x.set_type === "working")) !== null ? (
+                          <p className="shrink-0 text-sm text-muted tabular">≈ {sessionE1RM(s.sets.filter((x) => x.set_type === "working"))} kg est. 1RM</p>
                         ) : null}
                       </div>
                       <p className="text-sm text-muted">{s.template_name}{s.split_name ? ` · ${s.split_name}` : ""}</p>
@@ -149,6 +198,24 @@ export default async function ExercisePage({
                 ))}
               </ol>
             </section>
+            <details className="rounded-2xl border border-line px-4 py-3 text-sm text-muted">
+              <summary className="cursor-pointer font-medium text-fg">How these numbers are calculated</summary>
+              <ul className="mt-2 list-disc space-y-1.5 pl-5">
+                <li>Only completed working sets count. Warm-ups and sets not marked done are ignored.</li>
+                <li>{bestDefinition}</li>
+                {exercise.tracking_mode === "weight_reps" ? (
+                  <>
+                    <li>Estimated 1RM uses the Epley formula, weight × (1 + reps ÷ 30), on sets of 1–12 reps. Higher-rep sets are left out because the formula overestimates them. It is an estimate, not a tested max.</li>
+                    <li>Session volume is weight × reps added up over the session’s working sets.</li>
+                  </>
+                ) : exercise.tracking_mode === "added_weight_reps" ? (
+                  <li>Loads are the weight added to your bodyweight. Bodyweight is not recorded, so no 1RM is estimated.</li>
+                ) : (
+                  <li>Reps-only exercises are compared by reps; no load or 1RM is estimated.</li>
+                )}
+                <li>Each exercise, including each gym-specific variant, has its own history. Different machines are never combined.</li>
+              </ul>
+            </details>
           </>
         )}
       </div>

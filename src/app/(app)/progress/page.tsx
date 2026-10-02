@@ -13,14 +13,16 @@ export const metadata: Metadata = { title: "Progress" };
 export default async function ProgressPage() {
   const { supabase } = await requireUser();
   const tz = await viewerTimeZone();
-  const [performed, sessions] = await Promise.all([
+  const [performed, sessions, period, total] = await Promise.all([
     supabase.rpc("performed_exercises"),
     supabase
       .from("workout_sessions")
       .select("id, template_name, split_name, completed_at")
       .eq("status", "completed")
       .order("completed_at", { ascending: false })
-      .limit(8),
+      .limit(3),
+    supabase.from("split_active_periods").select("id, started_at, split_id, splits(name)").is("ended_at", null).maybeSingle(),
+    supabase.from("workout_sessions").select("id", { count: "exact", head: true }).eq("status", "completed"),
   ]);
   if (performed.error) throw performed.error;
   if (sessions.error) throw sessions.error;
@@ -49,12 +51,38 @@ export default async function ProgressPage() {
         </EmptyState>
       ) : (
         <div className="space-y-8">
+          <nav aria-label="Reviews" className="grid gap-2 sm:grid-cols-2">
+            <Link href="/history" className="flex items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3 hover:bg-surface-2/60">
+              <span className="min-w-0 flex-1">
+                <span className="block font-medium">Workout history</span>
+                <span className="block text-sm text-muted">{total.count ?? 0} completed {total.count === 1 ? "workout" : "workouts"}</span>
+              </span>
+              <IconChevronRight className="shrink-0 text-faint" />
+            </Link>
+            {period.data ? (
+              <Link
+                href={`/splits/${period.data.split_id}/review/${period.data.id}`}
+                className="flex items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3 hover:bg-surface-2/60"
+              >
+                <span className="min-w-0 flex-1">
+                  <span className="block font-medium">Split review</span>
+                  <span className="block truncate text-sm text-muted">
+                    {(period.data.splits as unknown as { name: string } | null)?.name} · since {formatDate(period.data.started_at, tz, { year: undefined })}
+                  </span>
+                </span>
+                <IconChevronRight className="shrink-0 text-faint" />
+              </Link>
+            ) : null}
+          </nav>
           <section>
             <h2 className="mb-3 text-sm font-medium tracking-wide text-muted uppercase">Exercises</h2>
             <ExerciseSearchList items={items} />
           </section>
           <section>
-            <h2 className="mb-3 text-sm font-medium tracking-wide text-muted uppercase">Recent workouts</h2>
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-sm font-medium tracking-wide text-muted uppercase">Recent workouts</h2>
+              <Link href="/history" className="text-sm text-accent-text underline-offset-4 hover:underline">All workouts</Link>
+            </div>
             <ul className="divide-y divide-line rounded-3xl border border-line bg-surface">
               {sessions.data.map((s) => (
                 <li key={s.id}>

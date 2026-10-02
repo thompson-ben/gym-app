@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { ClientBoot } from "@/components/ClientBoot";
 import { LoggerLoader } from "@/components/logger/LoggerLoader";
 import { requireUser, viewerTimeZone } from "@/lib/supabase/server";
+import { loadTargets } from "@/lib/targets";
 import type { PreviousMap, PreviousPerformance, SessionDoc } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Workout" };
@@ -20,10 +21,23 @@ export default async function WorkoutPage({ params }: { params: Promise<{ sessio
   if (session.status === "discarded") redirect("/train");
 
   const ids = [...new Set(session.exercises.map((e) => e.exercise_id))];
-  const [{ data: prev, error: prevError }, { data: profile }] = await Promise.all([
+  const [{ data: prev, error: prevError }, { data: profile }, targets] = await Promise.all([
     // A past workout compares with the workout before its date, not the latest one.
     supabase.rpc("previous_performance", { p_exercise_ids: ids, p_before: session.is_backdated ? session.started_at : null }),
     supabase.from("profiles").select("default_rest_seconds, auto_start_rest").eq("id", userId).maybeSingle(),
+    loadTargets(
+      supabase,
+      session.exercises.map((e) => ({
+        key: e.id,
+        exerciseId: e.exercise_id,
+        entryId: e.template_exercise_id,
+        mode: e.tracking_mode,
+        targetSets: e.target_sets,
+        repMin: e.rep_min,
+        repMax: e.rep_max,
+      })),
+      session.is_backdated ? session.started_at : null,
+    ),
   ]);
   if (prevError) throw prevError;
   const previous: PreviousMap = Object.fromEntries((prev as PreviousPerformance[]).map((p) => [p.exercise_id, p]));
@@ -37,6 +51,7 @@ export default async function WorkoutPage({ params }: { params: Promise<{ sessio
         previous={previous}
         settings={{ defaultRestSeconds: profile?.default_rest_seconds ?? 120, autoStartRest: profile?.auto_start_rest ?? false }}
         timeZone={await viewerTimeZone()}
+        targets={targets}
       />
     </>
   );

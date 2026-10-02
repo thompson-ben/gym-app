@@ -13,7 +13,8 @@ export type TargetEntry = {
   repMax: number | null;
 };
 
-export type TargetInfo = { target: Target | null; note?: string | null };
+/** exerciseId guards against showing a target after the entry was substituted. */
+export type TargetInfo = { exerciseId: string; target: Target | null; note?: string | null };
 export type TargetMap = Record<string, TargetInfo | undefined>;
 
 type CandidateRow = {
@@ -63,13 +64,16 @@ export async function loadTargets(supabase: SupabaseClient, entries: TargetEntry
   }
   const out: TargetMap = {};
   for (const e of wanted) {
-    out[e.key] = computeTarget({
+    out[e.key] = {
+      exerciseId: e.exerciseId,
+      ...computeTarget({
       mode: e.mode,
       settings: { enabled: true, incrementKg: enabled.get(e.entryId!) ?? null },
       prescription: { targetSets: e.targetSets, repMin: e.repMin, repMax: e.repMax },
       entryId: e.entryId,
       candidates: byExercise.get(e.exerciseId) ?? [],
-    });
+      }),
+    };
   }
   return out;
 }

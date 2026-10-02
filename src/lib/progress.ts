@@ -62,10 +62,10 @@ export function metricsFor(mode: TrackingMode): MetricInfo[] {
       {
         id: "e1rm",
         label: "Est. 1RM",
-        title: "Estimated 1-rep max, best set per session",
+        title: "Estimated 1RM per session",
         unit: "kg",
         description:
-          "Estimated from each session's best working set with the Epley formula: weight × (1 + reps ÷ 30). Lets sets in different rep ranges be compared. An estimate, most reliable up to about 12 reps.",
+          "An estimate from each session’s best working set of 12 reps or fewer, so sets in different rep ranges can be compared. Not a tested max.",
       },
       {
         id: "volume",

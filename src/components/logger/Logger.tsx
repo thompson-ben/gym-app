@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   addExercise,
   addSet,
+  applyTargetWeight,
   completeSet,
   moveExercise,
   removeExercise,
@@ -327,6 +328,11 @@ export default function Logger({ userId, initial, timeZone }: { userId: string; 
             onOpenMenu={() => setExerciseMenu(entry.id)}
             onOpenSetMenu={(set, ordinal) => setSetMenu({ entryId: entry.id, set, ordinal })}
             onUnskip={() => edit((d) => addSet(setSkipped(d, entry.id, false), entry.id, "working", recordRef.current.previous, newId))}
+            target={record.targets?.[entry.id]}
+            targetHidden={record.hiddenTargets?.includes(entry.id)}
+            onHideTarget={() => patch({ hiddenTargets: [...(recordRef.current.hiddenTargets ?? []), entry.id] })}
+            onUseTarget={(kg) => edit((d) => applyTargetWeight(d, entry.id, kg))}
+            onSwap={() => setPicker({ mode: "substitute", entryId: entry.id })}
           />
         ))}
 

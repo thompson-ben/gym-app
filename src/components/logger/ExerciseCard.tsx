@@ -4,10 +4,12 @@ import Link from "next/link";
 import { useRef, useState } from "react";
 import { validateCompletion, type CompleteError } from "@/lib/session/doc";
 import { matchPrevious } from "@/lib/session/previous";
-import { formatDate, formatSet, formatShortDate, formatTargetLong, weightLabel } from "@/lib/format";
+import { formatDate, formatKg, formatSet, formatShortDate, formatTargetLong, weightLabel } from "@/lib/format";
+import { formatTargetSets } from "@/lib/progression";
+import type { TargetInfo } from "@/lib/targets";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import type { PreviousPerformance, SessionExercise, SessionSet, SetType } from "@/lib/types";
-import { IconArrowUpRight, IconChevronDown, IconHistory, IconMore, IconPlus } from "../icons";
+import { IconArrowUpRight, IconChevronDown, IconHistory, IconMore, IconPlus, IconSwap } from "../icons";
 import { cx } from "../styles";
 import { Button, IconButton, Spinner } from "../ui";
 import { GRID_REPS_ONLY, GRID_WITH_WEIGHT, SetRow, type SetRowHandle } from "./SetRow";
@@ -31,7 +33,17 @@ export function ExerciseCard({
   onOpenMenu,
   onOpenSetMenu,
   onUnskip,
+  target,
+  targetHidden,
+  onHideTarget,
+  onUseTarget,
+  onSwap,
 }: {
+  target?: TargetInfo;
+  targetHidden?: boolean;
+  onHideTarget: () => void;
+  onUseTarget: (weightKg: number) => void;
+  onSwap: () => void;
   entry: SessionExercise;
   previous: PreviousPerformance | undefined;
   timeZone: string;
@@ -50,8 +62,11 @@ export function ExerciseCard({
   const rows = useRef(new Map<string, SetRowHandle>());
   const matched = matchPrevious(entry.sets, previous?.sets);
   const mode = entry.tracking_mode;
-  const target = formatTargetLong(entry.target_sets, entry.rep_min, entry.rep_max);
+  const prescription = formatTargetLong(entry.target_sets, entry.rep_min, entry.rep_max);
   const done = entry.sets.filter((s) => s.completed_at).length;
+  const currentId = entry.sets.find((s) => !s.completed_at)?.id ?? null;
+  const shownTarget = target && target.exerciseId === entry.exercise_id && !targetHidden ? target : null;
+  const unconfirmedWorking = entry.sets.filter((s) => s.set_type === "working" && !s.completed_at);
   let workingIndex = 0;
   let warmupIndex = 0;
 
@@ -101,7 +116,7 @@ export function ExerciseCard({
         <div className="min-w-0 pt-0.5">
           <h3 className="text-[20px] leading-snug font-medium tracking-[-0.01em]">{entry.exercise_name}</h3>
           <p className="mt-0.5 text-[15px] text-muted">
-            {target}
+            {prescription}
             {entry.skipped ? <span className="text-warn"> · Skipped</span> : null}
           </p>
           {previous ? (
@@ -121,6 +136,34 @@ export function ExerciseCard({
           <IconMore />
         </IconButton>
       </header>
+
+      {shownTarget?.target ? (
+        <div className="mx-1 mt-3 rounded-xl border border-dashed border-accent-text/50 px-3 py-2.5">
+          <div className="flex items-baseline justify-between gap-2">
+            <p>
+              <span className="mr-2 text-xs font-semibold tracking-[0.12em] text-accent-text uppercase">Target</span>
+              <span className="font-medium tabular">{formatTargetSets(shownTarget.target)}</span>
+            </p>
+            <button type="button" onClick={onHideTarget} className="-my-2 h-10 shrink-0 px-1 text-sm text-muted hover:text-fg">Hide</button>
+          </div>
+          <p className="mt-0.5 text-sm text-muted">
+            {shownTarget.target.reason}
+            {shownTarget.target.basis.sameEntry
+              ? ""
+              : ` Based on ${shownTarget.target.basis.workoutName}, ${formatShortDate(shownTarget.target.basis.completedAt, timeZone)}.`}
+          </p>
+          {unconfirmedWorking.some((s) => s.weight_kg !== shownTarget.target!.weightKg) ? (
+            <Button size="sm" variant="ghost" className="-ml-2 mt-1 text-accent-text" onClick={() => onUseTarget(shownTarget.target!.weightKg)}>
+              Use {formatKg(shownTarget.target.weightKg)} kg for remaining sets
+            </Button>
+          ) : null}
+        </div>
+      ) : shownTarget?.note ? (
+        <p className="mx-1 mt-2 text-sm text-faint">
+          No target: {shownTarget.note}{" "}
+          <button type="button" onClick={onHideTarget} className="text-muted underline underline-offset-4">Hide</button>
+        </p>
+      ) : null}
 
       {entry.template_notes ? <p className="mx-1 mt-2 rounded-xl bg-surface-2 px-3 py-2 text-sm text-muted">{entry.template_notes}</p> : null}
       {entry.notes ? <p className="mx-1 mt-2 text-sm text-muted italic">Note: {entry.notes}</p> : null}
@@ -154,6 +197,7 @@ export function ExerciseCard({
                 onChange={(patch) => onSetChange(set.id, patch)}
                 onToggleDone={() => tryComplete(set)}
                 onOpenMenu={() => onOpenSetMenu(set, ordinal)}
+                state={set.completed_at ? "done" : set.id === currentId ? "current" : "upcoming"}
               />
             );
           })}
@@ -163,9 +207,16 @@ export function ExerciseCard({
       </div>
 
       <div className="mt-2 flex items-center justify-between gap-2">
-        <Button size="sm" variant="quiet" onClick={() => onAddSet("working")}>
-          <IconPlus size={16} /> Add set
-        </Button>
+        <div className="flex gap-1">
+          <Button size="sm" variant="quiet" onClick={() => onAddSet("working")}>
+            <IconPlus size={16} /> Add set
+          </Button>
+          {done === 0 ? (
+            <Button size="sm" variant="quiet" onClick={onSwap} aria-label={`Swap ${entry.exercise_name} for another exercise this session`}>
+              <IconSwap size={16} /> Swap
+            </Button>
+          ) : null}
+        </div>
         <Button size="sm" variant="quiet" onClick={toggleHistory} aria-expanded={historyOpen}>
           <IconHistory size={16} /> History
           <IconChevronDown size={16} className={cx("transition", historyOpen && "rotate-180")} />

@@ -164,3 +164,22 @@ describe("weight carries forward to following sets", () => {
     expect(weights(d).at(-1)).toBe(40);
   });
 });
+
+import { applyTargetWeight } from "@/lib/session/doc";
+
+describe("applyTargetWeight", () => {
+  it("only changes weights of unconfirmed working sets and never confirms or fills reps", () => {
+    let doc = started();
+    const ex = doc.exercises[0];
+    doc = updateSet(doc, ex.id, ex.sets[0].id, { reps: 9 });
+    const done = completeSet(doc, ex.id, ex.sets[0].id, now);
+    if (!("doc" in done)) throw new Error("expected completion");
+    doc = addSet(done.doc, ex.id, "warmup", previous, seqId);
+    const after = applyTargetWeight(doc, ex.id, 75);
+    const sets = after.exercises[0].sets;
+    expect(sets[0]).toEqual(doc.exercises[0].sets[0]); // confirmed set untouched
+    expect(sets.filter((s) => s.set_type === "working" && !s.completed_at).every((s) => s.weight_kg === 75 && s.reps === null && s.completed_at === null)).toBe(true);
+    expect(sets.find((s) => s.set_type === "warmup")?.weight_kg).not.toBe(75);
+    expect(summarize(after).completedSets).toBe(summarize(doc).completedSets);
+  });
+});
