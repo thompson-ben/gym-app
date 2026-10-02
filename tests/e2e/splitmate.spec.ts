@@ -53,7 +53,7 @@ test("A/F: history follows the exercise across splits; prefilled sets are never 
   // Split B contains the same exercise: its previous performance appears immediately.
   await seedSplit(user, "Split B", "Full Body A", ["back-squat", "incline-barbell-bench-press"]);
   await page.goto("/train");
-  await expect(page.getByRole("heading", { name: "Split B" })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Active split Split B/ })).toBeVisible();
   await page.getByRole("button", { name: "Start" }).click();
   await page.waitForURL("**/workout/**");
   const card = page.getByRole("region", { name: INCLINE });
@@ -201,7 +201,7 @@ test("a past workout is recorded on the date it was performed", async ({ page })
   await page.getByRole("button", { name: "Finish & save" }).click();
   await page.waitForURL("**/sessions/**");
   await expect(page.getByText("Workout saved")).toBeVisible();
-  await expect(page.getByText(/sets · saved for /)).toBeVisible();
+  await expect(page.getByText(/working sets? · logged afterwards · saved for /)).toBeVisible();
 
   const { rows } = await db.query("select completed_at, is_backdated from workout_sessions where id = $1", [sessionId]);
   expect(rows[0].is_backdated).toBe(true);
@@ -227,7 +227,7 @@ test("a split's start date can be moved back so earlier workouts count towards i
   await expect(page.getByText("0 workouts")).toBeVisible();
 
   // Resume the past workout from Train, log a set and finish it through the app.
-  await page.getByText("Workout in progress").click();
+  await page.getByText("Workout in progress", { exact: true }).click();
   await page.waitForURL(`**/workout/${doc.data.id}`);
   await logSet(page, "Barbell Back Squat", 1, 5, 100);
   await expect(page.getByRole("status").filter({ hasText: "Saved" })).toBeVisible({ timeout: 10_000 });
@@ -236,8 +236,9 @@ test("a split's start date can be moved back so earlier workouts count towards i
   await page.waitForURL("**/sessions/**");
 
   await page.goto("/train");
-  await page.getByRole("link", { name: "Change" }).click();
-  await page.waitForURL(`**/splits/${splitId}#active`);
+  // Date management lives on the split page, one tap from Train's split summary.
+  await page.getByRole("link", { name: /Active split/ }).click();
+  await page.waitForURL(`**/splits/${splitId}`);
   await page.getByRole("button", { name: "Change start date" }).click();
   const day = new Date(Date.now() - 10 * 86_400_000).toISOString().slice(0, 10);
   await page.getByLabel("Split started").fill(`${day}T08:00`);
@@ -247,7 +248,7 @@ test("a split's start date can be moved back so earlier workouts count towards i
 
   await page.getByRole("link", { name: "Train" }).click();
   await page.waitForURL("**/train");
-  await expect(page.getByText("1 workout", { exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Active split/ })).toContainText("1 workout completed");
   const { rows } = await db.query("select started_at from split_active_periods where split_id = $1", [splitId]);
   expect(await page.evaluate((iso) => new Date(iso).toLocaleDateString("en-CA"), rows[0].started_at.toISOString())).toBe(day);
 });
@@ -293,8 +294,8 @@ test("progress compares sets across rep ranges with an estimated 1RM, plus volum
   await signIn(page, user);
   await page.goto("/progress");
   await page.getByRole("link", { name: /EZ-Bar Curl/ }).first().click();
-  await expect(page.getByRole("heading", { name: "Estimated 1-rep max, best set per session" })).toBeVisible();
-  await expect(page.getByText("40 kg × 8")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Estimated 1RM per session" })).toBeVisible();
+  await expect(page.getByText("40 kg × 8").first()).toBeVisible();
   await expect(page.getByText("≈ 50.7 kg est. 1RM").first()).toBeVisible();
   await page.getByRole("link", { name: "Volume" }).click();
   await expect(page.getByRole("heading", { name: "Session volume" })).toBeVisible();

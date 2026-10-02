@@ -74,6 +74,18 @@ export function updateSet(doc: SessionDoc, exId: string, setId: string, patch: P
   });
 }
 
+/**
+ * "Use target": sets the weight of this exercise's unconfirmed working sets to a suggested
+ * target weight. Reps are left empty and nothing is confirmed, so a target can never become
+ * a recorded result without the user entering reps and confirming each set.
+ */
+export function applyTargetWeight(doc: SessionDoc, exId: string, weightKg: number): SessionDoc {
+  return mapExercise(doc, exId, (ex) => ({
+    ...ex,
+    sets: ex.sets.map((s) => (s.set_type === "working" && !s.completed_at ? { ...s, weight_kg: weightKg } : s)),
+  }));
+}
+
 export type CompleteError = "reps_required" | "weight_required" | "invalid";
 
 /** Checks whether a set can be confirmed, and the weight that would be recorded. */

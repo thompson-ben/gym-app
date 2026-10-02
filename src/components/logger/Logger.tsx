@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   addExercise,
   addSet,
+  applyTargetWeight,
   completeSet,
   moveExercise,
   removeExercise,
@@ -238,7 +239,7 @@ export default function Logger({ userId, initial, timeZone }: { userId: string; 
 
   return (
     <div className={cx("mx-auto w-full max-w-xl px-4 sm:px-6", record.rest ? "pb-[calc(15rem+env(safe-area-inset-bottom))]" : "pb-[calc(11rem+env(safe-area-inset-bottom))]")}>
-      <div className="sticky top-0 z-20 -mx-4 bg-bg/90 px-4 backdrop-blur-lg pt-safe sm:-mx-6 sm:px-6">
+      <div className="sticky top-0 z-20 -mx-4 bg-bg px-4 pt-safe sm:-mx-6 sm:px-6">
         <div className="flex h-14 items-center justify-between gap-2">
           <Link href="/train" className="-ml-2 inline-flex h-11 items-center gap-0.5 rounded-2xl pr-2 pl-1 text-muted hover:text-fg" aria-label="Leave workout (it stays in progress)">
             <IconChevronLeft size={18} />
@@ -327,6 +328,11 @@ export default function Logger({ userId, initial, timeZone }: { userId: string; 
             onOpenMenu={() => setExerciseMenu(entry.id)}
             onOpenSetMenu={(set, ordinal) => setSetMenu({ entryId: entry.id, set, ordinal })}
             onUnskip={() => edit((d) => addSet(setSkipped(d, entry.id, false), entry.id, "working", recordRef.current.previous, newId))}
+            target={record.targets?.[entry.id]}
+            targetHidden={record.hiddenTargets?.includes(entry.id)}
+            onHideTarget={() => patch({ hiddenTargets: [...(recordRef.current.hiddenTargets ?? []), entry.id] })}
+            onUseTarget={(kg) => edit((d) => applyTargetWeight(d, entry.id, kg))}
+            onSwap={() => setPicker({ mode: "substitute", entryId: entry.id })}
           />
         ))}
 
@@ -342,7 +348,7 @@ export default function Logger({ userId, initial, timeZone }: { userId: string; 
 
       {/* Bottom action area: rest timer and finish. Hidden while typing. */}
       <div className={cx("fixed inset-x-0 bottom-0 z-30 transition-transform duration-200", inputFocused && "translate-y-full")} aria-hidden={inputFocused || undefined}>
-        <div className="mx-auto max-w-xl space-y-3 border-t border-line/70 bg-bg/95 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur-lg sm:rounded-t-3xl sm:border-x sm:px-6">
+        <div className="mx-auto max-w-xl space-y-3 border-t border-line/70 bg-bg px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur-lg sm:rounded-t-3xl sm:border-x sm:px-6">
           {record.rest ? (
             <RestTimerBar
               timer={record.rest}

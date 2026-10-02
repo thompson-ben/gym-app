@@ -14,7 +14,7 @@ export default async function TemplatePage({ params }: { params: Promise<{ split
     supabase.from("workout_templates").select("id, name, split_id, splits(name)").eq("id", templateId).eq("split_id", splitId).maybeSingle(),
     supabase
       .from("template_exercises")
-      .select(`id, position, target_sets, rep_min, rep_max, rest_seconds, notes, exercise:exercises(${EXERCISE_COLUMNS})`)
+      .select(`id, position, target_sets, rep_min, rep_max, rest_seconds, notes, progression_enabled, progression_increment_kg, exercise:exercises(${EXERCISE_COLUMNS})`)
       .eq("template_id", templateId)
       .order("position")
       .order("created_at"),

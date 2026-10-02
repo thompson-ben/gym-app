@@ -41,9 +41,9 @@ export default async function SplitsPage({ searchParams }: { searchParams: Promi
       <li key={r.id}>
         <Link href={`/splits/${r.id}`} className="flex items-center gap-3 rounded-3xl border border-line bg-surface p-4 transition hover:bg-surface-2">
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <h3 className="truncate text-lg font-semibold">{r.name}</h3>
-              {period ? <span className="shrink-0 rounded-full bg-accent px-2 py-0.5 text-xs font-semibold text-accent-ink">Active</span> : null}
+            <div className="flex items-start gap-2">
+              <h3 className="line-clamp-2 text-lg leading-snug font-semibold break-words">{r.name}</h3>
+              {period ? <span className="mt-1 shrink-0 rounded-full bg-accent px-2 py-0.5 text-xs font-semibold text-accent-ink">Active</span> : null}
             </div>
             <p className="text-sm text-muted">
               {count} {count === 1 ? "workout" : "workouts"}
@@ -62,11 +62,20 @@ export default async function SplitsPage({ searchParams }: { searchParams: Promi
       <PageHeader title="Splits" action={<NewSplitButton autoOpen={openNew === "1"} />} />
       {rows.length === 0 ? (
         <EmptyState title="No splits yet" action={<NewSplitButton label="Create your first split" variant="primary" />}>
-          A split is a set of workouts you rotate through, like Push / Pull / Legs. Your exercise history is kept separately, so changing splits never loses it.
+          A split is the set of workouts you rotate through, like Upper / Lower or Push / Pull / Legs. Change splits whenever you like: your exercise history stays with each exercise, so nothing is lost.
         </EmptyState>
       ) : (
         <div className="space-y-8">
-          {active.length ? <ul className="space-y-3">{active.map(item)}</ul> : null}
+          <section>
+            <h2 className="mb-3 text-sm font-medium tracking-wide text-muted uppercase">Active</h2>
+            {active.length ? (
+              <ul className="space-y-3">{active.map(item)}</ul>
+            ) : (
+              <p className="rounded-3xl border border-dashed border-line px-4 py-4 text-sm text-muted">
+                No split is active. Open a saved split and activate it to see its workouts on Train.
+              </p>
+            )}
+          </section>
           {saved.length ? (
             <section>
               <h2 className="mb-3 text-sm font-medium tracking-wide text-muted uppercase">Saved splits</h2>

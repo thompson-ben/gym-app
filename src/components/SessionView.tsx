@@ -4,7 +4,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { removeSet, toPayload, updateSet } from "@/lib/session/doc";
-import { formatDate, formatSet, formatTarget, weightLabel } from "@/lib/format";
+import { formatDate, formatMinutes, formatSet, formatTarget, weightLabel } from "@/lib/format";
+import { formatTargetSets } from "@/lib/progression";
+import type { PersonalRecord } from "@/lib/records";
+import type { TargetMap } from "@/lib/targets";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { friendlyError } from "@/lib/supabase/errors";
 import type { SessionDoc } from "@/lib/types";
@@ -14,15 +17,45 @@ import { cx } from "./styles";
 import { Button, ErrorNote, IconButton, PageHeader } from "./ui";
 import { WorkoutDateSheet } from "./WorkoutDateSheet";
 
-export function SessionView({ doc: initial, timeZone, justFinished }: { doc: SessionDoc; timeZone: string; justFinished: boolean }) {
+export type SessionInsights = {
+  byExercise: Record<string, { records: PersonalRecord[]; change: string | null } | undefined>;
+  nextTargets: TargetMap;
+  firstWorkout: boolean;
+  durationMinutes: number | null;
+};
+
+export function SessionView({
+  doc: initial,
+  timeZone,
+  justFinished,
+  insights,
+}: {
+  doc: SessionDoc;
+  timeZone: string;
+  justFinished: boolean;
+  insights: SessionInsights;
+}) {
   const router = useRouter();
   const [doc, setDoc] = useState(initial);
   const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dateOpen, setDateOpen] = useState(false);
-  const duration = doc.completed_at ? (new Date(doc.completed_at).getTime() - new Date(doc.started_at).getTime()) / 1000 : 0;
-  const totalSets = doc.exercises.reduce((n, e) => n + e.sets.length, 0);
+  const workingSets = doc.exercises.reduce((n, e) => n + e.sets.filter((s) => s.set_type === "working").length, 0);
+  const performed = doc.exercises.filter((e) => e.sets.some((s) => s.set_type === "working"));
+  const stats = [
+    `${performed.length} ${performed.length === 1 ? "exercise" : "exercises"}`,
+    `${workingSets} working ${workingSets === 1 ? "set" : "sets"}`,
+    insights.durationMinutes ? formatMinutes(insights.durationMinutes) : doc.is_backdated ? "logged afterwards" : null,
+  ].filter(Boolean).join(" · ");
+  const records = performed.flatMap((e) => (insights.byExercise[e.exercise_id]?.records ?? []).map((r) => ({ ...r, exercise: e.exercise_name, id: e.exercise_id })));
+  const seen = new Set<string>();
+  const uniqueRecords = records.filter((r) => (seen.has(r.id + r.kind) ? false : (seen.add(r.id + r.kind), true)));
+  const baselines = uniqueRecords.filter((r) => r.kind === "first");
+  const prs = uniqueRecords.filter((r) => r.kind !== "first");
+  const targets = doc.exercises
+    .map((e) => ({ e, t: insights.nextTargets[e.id] }))
+    .filter((x): x is { e: (typeof doc.exercises)[number]; t: NonNullable<typeof x.t> & { target: NonNullable<NonNullable<typeof x.t>["target"]> } } => Boolean(x.t?.target));
 
   async function changeDate(iso: string): Promise<string | null> {
     const { data, error } = await supabaseBrowser().rpc("set_session_date", { p_session_id: doc.id, p_performed_at: iso });
@@ -75,7 +108,7 @@ export function SessionView({ doc: initial, timeZone, justFinished }: { doc: Ses
   return (
     <>
       <PageHeader
-        back={{ href: "/progress", label: "Progress" }}
+        back={{ href: "/history", label: "History" }}
         eyebrow={[doc.split_name, doc.completed_at ? formatDate(doc.completed_at, timeZone, { weekday: "long" }) : null].filter(Boolean).join(" · ")}
         title={doc.template_name}
         action={
@@ -90,23 +123,60 @@ export function SessionView({ doc: initial, timeZone, justFinished }: { doc: Ses
         }
       />
       {justFinished ? (
-        <div className="-mt-2 mb-5 flex items-center gap-3 rounded-3xl bg-accent-soft p-4">
-          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-accent text-accent-ink"><IconCheck /></span>
+        <div className="-mt-2 mb-4 flex items-center gap-3 rounded-3xl bg-accent-soft p-4" role="status">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent text-accent-ink"><IconCheck /></span>
           <div>
             <p className="font-semibold">Workout saved</p>
             <p className="text-sm text-muted">
-              {totalSets} sets
-              {doc.is_backdated && doc.completed_at
-                ? ` · saved for ${formatDate(doc.completed_at, timeZone, { weekday: "long", year: undefined })}`
-                : ` · ${Math.round(duration / 60)} min`}
+              {stats}
+              {doc.is_backdated && doc.completed_at ? ` · saved for ${formatDate(doc.completed_at, timeZone, { weekday: "long", year: undefined })}` : ""}
             </p>
           </div>
         </div>
       ) : (
-        <p className="-mt-3 mb-5 text-sm text-muted">
-          {totalSets} sets{doc.is_backdated ? " · logged afterwards" : ` · ${Math.round(duration / 60)} min`}
-        </p>
+        <p className="-mt-3 mb-4 text-sm text-muted">{stats}</p>
       )}
+      {justFinished && insights.firstWorkout ? (
+        <p className="mb-4 rounded-2xl border border-line bg-surface px-4 py-3 text-sm text-muted">
+          Your first workout is logged. Next time you do these exercises, today’s sets appear in the Previous column so you know what to aim for.
+        </p>
+      ) : null}
+
+      {!editing && (prs.length || baselines.length) ? (
+        <section aria-labelledby="records-title" className="mb-4 rounded-3xl border border-line bg-surface p-4">
+          <h2 id="records-title" className="text-sm font-medium tracking-wide text-muted uppercase">Records</h2>
+          {prs.length ? (
+            <ul className="mt-2 space-y-2">
+              {[...new Set(prs.map((r) => r.id))].map((id) => {
+                const mine = prs.filter((r) => r.id === id);
+                return (
+                  <li key={id} className="flex items-start gap-2">
+                    <span aria-hidden="true" className="mt-0.5 text-accent-text">★</span>
+                    <span>
+                      <span className="font-medium">{mine[0].exercise}</span>
+                      {mine.map((r) => (
+                        <span key={r.kind} className="block text-sm text-muted">{r.label}: {r.detail}</span>
+                      ))}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : null}
+          {baselines.length ? (
+            <p className="mt-2 text-sm text-muted">
+              First recorded performance{baselines.length === 1 ? "" : "s"}: {baselines.map((b) => b.exercise).join(", ")}. Your baseline is set.
+            </p>
+          ) : null}
+          <details className="mt-2 text-sm text-faint">
+            <summary className="cursor-pointer py-1">How records are defined</summary>
+            <p className="mt-1">
+              Working sets only, compared with every earlier workout. Heaviest load: more weight than ever before. Rep record: more reps at a weight you have
+              lifted before. Estimated 1RM: Epley estimate from sets of 12 reps or fewer; an estimate, not a tested max. Ties are not records.
+            </p>
+          </details>
+        </section>
+      ) : null}
       {editing ? (
         <div className="mb-4 flex items-center justify-between gap-3 rounded-2xl border border-line bg-surface px-4 py-3">
           <div>
@@ -130,6 +200,9 @@ export function SessionView({ doc: initial, timeZone, justFinished }: { doc: Ses
                 </h2>
                 <span className="shrink-0 text-sm text-muted">{formatTarget(ex.target_sets, ex.rep_min, ex.rep_max)}</span>
               </div>
+              {!editing && insights.byExercise[ex.exercise_id]?.change && ex.sets.some((x) => x.set_type === "working") ? (
+                <p className="mt-0.5 text-sm text-muted">vs last time: {insights.byExercise[ex.exercise_id]!.change}</p>
+              ) : null}
               {ex.notes ? <p className="mt-1 text-sm text-muted italic">{ex.notes}</p> : null}
               {ex.sets.length === 0 ? (
                 <p className="mt-2 text-sm text-faint">{ex.skipped ? "Skipped" : "Not performed"}</p>
@@ -179,6 +252,21 @@ export function SessionView({ doc: initial, timeZone, justFinished }: { doc: Ses
           );
         })}
       </div>
+      {!editing && targets.length ? (
+        <section aria-labelledby="next-title" className="mt-4 rounded-3xl border border-dashed border-accent-text/50 p-4">
+          <h2 id="next-title" className="text-sm font-medium tracking-wide text-accent-text uppercase">Next time</h2>
+          <ul className="mt-2 space-y-2">
+            {targets.map(({ e, t }) => (
+              <li key={e.id}>
+                <span className="font-medium">{e.exercise_name}</span>
+                <span className="ml-2 tabular">{formatTargetSets(t.target)}</span>
+                <span className="block text-sm text-muted">{t.target.reason}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 text-xs text-faint">Suggestions only. They show beside Previous next time and never count as sets.</p>
+        </section>
+      ) : null}
       {editing ? null : <p className="mt-6 text-center text-xs text-faint">Names and targets are as they were when this workout was logged.</p>}
       <WorkoutDateSheet
         open={dateOpen}

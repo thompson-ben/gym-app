@@ -62,10 +62,10 @@ export function metricsFor(mode: TrackingMode): MetricInfo[] {
       {
         id: "e1rm",
         label: "Est. 1RM",
-        title: "Estimated 1-rep max, best set per session",
+        title: "Estimated 1RM per session",
         unit: "kg",
         description:
-          "Estimated from each session's best working set with the Epley formula: weight × (1 + reps ÷ 30). Lets sets in different rep ranges be compared. An estimate, most reliable up to about 12 reps.",
+          "An estimate from each session’s best working set of 12 reps or fewer, so sets in different rep ranges can be compared. Not a tested max.",
       },
       {
         id: "volume",
@@ -119,7 +119,8 @@ export function progressSeries(history: HistorySession[], mode: TrackingMode, me
     if (!working.length) continue;
     const base = { sessionId: s.session_id, date: s.completed_at, workout: s.template_name };
     if (metric === "e1rm" && mode === "weight_reps") {
-      const best = bestSet(working, mode)!;
+      const best = bestSet(working.filter(eligibleForE1RM), mode);
+      if (!best) continue;
       points.push({ ...base, value: round1(estimate1RM(best.weight_kg ?? 0, best.reps)), detail: setText(mode, best) });
     } else if (metric === "volume" && mode === "weight_reps") {
       const total = working.reduce((n, x) => n + (x.weight_kg ?? 0) * x.reps, 0);
@@ -136,9 +137,23 @@ export function progressSeries(history: HistorySession[], mode: TrackingMode, me
   return points.sort((a, b) => a.date.localeCompare(b.date));
 }
 
-/** Strength score of a set: e1RM for loaded lifts, reps for bodyweight, load then reps for added weight. */
-function setScore(mode: TrackingMode, x: PreviousSet): number {
-  if (mode === "weight_reps") return estimate1RM(x.weight_kg ?? 0, x.reps);
+/** Sets with more reps than this are not used for 1RM estimates (Epley overestimates them). */
+export const E1RM_REP_LIMIT = 12;
+
+const eligibleForE1RM = (x: PreviousSet) => x.reps >= 1 && x.reps <= E1RM_REP_LIMIT && (x.weight_kg ?? 0) > 0;
+
+/**
+ * Strength score of a set, used to pick a "best set":
+ * - weight × reps: estimated 1RM for sets of 1–12 reps; sets above 12 reps only win when no
+ *   set in range exists, and then by load (score below every eligible set).
+ * - reps only: most reps.
+ * - added weight: most added load, then most reps.
+ */
+export function setScore(mode: TrackingMode, x: PreviousSet): number {
+  if (mode === "weight_reps") {
+    if (eligibleForE1RM(x)) return 1e6 + estimate1RM(x.weight_kg ?? 0, x.reps);
+    return (x.weight_kg ?? 0) * 1000 + x.reps;
+  }
   if (mode === "bodyweight_reps") return x.reps;
   return (x.weight_kg ?? 0) * 1000 + x.reps;
 }
@@ -156,14 +171,14 @@ export function bestSetOverall(history: HistorySession[], mode: TrackingMode) {
   for (const s of history) {
     const top = bestSet(s.sets, mode);
     if (!top) continue;
-    const candidate = { set: top, date: s.completed_at, workout: s.template_name, e1rm: mode === "weight_reps" ? round1(estimate1RM(top.weight_kg ?? 0, top.reps)) : null };
+    const candidate = { set: top, date: s.completed_at, workout: s.template_name, e1rm: mode === "weight_reps" && eligibleForE1RM(top) ? round1(estimate1RM(top.weight_kg ?? 0, top.reps)) : null };
     if (!best || setScore(mode, top) > setScore(mode, best.set)) best = candidate;
   }
   return best && { ...best, text: setText(mode, best.set) };
 }
 
-/** Estimated 1RM of a session's best working set (loaded lifts only). */
+/** Estimated 1RM of a session's best eligible working set (loaded lifts, 1–12 reps), else null. */
 export function sessionE1RM(sets: PreviousSet[]): number | null {
-  const top = bestSet(sets, "weight_reps");
+  const top = bestSet(sets.filter(eligibleForE1RM), "weight_reps");
   return top ? round1(estimate1RM(top.weight_kg ?? 0, top.reps)) : null;
 }

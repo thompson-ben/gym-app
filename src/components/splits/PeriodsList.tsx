@@ -1,16 +1,17 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { formatDate, formatElapsed, fromLocalInput, toLocalInput } from "@/lib/format";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { friendlyError } from "@/lib/supabase/errors";
-import { IconEdit } from "../icons";
+import { IconChevronRight, IconEdit } from "../icons";
 import { Button, ErrorNote, Field, IconButton, SectionTitle, Sheet, inputClass } from "../ui";
 
 type Period = { id: string; started_at: string; ended_at: string | null; completed_workouts: number };
 
-export function PeriodsList({ periods, timeZone }: { periods: Period[]; timeZone: string }) {
+export function PeriodsList({ splitId, periods, timeZone }: { splitId: string; periods: Period[]; timeZone: string }) {
   const router = useRouter();
   const [editing, setEditing] = useState<Period | null>(null);
   const [start, setStart] = useState("");
@@ -48,18 +49,21 @@ export function PeriodsList({ periods, timeZone }: { periods: Period[]; timeZone
   return (
     <section>
       <SectionTitle>Active periods</SectionTitle>
-      <ol className="divide-y divide-line rounded-3xl border border-line bg-surface px-4">
+      <ol className="divide-y divide-line overflow-hidden rounded-3xl border border-line bg-surface">
         {periods.map((p) => (
-          <li key={p.id} className="flex items-center gap-3 py-3">
+          <li key={p.id} className="flex items-center gap-1 pr-2">
+            <Link href={`/splits/${splitId}/review/${p.id}`} className="flex min-w-0 flex-1 items-center gap-3 py-3 pl-4 hover:bg-surface-2/50">
             <div className="min-w-0 flex-1">
               <p className="font-medium">
                 {formatDate(p.started_at, timeZone)} – {p.ended_at ? formatDate(p.ended_at, timeZone) : "now"}
               </p>
               <p className="text-sm text-muted">
                 {p.ended_at ? "" : `Active for ${formatElapsed(p.started_at)} · `}
-                {p.completed_workouts} {p.completed_workouts === 1 ? "workout" : "workouts"} completed
+                {p.completed_workouts} {p.completed_workouts === 1 ? "workout" : "workouts"} completed · Review
               </p>
             </div>
+            <IconChevronRight className="shrink-0 text-faint" />
+            </Link>
             <IconButton label="Correct dates" onClick={() => open(p)}><IconEdit size={18} /></IconButton>
           </li>
         ))}

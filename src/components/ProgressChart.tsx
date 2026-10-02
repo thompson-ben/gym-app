@@ -8,8 +8,6 @@ import type { SeriesPoint } from "@/lib/progress";
 const H = 200;
 const PAD = { top: 16, right: 16, bottom: 28, left: 40 };
 
-
-/** Single-series line chart of the heaviest completed working set per session. */
 /** Single-series line chart of one metric per session. Tooltips show the real set(s) behind each value. */
 export function ProgressChart({ points, title, unit, timeZone }: { points: SeriesPoint[]; title: string; unit: string; timeZone: string }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -61,10 +59,11 @@ export function ProgressChart({ points, title, unit, timeZone }: { points: Serie
   return (
     <div
       ref={ref}
-      className="relative select-none"
-      onPointerMove={(e) => nearest(e.clientX)}
+      className="relative touch-pan-y select-none"
+      onPointerMove={(e) => (e.pointerType === "mouse" || e.buttons ? nearest(e.clientX) : undefined)}
       onPointerDown={(e) => nearest(e.clientX)}
-      onPointerLeave={() => setActive(null)}
+      // On touch the last inspected point stays visible after lifting the finger.
+      onPointerLeave={(e) => (e.pointerType === "mouse" ? setActive(null) : undefined)}
     >
       <svg
         width={width}
@@ -109,7 +108,29 @@ export function ProgressChart({ points, title, unit, timeZone }: { points: Serie
           <p className="text-muted">{formatDate(a.date, timeZone)} · {a.workout}</p>
         </div>
       ) : null}
-      <p className="mt-1 text-xs text-faint">Y axis: {unit}</p>
+      <p className="mt-1 text-xs text-faint">Y axis: {unit} · tap or drag across the chart to inspect a session</p>
+      <details className="mt-2 text-sm">
+        <summary className="cursor-pointer py-1 text-muted">Show as table</summary>
+        <table className="mt-2 w-full text-left tabular">
+          <caption className="sr-only">{title}</caption>
+          <thead>
+            <tr className="text-faint">
+              <th scope="col" className="py-1 font-normal">Date</th>
+              <th scope="col" className="py-1 font-normal">{unit}</th>
+              <th scope="col" className="py-1 font-normal">From</th>
+            </tr>
+          </thead>
+          <tbody>
+            {[...points].reverse().map((p) => (
+              <tr key={p.sessionId} className="border-t border-line">
+                <td className="py-1.5">{formatDate(p.date, timeZone)}</td>
+                <td className="py-1.5">{fmt(p.value)}</td>
+                <td className="py-1.5 text-muted">{p.detail}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </details>
     </div>
   );
 }

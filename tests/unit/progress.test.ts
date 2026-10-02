@@ -67,3 +67,19 @@ describe("chart metrics", () => {
     expect(bestSetOverall(history, "weight_reps")).toMatchObject({ text: "40 kg × 8", e1rm: 50.7, workout: "Chest & back" });
   });
 });
+
+import { bestSet, progressSeries, sessionE1RM } from "@/lib/progress";
+
+describe("best set and estimated 1RM eligibility", () => {
+  const w = (weight_kg: number, reps: number) => ({ set_type: "working" as const, weight_kg, reps });
+  it("prefers sets of 12 reps or fewer over a high-rep extrapolation", () => {
+    // 20 × 30 would "estimate" 40 kg; 32.5 × 8 estimates 41.2 kg but even 30 × 5 (35) must beat 20 × 30.
+    expect(bestSet([w(20, 30), w(30, 5)], "weight_reps")).toEqual(w(30, 5));
+    expect(sessionE1RM([w(20, 30)])).toBeNull();
+    expect(bestSet([w(20, 30), w(22, 25)], "weight_reps")).toEqual(w(22, 25));
+  });
+  it("leaves high-rep-only sessions out of the estimated 1RM chart", () => {
+    const s = (id: string, sets: ReturnType<typeof w>[]) => ({ session_id: id, completed_at: id, template_name: "A", split_name: null, split_id: null, sets });
+    expect(progressSeries([s("1", [w(20, 30)]), s("2", [w(30, 10)])], "weight_reps", "e1rm").map((p) => p.sessionId)).toEqual(["2"]);
+  });
+});

@@ -19,6 +19,8 @@ type Props = {
   onChange: (patch: Partial<Pick<SessionSet, "weight_kg" | "reps">>) => void;
   onToggleDone: () => void;
   onOpenMenu: () => void;
+  /** Where this set is in the exercise: confirmed, the next one to do, or later. */
+  state: "done" | "current" | "upcoming";
 };
 
 export const GRID_WITH_WEIGHT =
@@ -44,7 +46,7 @@ function useNumberField(value: number | null, parse: (s: string) => number | nul
 }
 
 export const SetRow = forwardRef<SetRowHandle, Props>(function SetRow(
-  { set, label, ordinal, previous, mode, exerciseName, onChange, onToggleDone, onOpenMenu },
+  { set, label, ordinal, previous, mode, exerciseName, onChange, onToggleDone, onOpenMenu, state },
   ref,
 ) {
   const weightRef = useRef<HTMLInputElement>(null);
@@ -57,6 +59,8 @@ export const SetRow = forwardRef<SetRowHandle, Props>(function SetRow(
   const weight = useNumberField(set.weight_kg, parseWeight, (n) => formatKg(n));
   const reps = useNumberField(set.reps, parseReps, (n) => (n === null ? "" : String(n)));
   const [flash, setFlash] = useState(false);
+  // A second tap within this window is treated as the same tap (no confirm-then-undo).
+  const lastToggle = useRef(Number.NEGATIVE_INFINITY);
   useEffect(() => {
     if (!flash) return;
     const t = setTimeout(() => setFlash(false), 600);
@@ -68,9 +72,14 @@ export const SetRow = forwardRef<SetRowHandle, Props>(function SetRow(
 
   return (
     <div
-      className={cx(showWeight ? GRID_WITH_WEIGHT : GRID_REPS_ONLY, "-mx-1 rounded-2xl px-1 py-1 transition-colors", done && "bg-accent-soft")}
+      className={cx(
+        showWeight ? GRID_WITH_WEIGHT : GRID_REPS_ONLY,
+        "-mx-1 rounded-2xl border px-1 py-1 transition-colors",
+        done ? "border-transparent bg-accent-soft" : state === "current" ? "border-line bg-surface-2/60" : "border-transparent",
+      )}
       role="group"
-      aria-label={setName}
+      aria-label={`${setName}${done ? ", completed" : state === "current" ? ", next to do" : ""}`}
+      aria-current={state === "current" ? "step" : undefined}
     >
       <button
         type="button"
@@ -81,6 +90,7 @@ export const SetRow = forwardRef<SetRowHandle, Props>(function SetRow(
         )}
         aria-label={`${ordinal} options`}
       >
+        {state === "current" ? <span aria-hidden="true" className="mr-0.5 text-[11px] text-muted">▸</span> : null}
         {label}
       </button>
       <div className="min-w-0 truncate text-center text-[13px] text-fg/85 tabular min-[380px]:text-[14px]" aria-label={previous ? `Previous: ${formatSet(mode, previous.weight_kg, previous.reps)}` : "No previous set"}>
@@ -112,7 +122,7 @@ export const SetRow = forwardRef<SetRowHandle, Props>(function SetRow(
               repsRef.current?.focus();
             }
           }}
-          className={cx(numberInput, weight.invalid ? "border-danger" : "border-line")}
+          className={cx(numberInput, "scroll-my-28", weight.invalid ? "border-danger" : "border-line")}
         />
       ) : null}
       <input
@@ -141,11 +151,13 @@ export const SetRow = forwardRef<SetRowHandle, Props>(function SetRow(
             e.currentTarget.blur();
           }
         }}
-        className={cx(numberInput, reps.invalid ? "border-danger" : "border-line")}
+        className={cx(numberInput, "scroll-my-28", reps.invalid ? "border-danger" : "border-line")}
       />
       <button
         type="button"
-        onClick={() => {
+        onClick={(e) => {
+          if (e.timeStamp - lastToggle.current < 400) return;
+          lastToggle.current = e.timeStamp;
           if (!done) setFlash(true);
           onToggleDone();
         }}
