@@ -24,8 +24,14 @@ export default async function TrainPage() {
   const { supabase } = await requireUser();
   const tz = await viewerTimeZone();
 
+  // Two round trips: the active split with its workouts (one nested query) plus the open and
+  // recent sessions, then the split's performed dates and period count together.
   const [{ data: period, error: periodError }, { data: open, error: openError }, recent] = await Promise.all([
-    supabase.from("split_active_periods").select("id, started_at, split_id, splits(id, name)").is("ended_at", null).maybeSingle(),
+    supabase
+      .from("split_active_periods")
+      .select("id, started_at, split_id, splits(id, name, workout_templates(id, name, position, created_at, template_exercises(target_sets)))")
+      .is("ended_at", null)
+      .maybeSingle(),
     supabase.from("workout_sessions").select("id, template_name, split_name, started_at, is_backdated").eq("status", "in_progress").maybeSingle(),
     supabase.from("workout_sessions").select("id, template_name, completed_at, split_id").eq("status", "completed").order("completed_at", { ascending: false }).limit(3),
   ]);
@@ -33,36 +39,26 @@ export default async function TrainPage() {
   if (openError) throw openError;
   if (recent.error) throw recent.error;
 
-  const split = period?.splits as unknown as { id: string; name: string } | null;
+  const split = period?.splits as unknown as { id: string; name: string; workout_templates: (TemplateRow & { created_at: string })[] } | null;
   let workouts: WorkoutSummary[] = [];
   let periodCount = 0;
   let next: NextWorkout | null = null;
 
   if (period && split) {
-    const tpl = await supabase
-      .from("workout_templates")
-      .select("id, name, position, template_exercises(target_sets)")
-      .eq("split_id", split.id)
-      .order("position")
-      .order("created_at");
-    if (tpl.error) throw tpl.error;
-    const rows = tpl.data as unknown as TemplateRow[];
+    const rows = [...split.workout_templates].sort((a, b) => a.position - b.position || a.created_at.localeCompare(b.created_at));
     const ids = rows.map((t) => t.id);
-    // Performed dates of this split's workouts (completed_at is when it was performed,
-    // including for past workouts logged later).
-    const history = ids.length
-      ? await supabase
-          .from("workout_sessions")
-          .select("template_id, split_id, completed_at")
-          .eq("status", "completed")
-          .in("template_id", ids)
-          .order("completed_at", { ascending: false })
-          .limit(1000)
-      : { data: [], error: null };
+    const [history, countRes] = await Promise.all([
+      // When each of this split's workouts was last performed (completed_at is the performed
+      // date, also for past workouts logged later). Quick workouts have no template, so never match.
+      ids.length
+        ? supabase.from("workout_sessions").select("template_id, completed_at").eq("status", "completed").in("template_id", ids).order("completed_at", { ascending: false }).limit(1000)
+        : Promise.resolve({ data: [], error: null }),
+      supabase.from("workout_sessions").select("id", { count: "exact", head: true }).eq("status", "completed").eq("split_id", split.id).gte("completed_at", period.started_at),
+    ]);
     if (history.error) throw history.error;
-    const performed = (history.data ?? []) as { template_id: string; split_id: string | null; completed_at: string }[];
+    if (countRes.error) throw countRes.error;
     const last = new Map<string, string>();
-    for (const s of performed) if (!last.has(s.template_id)) last.set(s.template_id, s.completed_at);
+    for (const s of (history.data ?? []) as { template_id: string; completed_at: string }[]) if (!last.has(s.template_id)) last.set(s.template_id, s.completed_at);
 
     workouts = rows.map((t, i) => ({
       id: t.id,
@@ -72,20 +68,8 @@ export default async function TrainPage() {
       workingSets: t.template_exercises.reduce((n, e) => n + e.target_sets, 0),
       lastPerformed: last.get(t.id) ?? null,
     }));
-    const inPeriod = performed.filter((s) => s.split_id === split.id && s.completed_at >= period.started_at);
-    const countRes = await supabase
-      .from("workout_sessions")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "completed")
-      .eq("split_id", split.id)
-      .gte("completed_at", period.started_at);
-    if (countRes.error) throw countRes.error;
     periodCount = countRes.count ?? 0;
-    next = suggestNextWorkout({
-      workouts,
-      periodSessions: inPeriod.map((s) => ({ templateId: s.template_id, performedAt: s.completed_at })),
-      trainedInEarlierPeriod: performed.some((s) => s.split_id === split.id && s.completed_at < period.started_at),
-    });
+    next = suggestNextWorkout(workouts, (iso) => formatShortDate(iso, tz));
   }
 
   const suggested = next && next.kind !== "choose" ? workouts.find((w) => w.id === next.templateId) ?? null : null;

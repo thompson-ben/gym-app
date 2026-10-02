@@ -1,57 +1,36 @@
 import { describe, expect, it } from "vitest";
 import { suggestNextWorkout, type SplitWorkout } from "@/lib/next-workout";
 
-const W: SplitWorkout[] = [
-  { id: "ua", name: "Upper A", position: 0, exerciseCount: 4 },
-  { id: "la", name: "Lower A", position: 1, exerciseCount: 4 },
-  { id: "ub", name: "Upper B", position: 2, exerciseCount: 5 },
-  { id: "lb", name: "Lower B", position: 3, exerciseCount: 3 },
-];
-const s = (templateId: string | null, performedAt: string) => ({ templateId, performedAt });
+const w = (id: string, position: number, lastPerformed: string | null, exerciseCount = 4): SplitWorkout => ({ id, name: id, position, exerciseCount, lastPerformed });
 
-describe("suggestNextWorkout", () => {
-  it("starts at the first workout of a brand-new split", () => {
-    expect(suggestNextWorkout({ workouts: W, periodSessions: [], trainedInEarlierPeriod: false })).toMatchObject({ kind: "first", templateId: "ua" });
+describe("suggestNextWorkout (longest ago in the active split)", () => {
+  it("starts a brand-new split at its first workout", () => {
+    expect(suggestNextWorkout([w("chest", 0, null), w("legs", 1, null), w("arms", 2, null)])).toMatchObject({ templateId: "chest", reason: "First in your split order" });
   });
 
-  it("is neutral when the split was trained in an earlier period but not this one", () => {
-    expect(suggestNextWorkout({ workouts: W, periodSessions: [], trainedInEarlierPeriod: true }).kind).toBe("choose");
+  it("suggests the workout performed longest ago, whatever the split order", () => {
+    // Done: legs 20 Sep, chest 18 Sep, arms 24 Sep → chest is the oldest.
+    const r = suggestNextWorkout([w("chest", 0, "2026-09-18T18:00:00Z"), w("legs", 1, "2026-09-20T18:00:00Z"), w("arms", 2, "2026-09-24T18:00:00Z")]);
+    expect(r).toMatchObject({ kind: "next", templateId: "chest" });
+    expect(r.reason).toBe("Done longest ago in this split (last 2026-09-18)");
   });
 
-  it("continues after the most recently performed workout and wraps round", () => {
-    const r = suggestNextWorkout({ workouts: W, periodSessions: [s("ua", "2026-09-01"), s("la", "2026-09-02")], trainedInEarlierPeriod: false });
-    expect(r).toMatchObject({ kind: "next", templateId: "ub", reason: "Next after Lower A in your split order" });
-    expect(suggestNextWorkout({ workouts: W, periodSessions: [s("lb", "2026-09-05")], trainedInEarlierPeriod: false })).toMatchObject({ templateId: "ua" });
+  it("puts a workout never done first, in split order", () => {
+    expect(suggestNextWorkout([w("chest", 0, "2026-09-18"), w("legs", 1, null), w("arms", 2, null)])).toMatchObject({ templateId: "legs", reason: "Not done yet in this split" });
   });
 
-  it("follows out-of-order and skipped workouts from the latest one", () => {
-    const r = suggestNextWorkout({ workouts: W, periodSessions: [s("ua", "2026-09-01"), s("ub", "2026-09-03")], trainedInEarlierPeriod: false });
-    expect(r).toMatchObject({ templateId: "lb" });
+  it("uses the date performed, so a past workout logged later sits on its own date", () => {
+    // Arms was logged today but performed on 10 Sep, so it is still the oldest.
+    expect(suggestNextWorkout([w("chest", 0, "2026-09-18"), w("arms", 1, "2026-09-10")])).toMatchObject({ templateId: "arms" });
   });
 
-  it("orders by when the workout was performed, so a past workout logged later does not jump ahead", () => {
-    // Lower B was logged retrospectively for 30 Aug, after Upper A on 1 Sep was logged live.
-    const r = suggestNextWorkout({ workouts: W, periodSessions: [s("ua", "2026-09-01T18:00:00Z"), s("lb", "2026-08-30T18:00:00Z")], trainedInEarlierPeriod: false });
-    expect(r).toMatchObject({ templateId: "la" });
-  });
-
-  it("ignores quick workouts and workouts no longer in the split", () => {
-    const r = suggestNextWorkout({ workouts: W, periodSessions: [s("ua", "2026-09-01"), s(null, "2026-09-02"), s("gone", "2026-09-03")], trainedInEarlierPeriod: false });
-    expect(r).toMatchObject({ templateId: "la" });
-  });
-
-  it("uses the current order after reordering", () => {
-    const reordered = W.map((w) => (w.id === "ub" ? { ...w, position: 1 } : w.id === "la" ? { ...w, position: 2 } : w));
-    expect(suggestNextWorkout({ workouts: reordered, periodSessions: [s("ua", "2026-09-01")], trainedInEarlierPeriod: false })).toMatchObject({ templateId: "ub" });
-  });
-
-  it("passes over workouts without exercises", () => {
-    const w = W.map((x) => (x.id === "la" ? { ...x, exerciseCount: 0 } : x));
-    expect(suggestNextWorkout({ workouts: w, periodSessions: [s("ua", "2026-09-01")], trainedInEarlierPeriod: false })).toMatchObject({ templateId: "ub" });
-    expect(suggestNextWorkout({ workouts: w.map((x) => ({ ...x, exerciseCount: 0 })), periodSessions: [], trainedInEarlierPeriod: false }).kind).toBe("choose");
+  it("breaks ties by split order and skips workouts without exercises", () => {
+    expect(suggestNextWorkout([w("b", 1, "2026-09-18"), w("a", 0, "2026-09-18")])).toMatchObject({ templateId: "a" });
+    expect(suggestNextWorkout([w("empty", 0, null, 0), w("a", 1, "2026-09-18"), w("b", 2, "2026-09-20")])).toMatchObject({ templateId: "a" });
+    expect(suggestNextWorkout([w("empty", 0, null, 0)]).kind).toBe("choose");
   });
 
   it("handles a single-workout split", () => {
-    expect(suggestNextWorkout({ workouts: [W[0]], periodSessions: [s("ua", "2026-09-01")], trainedInEarlierPeriod: false })).toMatchObject({ kind: "only", templateId: "ua" });
+    expect(suggestNextWorkout([w("a", 0, "2026-09-18")])).toMatchObject({ kind: "only", templateId: "a" });
   });
 });

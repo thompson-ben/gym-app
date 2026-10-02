@@ -38,10 +38,10 @@ test("Train → preview → log with an optional target → summary → split re
   await logPast(user, legs, 3, [[100, 12], [100, 12]]);
 
   await signIn(page, user);
-  // Legs was last, so Upper is suggested next; Legs is one of the other workouts.
+  // Upper has never been done, so it is suggested before Legs.
   await expect(page.getByText("Suggested next")).toBeVisible();
   await expect(page.getByRole("heading", { level: 1, name: "Upper" })).toBeVisible();
-  await expect(page.getByText("Next after Legs in your split order")).toBeVisible();
+  await expect(page.getByText("Not done yet in this split")).toBeVisible();
   await expectNoHorizontalScroll(page);
 
   await page.locator('a[href^="/train/workout/"]', { hasText: "Legs" }).click();
@@ -107,4 +107,20 @@ test("a brand-new split starts at its first workout; history and review are reac
   await expect(page.getByText("Not performed yet", { exact: true })).toBeVisible();
   await page.goto("/history");
   await expect(page.getByText("No workouts yet")).toBeVisible();
+});
+
+test("one high-rep session still shows the chart with all metric tabs, opening on one with data", async ({ page }) => {
+  const user = await newUser("onechart");
+  const { templateId } = await seedSplit(user, "Arms", "Arms", ["triceps-pushdown"]);
+  await logPast(user, templateId, 2, [[20, 20], [20, 20]]);
+  await signIn(page, user);
+  await page.goto("/progress");
+  await page.getByRole("link", { name: /Triceps Pushdown/ }).first().click();
+  for (const tab of ["Est. 1RM", "Volume", "Heaviest"]) await expect(page.getByRole("link", { name: tab, exact: true })).toBeVisible();
+  // 20-rep sets give no 1RM estimate, so the page opens on Volume with a one-point chart.
+  await expect(page.getByRole("heading", { name: "Session volume" })).toBeVisible();
+  await expect(page.getByRole("img", { name: /Session volume, 1 sessions/ })).toBeVisible();
+  await expect(page.getByText("Your baseline is set.", { exact: false })).toBeVisible();
+  await page.getByRole("link", { name: "Est. 1RM", exact: true }).click();
+  await expect(page.getByText(/No estimate yet/)).toBeVisible();
 });

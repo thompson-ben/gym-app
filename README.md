@@ -176,12 +176,11 @@ History, the Previous column and charts are ordered by the performed date, so pa
 
 Train leads with one decision. If a workout is in progress, **Resume** replaces everything else (a second session cannot be started). Otherwise it shows a compact summary of the active split (one tap to its page, where dates are managed), the **suggested next** workout, the other workouts as compact rows (tap for a preview, or Start), Quick workout, and the last three workouts. "Log past workout" sits in the header.
 
-The suggestion is a *sequence* hint, never a readiness judgement (`src/lib/next-workout.ts`, unit-tested):
+The suggestion is a rotation hint, never a readiness judgement (`src/lib/next-workout.ts`, unit-tested): **the active split's workout done longest ago.**
 
-- Candidates are the active split's current workouts in their saved order; empty workouts are passed over.
-- Only completed sessions of those workouts in the current active period count, ordered by the date performed, so a past workout logged today lands on its own date. Quick workouts, other splits and workouts removed from the split are ignored.
-- Next = the workout after the most recently performed one, wrapping round. Out-of-order or skipped workouts simply continue from the latest.
-- Nothing yet this period: the first workout, unless the split was trained in an earlier period. Then Train says **Choose a workout** rather than guess.
+- Only the active split's current workouts are candidates; empty workouts are passed over.
+- "Done" means a completed session of that workout, dated when it was performed, so a past workout logged today counts on its own date. Quick workouts and other splits' workouts never count.
+- A workout never done comes first (in split order). Otherwise the one with the oldest last-performed date; ties go to the earlier one in the split's order.
 
 Tapping a workout opens a **preview** (`/train/workout/[id]`): exercise order, sets and rep ranges, last performance, notes and any target. Starting never requires the preview.
 
@@ -212,7 +211,7 @@ After finishing (and whenever a workout is opened later) the summary shows exerc
 
 ### Progress, history and split review
 
-- **Exercise progress**: identity → latest session and its change → chart (or "Your baseline is set" with one session, or "Not enough comparable data" when a metric has fewer than two points) → full history → "How these numbers are calculated" on demand. **Best set** is the completed working set with the highest estimated 1RM *among sets of 12 reps or fewer* (high-rep sets only win when nothing else exists, by load). Chart points can be inspected by touch, mouse or arrow keys, and the same data is available as a table. Metrics: **Est. 1RM** (Epley `weight × (1 + reps ÷ 30)`, sets of 1–12 reps), **Volume** (weight × reps over working sets), **Heaviest**; reps-only and added-weight exercises show heaviest/most reps and total reps only.
+- **Exercise progress**: identity → latest session and its change → chart with the Est. 1RM / Volume / Heaviest tabs (shown from the first session; without a choice it opens on the first metric that has data, e.g. Volume when every set is above 12 reps) → full history → "How these numbers are calculated" on demand. **Best set** is the completed working set with the highest estimated 1RM *among sets of 12 reps or fewer* (high-rep sets only win when nothing else exists, by load). Chart points can be inspected by touch, mouse or arrow keys, and the same data is available as a table. Metrics: **Est. 1RM** (Epley `weight × (1 + reps ÷ 30)`, sets of 1–12 reps), **Volume** (weight × reps over working sets), **Heaviest**; reps-only and added-weight exercises show heaviest/most reps and total reps only.
 - **Workout history** (`/history`): every completed workout by month performed.
 - **Split review** (`/splits/[id]/review/[period]`, linked from each active period and from Progress): sessions performed during the period (half-open: start ≤ performed < end), working sets per Monday–Sunday week in your time zone, a breakdown by workout, and first-vs-latest best set for exercises done at least twice. It describes what was logged only: no adherence scores, no causal claims, and names appear as they were logged, so later template edits do not rewrite it.
 
