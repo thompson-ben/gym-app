@@ -42,8 +42,11 @@ export default async function ExercisePage({
   const sessions = history.data as HistorySession[];
   const filtered = Boolean(uuid(split) || uuid(period));
   const metrics = metricsFor(exercise.tracking_mode);
-  const metric = metrics.find((m) => m.id === metricParam) ?? metrics[0];
-  const points = progressSeries(sessions, exercise.tracking_mode, metric.id);
+  // Without a choice in the URL, open on the first metric that has data (e.g. Volume when every
+  // set is above 12 reps, so no 1RM can be estimated).
+  const seriesFor = (id: (typeof metrics)[number]["id"]) => progressSeries(sessions, exercise.tracking_mode, id);
+  const metric = metrics.find((m) => m.id === metricParam) ?? metrics.find((m) => seriesFor(m.id).length > 0) ?? metrics[0];
+  const points = seriesFor(metric.id);
   const best = bestSetOverall(sessions, exercise.tracking_mode);
   const chronological = [...sessions].sort((a, b) => a.completed_at.localeCompare(b.completed_at));
   const latest = chronological.at(-1);
@@ -61,6 +64,7 @@ export default async function ExercisePage({
     if (uuid(split)) q.set("split", split!);
     if (uuid(period)) q.set("period", period!);
     for (const [k, v] of Object.entries(extra)) if (v) q.set(k, v);
+    if (!("metric" in extra) && metricParam) q.set("metric", metricParam);
     const str = q.toString();
     return `/progress/${exerciseId}${str ? `?${str}` : ""}`;
   };
@@ -82,7 +86,7 @@ export default async function ExercisePage({
             label: `${(p.splits as unknown as { name: string } | null)?.name ?? "Split"}: ${formatDate(p.started_at, tz)} – ${p.ended_at ? formatDate(p.ended_at, tz) : "now"}`,
           }))}
           value={uuid(period) ? `period:${period}` : uuid(split) ? `split:${split}` : ""}
-          metric={metric.id === metrics[0].id ? null : metric.id}
+          metric={metricParam ? metric.id : null}
         />
 
         {sessions.length === 0 ? (
@@ -110,60 +114,43 @@ export default async function ExercisePage({
                 ) : null}
               </Card>
             ) : null}
-            {sessions.length === 1 ? (
-              <Card className="p-4">
-                <h2 className="font-medium">Your baseline is set</h2>
-                <p className="mt-1 text-sm text-muted">
-                  This is the first recorded session{filtered ? " in this view" : ""}. Log it again and a chart appears here, comparing like with like.
-                </p>
-              </Card>
-            ) : points.length >= 2 ? (
-              <Card className="p-4">
-                {metrics.length > 1 ? (
-                  <nav aria-label="Chart metric" className="mb-4 flex gap-1 rounded-2xl bg-field p-1">
-                    {metrics.map((m) => (
-                      <Link
-                        key={m.id}
-                        href={query({ metric: m.id === metrics[0].id ? null : m.id })}
-                        replace
-                        scroll={false}
-                        aria-current={m.id === metric.id ? "true" : undefined}
-                        className={cx(
-                          "flex h-10 flex-1 items-center justify-center rounded-xl text-sm font-medium transition",
-                          m.id === metric.id ? "bg-surface-3 text-fg" : "text-muted hover:text-fg",
-                        )}
-                      >
-                        {m.label}
-                      </Link>
-                    ))}
-                  </nav>
-                ) : null}
-                <h2 className="font-medium">{metric.title}</h2>
-                <p className="mb-3 text-sm text-muted">{metric.description}</p>
-                <ProgressChart points={points} title={metric.title} unit={metric.unit} timeZone={tz} />
-              </Card>
-            ) : (
-              <Card className="p-4">
-                <h2 className="font-medium">Not enough comparable data for this chart</h2>
-                <p className="mt-1 text-sm text-muted">
+            <Card className="p-4">
+              {metrics.length > 1 ? (
+                <nav aria-label="Chart metric" className="mb-4 flex gap-1 rounded-2xl bg-field p-1">
+                  {metrics.map((m) => (
+                    <Link
+                      key={m.id}
+                      href={query({ metric: m.id })}
+                      replace
+                      scroll={false}
+                      aria-current={m.id === metric.id ? "true" : undefined}
+                      className={cx(
+                        "flex h-10 flex-1 items-center justify-center rounded-xl text-sm font-medium transition",
+                        m.id === metric.id ? "bg-surface-3 text-fg" : "text-muted hover:text-fg",
+                      )}
+                    >
+                      {m.label}
+                    </Link>
+                  ))}
+                </nav>
+              ) : null}
+              <h2 className="font-medium">{metric.title}</h2>
+              <p className="mb-3 text-sm text-muted">{metric.description}</p>
+              {points.length ? (
+                <>
+                  <ProgressChart points={points} title={metric.title} unit={metric.unit} timeZone={tz} />
+                  {sessions.length === 1 ? (
+                    <p className="mt-3 text-sm text-muted">Your baseline is set. Log this exercise again and the chart shows the change.</p>
+                  ) : null}
+                </>
+              ) : (
+                <p className="rounded-xl bg-surface-2 px-3 py-3 text-sm text-muted">
                   {metric.id === "e1rm"
-                    ? "Estimated 1RM uses sets of 12 reps or fewer, and fewer than two sessions have one."
-                    : "Fewer than two sessions have working sets for this metric."}
+                    ? "No estimate yet: estimated 1RM only uses sets of 12 reps or fewer. Volume and Heaviest include every working set."
+                    : "No working sets for this metric yet."}
                 </p>
-                {metrics.length > 1 ? (
-                  <p className="mt-2 text-sm">
-                    Try{" "}
-                    {metrics.filter((m) => m.id !== metric.id).map((m, i) => (
-                      <span key={m.id}>
-                        {i ? " or " : ""}
-                        <Link href={query({ metric: m.id === metrics[0].id ? null : m.id })} replace scroll={false} className="text-accent-text underline underline-offset-4">{m.label}</Link>
-                      </span>
-                    ))}
-                    .
-                  </p>
-                ) : null}
-              </Card>
-            )}
+              )}
+            </Card>
             {filtered ? (
               <p className="text-sm text-faint">Showing a subset of sessions. Differences between periods are observations, not proof that a split caused them.</p>
             ) : null}
