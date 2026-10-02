@@ -8,7 +8,7 @@ import { clearUser, hasUnsyncedChanges, listRecords } from "@/lib/session/store"
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { friendlyError } from "@/lib/supabase/errors";
 import { IconChevronRight } from "./icons";
-import { Button, Input, SectionTitle, Sheet, Toggle, cx, inputClass } from "./ui";
+import { Button, ErrorNote, Field, Input, SectionTitle, Sheet, Toggle, cx, inputClass } from "./ui";
 
 type Profile = { display_name: string | null; default_rest_seconds: number; auto_start_rest: boolean; weight_unit: string };
 type Status = { kind: "idle" } | { kind: "saving" } | { kind: "saved" } | { kind: "error"; message: string; retry: () => void };
@@ -18,7 +18,16 @@ type Status = { kind: "idle" } | { kind: "saving" } | { kind: "saved" } | { kind
  * depends on finding a Save button (which the bottom navigation used to cover) and a failed
  * save is never silent.
  */
-export function ProfileForm({ userId, email, profile }: { userId: string; email: string | null; profile: Profile }) {
+type Membership = { status: "founder" | "trial" | "paid" | "lapsed"; trial_ends_at: string | null } | null;
+
+const MEMBERSHIP_LABEL: Record<NonNullable<Membership>["status"], string> = {
+  founder: "Founding member",
+  trial: "Free trial",
+  paid: "Member",
+  lapsed: "Membership ended",
+};
+
+export function ProfileForm({ userId, email, profile, membership }: { userId: string; email: string | null; profile: Profile; membership: Membership }) {
   const router = useRouter();
   const [displayName, setDisplayName] = useState(profile.display_name ?? "");
   const [savedName, setSavedName] = useState(profile.display_name ?? "");
@@ -27,6 +36,27 @@ export function ProfileForm({ userId, email, profile }: { userId: string; email:
   const [status, setStatus] = useState<Record<string, Status>>({});
   const [busy, setBusy] = useState(false);
   const [confirmSignOut, setConfirmSignOut] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteText, setDeleteText] = useState("");
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  async function deleteAccount() {
+    if (deleteText.trim().toUpperCase() !== "DELETE") return setDeleteError("Type DELETE to confirm.");
+    setDeleteBusy(true);
+    setDeleteError(null);
+    const supabase = supabaseBrowser();
+    const { error } = await supabase.rpc("delete_my_account");
+    if (error) {
+      setDeleteBusy(false);
+      return setDeleteError(friendlyError(error, "Your account could not be deleted. Nothing was removed; please try again."));
+    }
+    // The account no longer exists: drop the local session and any workout data on this device.
+    await supabase.auth.signOut({ scope: "local" }).catch(() => undefined);
+    clearUser(window.localStorage, userId);
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+    window.location.assign("/sign-in?deleted=1");
+  }
 
   async function save(field: string, patch: Partial<Profile>, revert: () => void) {
     setStatus((s) => ({ ...s, [field]: { kind: "saving" } }));
@@ -72,6 +102,11 @@ export function ProfileForm({ userId, email, profile }: { userId: string; email:
         <div className="min-w-0">
           <p className="truncate text-lg font-semibold">{savedName || "No display name"}</p>
           <p className="truncate text-sm text-muted">{email}</p>
+          {membership ? (
+            <p className="mt-1 inline-flex rounded-full border border-accent-text/40 px-2 py-0.5 text-xs font-medium text-accent-text">
+              {MEMBERSHIP_LABEL[membership.status]}
+            </p>
+          ) : null}
         </div>
       </section>
 
@@ -152,11 +187,77 @@ export function ProfileForm({ userId, email, profile }: { userId: string; email:
       </section>
 
       <section>
+        <SectionTitle>Your data</SectionTitle>
+        <div className="divide-y divide-line overflow-hidden rounded-3xl border border-line bg-surface">
+          <a href="/api/export?format=csv" download className="flex min-h-13 items-center gap-3 px-4 py-3 hover:bg-surface-2/50">
+            <span className="min-w-0 flex-1">
+              <span className="block font-medium">Export as spreadsheet</span>
+              <span className="block text-sm text-muted">Every completed set as a CSV file. Opens in Excel or Google Sheets.</span>
+            </span>
+            <IconChevronRight className="shrink-0 text-faint" />
+          </a>
+          <a href="/api/export?format=json" download className="flex min-h-13 items-center gap-3 px-4 py-3 hover:bg-surface-2/50">
+            <span className="min-w-0 flex-1">
+              <span className="block font-medium">Export everything</span>
+              <span className="block text-sm text-muted">Splits, workouts, history and settings as a JSON file.</span>
+            </span>
+            <IconChevronRight className="shrink-0 text-faint" />
+          </a>
+          <button
+            type="button"
+            onClick={() => {
+              setDeleteText("");
+              setDeleteError(null);
+              setDeleting(true);
+            }}
+            className="flex min-h-13 w-full flex-col items-start justify-center px-4 py-3 text-left hover:bg-surface-2/50"
+          >
+            <span className="font-medium text-danger">Delete account</span>
+            <span className="text-sm text-muted">Permanently removes your account and all your data.</span>
+          </button>
+        </div>
+      </section>
+
+      <section>
         <SectionTitle>Privacy</SectionTitle>
         <p className="rounded-3xl border border-line bg-surface p-4 text-sm text-muted">
           Your splits, workouts and history are private to your account. Sharing a split shares only its structure and targets, never your weights, reps or history.
+          <span className="mt-2 block">
+            <Link href="/privacy" className="text-accent-text underline underline-offset-4">Privacy notice</Link>
+            {" · "}
+            <Link href="/terms" className="text-accent-text underline underline-offset-4">Terms of use</Link>
+          </span>
         </p>
       </section>
+
+      <Sheet
+        open={deleting}
+        onClose={() => setDeleting(false)}
+        title="Delete your account?"
+        footer={
+          <div className="flex gap-2">
+            <Button variant="ghost" size="lg" className="flex-1" onClick={() => setDeleting(false)}>Cancel</Button>
+            <Button variant="danger" size="lg" className="flex-1" busy={deleteBusy} disabled={deleteText.trim().toUpperCase() !== "DELETE"} onClick={deleteAccount}>
+              Delete forever
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          <p className="text-muted">
+            This permanently deletes your account, splits, workouts, exercise history and settings. It cannot be undone. Share links you created
+            stop working; friends’ copies of your splits are theirs and are not affected.
+          </p>
+          <p className="text-sm text-muted">
+            Want a copy first?{" "}
+            <a href="/api/export?format=csv" download className="text-accent-text underline underline-offset-4">Export as spreadsheet</a>
+          </p>
+          <Field label="Type DELETE to confirm">
+            {(id) => <Input id={id} value={deleteText} onChange={(e) => setDeleteText(e.target.value)} autoComplete="off" autoCapitalize="characters" />}
+          </Field>
+          <ErrorNote>{deleteError}</ErrorNote>
+        </div>
+      </Sheet>
 
       <Sheet
         open={confirmSignOut}

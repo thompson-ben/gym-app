@@ -245,11 +245,28 @@ Remaining time is derived from the start timestamp (`Date.now()`), not from coun
 | Split-period boundaries, weekly sets | `tests/unit/split-review.test.ts` |
 | Cross-account privacy of new pages | `tests/e2e/auth.spec.ts` (preview, split review, history) |
 
+### Memberships, founders and your data
+
+Every account has a membership row (`public.memberships`): `founder`, `trial`, `paid` or `lapsed`. Users can read their own (Profile shows "Founding member") but cannot change it; only the owner can, from the Supabase SQL Editor. Payments are not built yet, so nothing is gated on it today.
+
+| Task | SQL |
+|---|---|
+| Tag someone as a founder | `update public.memberships set status = 'founder', trial_ends_at = null where user_id = (select id from auth.users where email = 'friend@example.com');` |
+| See everyone's status | `select u.email, m.status, m.trial_ends_at from public.memberships m join auth.users u on u.id = m.user_id order by m.created_at;` |
+| Close the founding phase (new sign-ups start a 14-day trial instead) | `update public.app_settings set auto_founder = false;` |
+
+While `auto_founder` is on (the default), **every new sign-up is a founder automatically**, and the migration made all existing accounts founders.
+
+- **Export:** Profile → Your data → *Export as spreadsheet* (`/api/export?format=csv`: one row per completed set, local date and time, UTF-8 with BOM, formula-safe) or *Export everything* (`?format=json`: profile, membership, custom exercises, splits with workouts and periods, all workouts). Both run as the user under RLS.
+- **Delete account:** Profile → Your data → Delete account (type DELETE). `delete_my_account()` removes the user's workouts, shares, splits, custom exercises, membership, profile and auth user, then the app clears local data. Friends' copies of shared splits are independent and stay.
+- **Privacy and terms:** `/privacy` and `/terms` are public and linked from sign-up and Profile. They are a plain-English starting point; have them reviewed before charging. Set `NEXT_PUBLIC_CONTACT_EMAIL` in Vercel to show a contact address (otherwise they say "the person who invited you").
+
 ### Upgrading an existing deployment
 
 Migrations are additive and versioned; never reset a deployed database.
 
 1. **Apply `supabase/migrations/20261002000008_progression_targets.sql` first** (`npx supabase db push`, or paste it into the SQL Editor). It adds `template_exercises.progression_enabled` (default `false`) and `progression_increment_kg` (nullable), re-creates `duplicate_split`/`duplicate_template` so copies keep those settings, and adds the read-only `progression_candidates` function. It does not touch sessions, sets, snapshots or exercise identities.
+   Then `supabase/migrations/20261003000009_memberships_and_account_deletion.sql` (memberships, `app_settings`, `delete_my_account`). Apply both in filename order; each is additive and safe to run before the app that uses it.
 2. **Then deploy the app.** Old app versions keep working against the migrated database (they ignore the new columns). If the app were deployed first, the workout editor would fail to load until the migration runs, while the logger and summaries simply show no targets.
 3. Offline compatibility: workouts already open on a device keep working; local records saved by the previous version have no `targets` field and load normally. The service worker is now registered per build (`/sw.js?v=<commit>`), so each deployment installs a fresh offline shell and removes the old cache; pages themselves are always fetched from the network first.
 

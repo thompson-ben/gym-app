@@ -15,6 +15,8 @@ export default async function ProfilePage() {
     // Accounts created before the database was set up have no profile row yet: create it.
     ({ data } = await supabase.from("profiles").upsert({ id: userId }, { onConflict: "id" }).select(columns).maybeSingle());
   }
+  // Membership is read-only for users; a missing table (before migration 9) just hides the badge.
+  const { data: membership } = await supabase.from("memberships").select("status, trial_ends_at").eq("user_id", userId).maybeSingle();
   // Never block the page on profile settings; they only affect defaults.
   const unavailable = !data;
   return (
@@ -25,7 +27,7 @@ export default async function ProfilePage() {
           Your profile settings could not be loaded, so defaults are shown. Your splits and workouts are not affected.
         </p>
       ) : null}
-      <ProfileForm userId={userId} email={email} profile={data ?? defaults} />
+      <ProfileForm userId={userId} email={email} profile={data ?? defaults} membership={membership ?? null} />
       <div className="mt-12 text-center">
         <Wordmark size="sm" className="text-muted" />
         <p className="text-xs text-faint">Workout Planner &amp; Tracker</p>
