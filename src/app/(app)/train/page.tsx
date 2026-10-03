@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { IconChevronRight, IconPlay } from "@/components/icons";
 import { buttonClass, cx } from "@/components/styles";
+import { InstallCard } from "@/components/InstallPrompt";
 import { QuickWorkoutButton } from "@/components/QuickWorkoutButton";
+import { StarterSplits } from "@/components/StarterSplits";
 import { LogPastWorkoutButton, StartWorkoutButton } from "@/components/StartWorkoutButton";
 import { Wordmark } from "@/components/Wordmark";
 import { formatDate, formatElapsed, formatShortDate } from "@/lib/format";
@@ -72,6 +74,13 @@ export default async function TrainPage() {
     next = suggestNextWorkout(workouts, (iso) => formatShortDate(iso, tz));
   }
 
+  // First run: no splits at all gets a welcome with starter templates.
+  let hasSplits = true;
+  if (!period) {
+    const { count } = await supabase.from("splits").select("id", { count: "exact", head: true });
+    hasSplits = (count ?? 0) > 0;
+  }
+
   const suggested = next && next.kind !== "choose" ? workouts.find((w) => w.id === next.templateId) ?? null : null;
   const others = workouts.filter((w) => w.id !== suggested?.id);
   const startable = workouts.filter((w) => w.exerciseCount > 0);
@@ -82,6 +91,7 @@ export default async function TrainPage() {
         <Wordmark />
         {split && !open && startable.length ? <LogPastWorkoutButton workouts={startable} size="sm" label="Log past workout" /> : null}
       </div>
+      {!open ? <InstallCard /> : null}
 
       {open ? (
         <Link
@@ -182,17 +192,48 @@ export default async function TrainPage() {
           </div>
         </>
       ) : (
-        <section className="pt-6">
-          <h1 className="text-[32px] leading-tight font-semibold tracking-tight">Ready to train?</h1>
-          <p className="mt-2 text-muted">Activate a split to see what’s next here. Only one split is active at a time; your exercise history carries across all of them.</p>
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <Link href="/splits?new=1" className={buttonClass("primary", "lg")}>Create a split</Link>
-            <Link href="/splits" className={buttonClass("secondary", "lg")}>Choose a split</Link>
-          </div>
-          <div className="mt-6">
-            <QuickWorkoutButton disabled={Boolean(open)} />
-          </div>
-        </section>
+        hasSplits ? (
+          <section className="pt-6">
+            <h1 className="text-[32px] leading-tight font-semibold tracking-tight">Ready to train?</h1>
+            <p className="mt-2 text-muted">Activate a split to see what’s next here. Only one split is active at a time; your exercise history carries across all of them.</p>
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+              <Link href="/splits" className={buttonClass("primary", "lg")}>Choose a split</Link>
+              <Link href="/splits?new=1" className={buttonClass("secondary", "lg")}>Create a split</Link>
+            </div>
+            <div className="mt-6">
+              <QuickWorkoutButton disabled={Boolean(open)} />
+            </div>
+          </section>
+        ) : (
+          <section className="pt-6" aria-labelledby="welcome-title">
+            <h1 id="welcome-title" className="text-[32px] leading-tight font-semibold tracking-tight">Welcome to Splitmate</h1>
+            <p className="mt-2 text-muted">
+              Plan your split, log every set with last time’s numbers beside it, and keep your progress whenever you change splits.
+            </p>
+            <ol className="mt-6 space-y-3">
+              <li className="flex gap-3">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-semibold text-accent-ink">1</span>
+                <span><span className="font-medium">Set up your split.</span> <span className="text-muted">Start from a template or build your own. You can change anything later.</span></span>
+              </li>
+              <li className="flex gap-3">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-3 text-sm font-semibold">2</span>
+                <span><span className="font-medium">Train.</span> <span className="text-muted">Tap Start, enter reps, tick each set. It saves as you go, even offline.</span></span>
+              </li>
+              <li className="flex gap-3">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-3 text-sm font-semibold">3</span>
+                <span><span className="font-medium">Know what to aim for.</span> <span className="text-muted">Next time, your previous sets sit beside each exercise.</span></span>
+              </li>
+            </ol>
+            <div className="mt-6 flex flex-col gap-3">
+              <StarterSplits />
+              <Link href="/splits?new=1" className={buttonClass("ghost", "lg")}>Build my own split</Link>
+            </div>
+            <p className="mt-4 text-sm text-faint">Got a split link from a friend? Open it and tap Copy to use their split.</p>
+            <div className="mt-6">
+              <QuickWorkoutButton disabled={Boolean(open)} />
+            </div>
+          </section>
+        )
       )}
 
       {recent.data.length ? (

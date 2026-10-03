@@ -7,7 +7,9 @@ import { formatDuration } from "@/lib/format";
 import { clearUser, hasUnsyncedChanges, listRecords } from "@/lib/session/store";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { friendlyError } from "@/lib/supabase/errors";
+import { FeedbackRow } from "./FeedbackButton";
 import { IconChevronRight } from "./icons";
+import { InstallRow } from "./InstallPrompt";
 import { Button, ErrorNote, Field, Input, SectionTitle, Sheet, Toggle, cx, inputClass } from "./ui";
 
 type Profile = { display_name: string | null; default_rest_seconds: number; auto_start_rest: boolean; weight_unit: string };
@@ -183,6 +185,14 @@ export function ProfileForm({ userId, email, profile, membership }: { userId: st
           <button type="button" onClick={() => signOut()} disabled={busy} className="flex min-h-13 w-full items-center px-4 py-3 text-left font-medium text-danger hover:bg-surface-2/50 disabled:opacity-50">
             Sign out
           </button>
+        </div>
+      </section>
+
+      <section>
+        <SectionTitle>App</SectionTitle>
+        <div className="divide-y divide-line overflow-hidden rounded-3xl border border-line bg-surface">
+          <InstallRow />
+          <FeedbackRow />
         </div>
       </section>
 
