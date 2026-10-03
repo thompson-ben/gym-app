@@ -816,3 +816,45 @@ describe("memberships and account deletion (migration 9)", () => {
     expect(await count(friend)).toEqual({ users: 1, profiles: 1, memberships: 1, exercises: 1, splits: 1, shares: 1, sessions: 1, sets: 2 });
   });
 });
+
+describe("feedback and starter splits (migration 10)", () => {
+  it("lets users submit feedback only as themselves and never read it back", async () => {
+    const me = await newUser("feedback-me");
+    const other = await newUser("feedback-other");
+    await as(user(me), (q) => q("insert into feedback (kind, message, page) values ('bug', 'Chart is empty', '/progress')"));
+    await expect(as(user(me), (q) => q("insert into feedback (user_id, message) values ($1, 'spoof')", [other]))).rejects.toThrow();
+    await expect(as(user(me), (q) => q("select * from feedback"))).rejects.toThrow();
+    await expect(as(anon, (q) => q("insert into feedback (message) values ('x')"))).rejects.toThrow();
+    const { rows } = await pool.query("select user_id, kind, message, page from feedback where user_id = $1", [me]);
+    expect(rows).toEqual([{ user_id: me, kind: "bug", message: "Chart is empty", page: "/progress" }]);
+  });
+
+  it("creates every starter split atomically from catalogue exercises", async () => {
+    const { STARTERS } = await import("../../src/lib/starters");
+    const me = await newUser("starter");
+    for (const [i, plan] of STARTERS.entries()) {
+      const [{ id }] = await as(user(me), (q) =>
+        q("select create_split_from_plan($1::jsonb, $2) as id", [JSON.stringify({ name: plan.name, description: plan.description, workouts: plan.workouts }), i === 0]),
+      );
+      const rows = await as(user(me), (q) =>
+        q(
+          `select t.name, count(te.id)::int as n from workout_templates t join template_exercises te on te.template_id = t.id
+           where t.split_id = $1 group by t.name, t.position order by t.position`,
+          [id],
+        ),
+      );
+      expect(rows).toEqual(plan.workouts.map((w) => ({ name: w.name, n: w.exercises.length })));
+    }
+    const active = await as(user(me), (q) => q("select s.name from split_active_periods p join splits s on s.id = p.split_id where p.ended_at is null"));
+    expect(active).toEqual([{ name: STARTERS[0].name }]);
+  });
+
+  it("rolls back completely on an unknown exercise", async () => {
+    const me = await newUser("starter-bad");
+    const plan = { name: "Bad", workouts: [{ name: "A", exercises: [{ slug: "back-squat", sets: 3 }, { slug: "not-an-exercise", sets: 3 }] }] };
+    await expect(as(user(me), (q) => q("select create_split_from_plan($1::jsonb)", [JSON.stringify(plan)]))).rejects.toThrow(/unknown_exercise/);
+    await expect(as(user(me), (q) => q("select create_split_from_plan($1::jsonb)", [JSON.stringify({ name: "Empty", workouts: [] })]))).rejects.toThrow(/invalid_plan/);
+    expect(await as(user(me), (q) => q("select id from splits"))).toEqual([]);
+    await expect(as(anon, (q) => q("select create_split_from_plan('{}'::jsonb)"))).rejects.toThrow();
+  });
+});

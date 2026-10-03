@@ -261,12 +261,19 @@ While `auto_founder` is on (the default), **every new sign-up is a founder autom
 - **Delete account:** Profile → Your data → Delete account (type DELETE). `delete_my_account()` removes the user's workouts, shares, splits, custom exercises, membership, profile and auth user, then the app clears local data. Friends' copies of shared splits are independent and stay.
 - **Privacy and terms:** `/privacy` and `/terms` are public and linked from sign-up and Profile. They are a plain-English starting point; have them reviewed before charging. Set `NEXT_PUBLIC_CONTACT_EMAIL` in Vercel to show a contact address (otherwise they say "the person who invited you").
 
+### First run, feedback and installing
+
+- **First run:** an account with no splits sees a welcome on Train with three steps and *Start from a template* (Full Body, Upper / Lower, Push / Pull / Legs; `src/lib/starters.ts`). The chosen split is created and activated in one transaction (`create_split_from_plan`), built only from catalogue exercises, and is fully editable afterwards.
+- **Feedback:** Profile → App → *Send feedback* (problem, idea, other). Stored in `public.feedback` with the last screen visited, app build and device; users can submit but not read it. Read it in the SQL Editor:
+  `select f.created_at, u.email, f.kind, f.message, f.page from public.feedback f join auth.users u on u.id = f.user_id order by f.created_at desc;`
+- **Add to Home Screen:** phone users in a browser see a dismissible card on Train. On Android/Chrome it opens the browser's own install prompt when available; on iPhone it shows the Share → Add to Home Screen steps (iOS has no install prompt). Always available again from Profile → App. Hidden once opened from the Home Screen icon.
+
 ### Upgrading an existing deployment
 
 Migrations are additive and versioned; never reset a deployed database.
 
 1. **Apply `supabase/migrations/20261002000008_progression_targets.sql` first** (`npx supabase db push`, or paste it into the SQL Editor). It adds `template_exercises.progression_enabled` (default `false`) and `progression_increment_kg` (nullable), re-creates `duplicate_split`/`duplicate_template` so copies keep those settings, and adds the read-only `progression_candidates` function. It does not touch sessions, sets, snapshots or exercise identities.
-   Then `supabase/migrations/20261003000009_memberships_and_account_deletion.sql` (memberships, `app_settings`, `delete_my_account`). Apply both in filename order; each is additive and safe to run before the app that uses it.
+   Then `supabase/migrations/20261003000009_memberships_and_account_deletion.sql` and `…0010_feedback_and_starter_splits.sql`, and (memberships, `app_settings`, `delete_my_account`). Apply both in filename order; each is additive and safe to run before the app that uses it.
 2. **Then deploy the app.** Old app versions keep working against the migrated database (they ignore the new columns). If the app were deployed first, the workout editor would fail to load until the migration runs, while the logger and summaries simply show no targets.
 3. Offline compatibility: workouts already open on a device keep working; local records saved by the previous version have no `targets` field and load normally. The service worker is now registered per build (`/sw.js?v=<commit>`), so each deployment installs a fresh offline shell and removes the old cache; pages themselves are always fetched from the network first.
 
