@@ -1,8 +1,9 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { pruneOtherUsers, setLastUser } from "@/lib/session/store";
+import { LAST_PAGE_KEY } from "./FeedbackButton";
 
 /**
  * Remembers the signed-in user for the offline workout shell and shares the browser's time
@@ -20,5 +21,15 @@ export function ClientBoot({ userId }: { userId: string }) {
       router.refresh();
     }
   }, [userId, router]);
+  // Remember the last screen outside Profile so feedback can say where a problem happened.
+  const pathname = usePathname();
+  useEffect(() => {
+    if (!pathname || pathname.startsWith("/profile")) return;
+    try {
+      window.sessionStorage.setItem(LAST_PAGE_KEY, pathname.slice(0, 200));
+    } catch {
+      /* storage unavailable */
+    }
+  }, [pathname]);
   return null;
 }
