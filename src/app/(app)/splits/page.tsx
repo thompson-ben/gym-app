@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { IconChevronRight } from "@/components/icons";
 import { NewSplitButton } from "@/components/splits/NewSplitButton";
+import { PageTip } from "@/components/PageTip";
 import { EmptyState, PageHeader } from "@/components/ui";
 import { formatDate } from "@/lib/format";
 import { requireUser, viewerTimeZone } from "@/lib/supabase/server";
@@ -66,6 +67,10 @@ export default async function SplitsPage({ searchParams }: { searchParams: Promi
         </EmptyState>
       ) : (
         <div className="space-y-8">
+          <PageTip id="splits" title="How splits work">
+            <p>A split is the set of workouts you rotate through. Only one is active at a time.</p>
+            <p>Your history stays with each exercise, so switching splits never loses progress. Open a split to edit workouts, rep ranges and targets, or to share it.</p>
+          </PageTip>
           <section>
             <h2 className="mb-3 text-sm font-medium tracking-wide text-muted uppercase">Active</h2>
             {active.length ? (

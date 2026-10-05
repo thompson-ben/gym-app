@@ -39,7 +39,7 @@ test("Train → preview → log with an optional target → summary → split re
 
   await signIn(page, user);
   // Upper has never been done, so it is suggested before Legs.
-  await expect(page.getByText("Suggested next")).toBeVisible();
+  await expect(page.getByText("Suggested next", { exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { level: 1, name: "Upper" })).toBeVisible();
   await expect(page.getByText("Not done yet in this split")).toBeVisible();
   await expectNoHorizontalScroll(page);

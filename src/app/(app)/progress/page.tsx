@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { IconChevronRight } from "@/components/icons";
 import { ExerciseSearchList } from "@/components/ExerciseSearchList";
+import { PageTip } from "@/components/PageTip";
 import { EmptyState, PageHeader } from "@/components/ui";
 import { buttonClass } from "@/components/styles";
 import { exerciseLabel } from "@/lib/exercises";
@@ -51,6 +52,10 @@ export default async function ProgressPage() {
         </EmptyState>
       ) : (
         <div className="space-y-8">
+          <PageTip id="progress" title="Reading your progress">
+            <p>Tap an exercise for its chart (Est. 1RM, Volume or Heaviest) and every session, across all your splits.</p>
+            <p>Workout history and Split review are just below.</p>
+          </PageTip>
           <nav aria-label="Reviews" className="grid grid-cols-[minmax(0,1fr)] gap-2 sm:grid-cols-2">
             <Link href="/history" className="flex items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3 hover:bg-surface-2/60">
               <span className="min-w-0 flex-1">

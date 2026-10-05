@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { validateCompletion, type CompleteError } from "@/lib/session/doc";
 import { matchPrevious } from "@/lib/session/previous";
 import { formatDate, formatKg, formatSet, formatShortDate, formatTargetLong, weightLabel } from "@/lib/format";
-import { formatTargetSets } from "@/lib/progression";
+import { formatTargetSets, targetMet, topOfRangeLastTime, topOfRangeNow } from "@/lib/progression";
 import type { TargetInfo } from "@/lib/targets";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import type { PreviousPerformance, SessionExercise, SessionSet, SetType } from "@/lib/types";
@@ -38,7 +38,10 @@ export function ExerciseCard({
   onHideTarget,
   onUseTarget,
   onSwap,
+  onSetupTargets,
 }: {
+  /** Opens target settings for this entry; absent when targets are not available for it. */
+  onSetupTargets?: () => void;
   target?: TargetInfo;
   targetHidden?: boolean;
   onHideTarget: () => void;
@@ -67,6 +70,24 @@ export function ExerciseCard({
   const currentId = entry.sets.find((s) => !s.completed_at)?.id ?? null;
   const shownTarget = target && target.exerciseId === entry.exercise_id && !targetHidden ? target : null;
   const unconfirmedWorking = entry.sets.filter((s) => s.set_type === "working" && !s.completed_at);
+  const plan = { targetSets: entry.target_sets, repMin: entry.rep_min, repMax: entry.rep_max };
+  const goal = shownTarget?.target ?? null;
+  const targetsOn = Boolean(target && target.exerciseId === entry.exercise_id);
+  // Without targets switched on, a factual nudge when last time reached the top of the range.
+  const readyReps = !targetsOn ? topOfRangeLastTime(mode, plan, previous?.sets) : null;
+  const hit: "target" | "top" | null = goal ? (targetMet(goal, entry.sets) ? "target" : null) : topOfRangeNow(mode, plan, entry.sets) ? "top" : null;
+  // Celebrate the moment it happens (not when a finished exercise is reloaded).
+  const [prevHit, setPrevHit] = useState(hit);
+  const [celebrating, setCelebrating] = useState(false);
+  if (hit !== prevHit) {
+    setPrevHit(hit);
+    if (hit && !prevHit) setCelebrating(true);
+  }
+  useEffect(() => {
+    if (!celebrating) return;
+    const t = setTimeout(() => setCelebrating(false), 3500);
+    return () => clearTimeout(t);
+  }, [celebrating]);
   let workingIndex = 0;
   let warmupIndex = 0;
 
@@ -111,7 +132,14 @@ export function ExerciseCard({
   }
 
   return (
-    <section aria-label={entry.exercise_name} className="rounded-3xl border border-line bg-surface p-3 min-[380px]:p-4 sm:p-5">
+    <section
+      aria-label={entry.exercise_name}
+      className={cx(
+        "relative rounded-3xl border bg-surface p-3 transition-colors min-[380px]:p-4 sm:p-5",
+        hit ? "border-accent-text/60" : "border-line",
+      )}
+    >
+      {celebrating ? <Burst /> : null}
       <header className="flex items-start justify-between gap-2 px-1">
         <div className="min-w-0 pt-0.5">
           <h3 className="text-[20px] leading-snug font-medium tracking-[-0.01em]">{entry.exercise_name}</h3>
@@ -136,6 +164,20 @@ export function ExerciseCard({
           <IconMore />
         </IconButton>
       </header>
+
+      {readyReps ? (
+        <div className="mx-1 mt-3 rounded-xl border border-accent-text/40 bg-accent-soft px-3 py-2.5 text-sm">
+          <p>
+            <span className="font-medium text-fg">Ready to go heavier.</span>{" "}
+            <span className="text-muted">Last time every working set reached {readyReps} reps, the top of your range.</span>
+          </p>
+          {onSetupTargets ? (
+            <button type="button" onClick={onSetupTargets} className="mt-1 h-9 font-medium text-accent-text underline-offset-4 hover:underline">
+              Suggest a target weight
+            </button>
+          ) : null}
+        </div>
+      ) : null}
 
       {shownTarget?.target ? (
         <div className="mx-1 mt-3 rounded-xl border border-dashed border-accent-text/50 px-3 py-2.5">
@@ -203,6 +245,21 @@ export function ExerciseCard({
           })}
         </div>
         {hint ? <p role="alert" className="mt-2 px-1 text-sm text-warn">{hint}</p> : null}
+        <div aria-live="polite">
+          {hit ? (
+            <p className={cx("mt-3 flex items-start gap-2 rounded-xl bg-accent-soft px-3 py-2.5 text-sm", celebrating && "sm-pop")}>
+              <span aria-hidden="true" className="text-base leading-5">{hit === "target" ? "🎯" : "🔥"}</span>
+              <span>
+                <span className="font-semibold text-fg">{hit === "target" ? "Target hit!" : "Top of your range!"}</span>{" "}
+                <span className="text-muted">
+                  {hit === "target" && goal
+                    ? `Every set at ${formatTargetSets(goal)} or better.`
+                    : `Every working set reached ${entry.rep_max} reps. Time to go heavier next session.`}
+                </span>
+              </span>
+            </p>
+          ) : null}
+        </div>
         {mode === "added_weight_reps" ? <p className="mt-2 px-1 text-xs text-faint">+kg is load added to your bodyweight. Leave 0 for bodyweight only.</p> : null}
       </div>
 
@@ -254,5 +311,16 @@ export function ExerciseCard({
         </div>
       ) : null}
     </section>
+  );
+}
+
+/** A short, decorative burst when an exercise target is hit. Skipped with reduced motion. */
+function Burst() {
+  return (
+    <span aria-hidden="true" className="sm-burst pointer-events-none absolute inset-x-0 top-1/2 flex justify-center">
+      {Array.from({ length: 10 }, (_, i) => (
+        <span key={i} style={{ ["--a" as string]: `${i * 36}deg` }} className={cx("absolute h-2 w-2 rounded-full", i % 2 ? "bg-accent" : "bg-fg/70")} />
+      ))}
+    </span>
   );
 }

@@ -80,3 +80,36 @@ describe("computeTarget (double progression)", () => {
     expect(run([]).target).toBeNull();
   });
 });
+
+import { targetMet, topOfRangeLastTime, topOfRangeNow } from "@/lib/progression";
+
+describe("ready-to-progress nudge and target celebration", () => {
+  const done = (weight_kg: number, reps: number, set_type: "working" | "warmup" = "working") => ({ set_type, weight_kg, reps, completed_at: "x" });
+  const open = (weight_kg: number, reps: number | null) => ({ set_type: "working" as const, weight_kg, reps, completed_at: null });
+
+  it("nudges only when every planned working set reached the top of the range last time", () => {
+    const p = { targetSets: 3, repMin: 12, repMax: 20 };
+    expect(topOfRangeLastTime("weight_reps", p, [w(6.25, 20), w(6.25, 20), w(6.25, 20)])).toBe(20);
+    expect(topOfRangeLastTime("weight_reps", p, [w(6.25, 20), w(6.25, 20), w(6.25, 12)])).toBeNull();
+    expect(topOfRangeLastTime("weight_reps", p, [wu(6.25, 20), w(6.25, 20), w(6.25, 20)])).toBeNull();
+    expect(topOfRangeLastTime("added_weight_reps", p, [w(5, 20), w(5, 20), w(5, 21)])).toBe(20);
+    expect(topOfRangeLastTime("bodyweight_reps", p, [w(0, 20), w(0, 20), w(0, 20)])).toBeNull();
+    expect(topOfRangeLastTime("weight_reps", { ...p, repMax: null }, [w(6.25, 20)])).toBeNull();
+  });
+
+  it("celebrates a target only when every target set is met or beaten and confirmed", () => {
+    const t = { weightKg: 32.5, reps: [8, 8, 8] };
+    expect(targetMet(t, [done(32.5, 8), done(32.5, 9), done(35, 8)])).toBe(true);
+    expect(targetMet(t, [done(32.5, 8), done(32.5, 7), done(32.5, 8)])).toBe(false);
+    expect(targetMet(t, [done(30, 12), done(32.5, 8), done(32.5, 8)])).toBe(false);
+    expect(targetMet(t, [done(32.5, 8), done(32.5, 8), open(32.5, 8)])).toBe(false);
+    expect(targetMet(t, [done(40, 10, "warmup"), done(32.5, 8), done(32.5, 8)])).toBe(false);
+  });
+
+  it("recognises the top of the range this session without targets", () => {
+    const p = { targetSets: 2, repMin: 8, repMax: 12 };
+    expect(topOfRangeNow("weight_reps", p, [done(30, 12), done(30, 13)])).toBe(true);
+    expect(topOfRangeNow("weight_reps", p, [done(30, 12), open(30, 12)])).toBe(false);
+    expect(topOfRangeNow("bodyweight_reps", p, [done(0, 12), done(0, 12)])).toBe(false);
+  });
+});
