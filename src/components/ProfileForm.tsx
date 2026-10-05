@@ -10,6 +10,7 @@ import { friendlyError } from "@/lib/supabase/errors";
 import { FeedbackRow } from "./FeedbackButton";
 import { IconChevronRight } from "./icons";
 import { InstallRow } from "./InstallPrompt";
+import { ShowTipsAgainRow } from "./PageTip";
 import { Button, ErrorNote, Field, Input, SectionTitle, Sheet, Toggle, cx, inputClass } from "./ui";
 
 type Profile = { display_name: string | null; default_rest_seconds: number; auto_start_rest: boolean; weight_unit: string };
@@ -193,6 +194,7 @@ export function ProfileForm({ userId, email, profile, membership }: { userId: st
         <div className="divide-y divide-line overflow-hidden rounded-3xl border border-line bg-surface">
           <InstallRow />
           <FeedbackRow />
+          <ShowTipsAgainRow />
         </div>
       </section>
 

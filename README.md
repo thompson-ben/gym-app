@@ -197,6 +197,10 @@ Off by default. Switch on per exercise in a workout (**Edit workout → exercise
 | Increase | Every working set reached the top of the range → weight + your increment, aim for the bottom of the range ("You reached the top of your rep range on all working sets.") |
 | Repeat | Otherwise → same weight, one more rep per set up to the top of the range. The weight is never lowered automatically |
 
+Without targets switched on, an exercise whose last session reached the top of the rep range on every planned working set shows a factual nudge, **"Ready to go heavier"** (loaded exercises only; it names no weight because the increment is unknown), with a link to switch targets on. Targets can also be switched on or off mid-workout from the exercise's ⋯ menu → **Next-session targets**; this saves to the workout so it applies next time too.
+
+When every target set is met or beaten (each completed working set at the target weight or heavier, with at least the target reps), the card shows **"Target hit!"** with a short pop and burst (skipped with reduced motion; no sound or vibration). Without a target, completing every planned working set at the top of the range shows **"Top of your range!"**. Both are derived from the logged sets, so undoing a set removes them, and reloading a finished exercise shows the banner without replaying the animation.
+
 In the logger a target sits in a dashed **Target** box, apart from the Previous column. "Use 102.5 kg for remaining sets" only changes unconfirmed working-set weights; reps stay empty and nothing counts until each set is confirmed. **Hide** dismisses it for that session (stored on the device only). Targets are computed when needed and never stored as sets or in the session, so they cannot become, or be mistaken for, results.
 
 ### Workout summary and records
@@ -267,6 +271,10 @@ While `auto_founder` is on (the default), **every new sign-up is a founder autom
 - **Feedback:** Profile → App → *Send feedback* (problem, idea, other). Stored in `public.feedback` with the last screen visited, app build and device; users can submit but not read it. Read it in the SQL Editor:
   `select f.created_at, u.email, f.kind, f.message, f.page from public.feedback f join auth.users u on u.id = f.user_id order by f.created_at desc;`
 - **Add to Home Screen:** phone users in a browser see a dismissible card on Train. On Android/Chrome it opens the browser's own install prompt when available; on iPhone it shows the Share → Add to Home Screen steps (iOS has no install prompt). Always available again from Profile → App. Hidden once opened from the Home Screen icon.
+
+### One-time tips
+
+Train, the workout logger, Splits and Progress each show a short **Tip** card the first time they are opened on a device, explaining that screen's key points. "Got it" hides it for good (stored in the browser, not the account); Profile → App → **Show tips again** brings them all back.
 
 ### Upgrading an existing deployment
 

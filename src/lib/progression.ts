@@ -128,3 +128,37 @@ export function formatTargetSets(t: Target): string {
   const allSame = t.reps.every((r) => r === t.reps[0]);
   return `${formatKg(t.weightKg)} kg × ${allSame ? t.reps[0] : t.reps.join(", ")}`;
 }
+
+/**
+ * Factual nudge without any settings: last time, every one of the first N completed working
+ * sets reached the top of the current rep range. Only for loaded exercises (weight × reps or
+ * added weight). Returns the rep count reached, or null.
+ */
+export function topOfRangeLastTime(mode: TrackingMode, prescription: Prescription, previousSets: PreviousSet[] | undefined): number | null {
+  const { targetSets, repMax } = prescription;
+  if (mode === "bodyweight_reps" || !targetSets || !repMax || !previousSets) return null;
+  const working = previousSets.filter((s) => s.set_type === "working").slice(0, targetSets);
+  if (working.length < targetSets) return null;
+  return working.every((s) => s.reps >= repMax) ? repMax : null;
+}
+
+type DoneSet = { set_type: "working" | "warmup"; weight_kg: number | null; reps: number | null; completed_at: string | null };
+
+/**
+ * Whether this session's completed working sets meet or beat a target on every set: at
+ * least as many completed working sets as the target has, each at the target weight or
+ * heavier and with at least the target reps. Warm-ups and unconfirmed sets never count.
+ */
+export function targetMet(target: Pick<Target, "weightKg" | "reps">, sets: DoneSet[]): boolean {
+  const done = sets.filter((s) => s.set_type === "working" && s.completed_at && s.reps !== null);
+  if (done.length < target.reps.length) return false;
+  return target.reps.every((reps, i) => (done[i].weight_kg ?? 0) >= target.weightKg && (done[i].reps ?? 0) >= reps);
+}
+
+/** Without targets: every planned working set done this session reached the top of the range. */
+export function topOfRangeNow(mode: TrackingMode, prescription: Prescription, sets: DoneSet[]): boolean {
+  const { targetSets, repMax } = prescription;
+  if (mode === "bodyweight_reps" || !targetSets || !repMax) return false;
+  const done = sets.filter((s) => s.set_type === "working" && s.completed_at && s.reps !== null);
+  return done.length >= targetSets && done.slice(0, targetSets).every((s) => (s.reps ?? 0) >= repMax);
+}

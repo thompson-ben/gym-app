@@ -3,6 +3,7 @@ import Link from "next/link";
 import { IconChevronRight, IconPlay } from "@/components/icons";
 import { buttonClass, cx } from "@/components/styles";
 import { InstallCard } from "@/components/InstallPrompt";
+import { PageTip } from "@/components/PageTip";
 import { QuickWorkoutButton } from "@/components/QuickWorkoutButton";
 import { StarterSplits } from "@/components/StarterSplits";
 import { LogPastWorkoutButton, StartWorkoutButton } from "@/components/StartWorkoutButton";
@@ -130,6 +131,11 @@ export default async function TrainPage() {
             </span>
             <IconChevronRight className="shrink-0 text-faint" />
           </Link>
+
+          <PageTip id="train" title="Your training home" className="mt-4">
+            <p>Suggested next is the workout in your active split that you did longest ago.</p>
+            <p>Tap any workout to preview it. Did one earlier? Use Log past workout, top right.</p>
+          </PageTip>
 
           {!open && suggested && next && next.kind !== "choose" ? (
             <section aria-labelledby="up-next" className="mt-4 rounded-3xl border border-line bg-surface p-5">

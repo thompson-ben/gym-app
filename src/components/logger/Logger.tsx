@@ -23,9 +23,11 @@ import { formatDate, formatDuration, formatTime } from "@/lib/format";
 import { hasUnsyncedChanges, removeRecord, type LocalRecord } from "@/lib/session/store";
 import { adjustTimer, clockNow, startTimer } from "@/lib/timer";
 import { supabaseBrowser } from "@/lib/supabase/client";
+import { loadTargets } from "@/lib/targets";
 import { friendlyError } from "@/lib/supabase/errors";
 import type { Exercise, PreviousPerformance, SessionSet } from "@/lib/types";
 import { ExercisePicker } from "../ExercisePicker";
+import { PageTip } from "../PageTip";
 import { WorkoutDateSheet } from "../WorkoutDateSheet";
 import { IconAlert, IconChevronLeft, IconMore, IconPlus, IconTimer } from "../icons";
 import { cx } from "../styles";
@@ -33,6 +35,7 @@ import { Button, ErrorNote, IconButton, Sheet, Toggle } from "../ui";
 import { Wordmark } from "../Wordmark";
 import { ExerciseCard } from "./ExerciseCard";
 import { RestTimerBar } from "./RestTimer";
+import { TargetSettingsSheet } from "./TargetSettingsSheet";
 import { SyncBadge } from "./SyncBadge";
 import { useSessionRecord } from "./useSessionRecord";
 
@@ -61,6 +64,7 @@ export default function Logger({ userId, initial, timeZone }: { userId: string; 
   const [notice, setNotice] = useState<string | null>(null);
   const [inputFocused, setInputFocused] = useState(false);
   const [lastRest, setLastRest] = useState(record.settings.defaultRestSeconds);
+  const [targetsFor, setTargetsFor] = useState<string | null>(null);
   const newId = () => crypto.randomUUID();
 
   // Hide the bottom action bar while typing so the keyboard never covers inputs behind it.
@@ -233,6 +237,7 @@ export default function Logger({ userId, initial, timeZone }: { userId: string; 
   }
 
   const menuEntry = doc.exercises.find((e) => e.id === exerciseMenu);
+  const targetsEntry = doc.exercises.find((e) => e.id === targetsFor);
   const notesEntry = notesFor && notesFor !== "session" ? doc.exercises.find((e) => e.id === notesFor) : null;
   const progress = summary.plannedSets ? summary.completedSets / summary.plannedSets : 0;
   const closed = status.kind === "closed";
@@ -315,6 +320,10 @@ export default function Logger({ userId, initial, timeZone }: { userId: string; 
         ) : null}
         {notice ? <Banner tone="muted" onDismiss={() => setNotice(null)}>{notice}</Banner> : null}
 
+        <PageTip id="workout" title="Logging a set">
+          <p>Previous shows what you did last time. Weights are filled in; type your reps and tick ✓ to record the set. Nothing counts until it’s ticked.</p>
+          <p>Use ⋯ on an exercise for warm-ups, swaps, notes and next-session targets. Everything saves as you go, even offline.</p>
+        </PageTip>
         {doc.exercises.map((entry) => (
           <ExerciseCard
             key={entry.id}
@@ -333,6 +342,7 @@ export default function Logger({ userId, initial, timeZone }: { userId: string; 
             onHideTarget={() => patch({ hiddenTargets: [...(recordRef.current.hiddenTargets ?? []), entry.id] })}
             onUseTarget={(kg) => edit((d) => applyTargetWeight(d, entry.id, kg))}
             onSwap={() => setPicker({ mode: "substitute", entryId: entry.id })}
+            onSetupTargets={entry.template_exercise_id && entry.tracking_mode === "weight_reps" ? () => setTargetsFor(entry.id) : undefined}
           />
         ))}
 
@@ -386,6 +396,9 @@ export default function Logger({ userId, initial, timeZone }: { userId: string; 
               { label: "Add warm-up set", onClick: () => edit((d) => addSet(d, menuEntry.id, "warmup", recordRef.current.previous, newId)) },
               { label: menuEntry.notes ? "Edit note" : "Add note", onClick: () => setNotesFor(menuEntry.id) },
               { label: "Substitute exercise", hint: "For this session only", onClick: () => setPicker({ mode: "substitute", entryId: menuEntry.id }) },
+              ...(menuEntry.template_exercise_id && menuEntry.tracking_mode === "weight_reps"
+                ? [{ label: "Next-session targets", hint: record.targets?.[menuEntry.id] ? "On · change increment or turn off" : "Suggest a weight and reps to aim for", onClick: () => setTargetsFor(menuEntry.id) }]
+                : []),
               menuEntry.skipped
                 ? { label: "Unskip exercise", onClick: () => edit((d) => setSkipped(d, menuEntry.id, false)) }
                 : { label: "Skip exercise", hint: "Unconfirmed sets are cleared", onClick: () => edit((d) => setSkipped(d, menuEntry.id, true)) },
@@ -442,6 +455,27 @@ export default function Logger({ userId, initial, timeZone }: { userId: string; 
           />
         </div>
       </Sheet>
+
+      <TargetSettingsSheet
+        open={targetsEntry !== undefined}
+        onClose={() => setTargetsFor(null)}
+        exerciseName={targetsEntry?.exercise_name ?? ""}
+        entryId={targetsEntry?.template_exercise_id ?? ""}
+        hasRange={Boolean(targetsEntry?.rep_min && targetsEntry?.rep_max)}
+        onSaved={async (enabled) => {
+          const entry = targetsEntry;
+          if (!entry) return;
+          const rest = { ...recordRef.current.targets };
+          delete rest[entry.id];
+          if (!enabled) return patch({ targets: rest });
+          const fresh = await loadTargets(
+            supabaseBrowser(),
+            [{ key: entry.id, exerciseId: entry.exercise_id, entryId: entry.template_exercise_id, mode: entry.tracking_mode, targetSets: entry.target_sets, repMin: entry.rep_min, repMax: entry.rep_max }],
+            recordRef.current.doc.is_backdated ? recordRef.current.doc.started_at : null,
+          );
+          patch({ targets: { ...rest, ...fresh }, hiddenTargets: (recordRef.current.hiddenTargets ?? []).filter((id) => id !== entry.id) });
+        }}
+      />
 
       <NameSheet
         key={renameOpen ? "rename-open" : "rename-closed"}
