@@ -7,7 +7,7 @@ export default function PrivacyPage() {
   return (
     <LegalPage title="Privacy">
       <p>
-        Splitmate is a workout planner and tracker. This page explains, in plain English, what we store, why, and what you can do about it. We
+        NotchLift is a workout planner and tracker. This page explains, in plain English, what we store, why, and what you can do about it. We
         do not show ads, sell data or use third-party analytics or tracking.
       </p>
       <section>
@@ -26,7 +26,7 @@ export default function PrivacyPage() {
       <section>
         <h2>Why</h2>
         <p>
-          Only to provide Splitmate to you: to sign you in, save and sync your workouts, and show your history and progress. Training logs can be
+          Only to provide NotchLift to you: to sign you in, save and sync your workouts, and show your history and progress. Training logs can be
           considered health-related information; you choose what to record, and it is used for nothing else.
         </p>
       </section>

@@ -56,7 +56,7 @@ export function ForgotPasswordForm({ initialEmail, linkInvalid }: { initialEmail
     <form onSubmit={submit} className="space-y-5">
       <div>
         <h1 className="text-2xl font-semibold">Reset your password</h1>
-        <p className="mt-1 text-muted">Enter the email you use for Splitmate and we will send you a link to choose a new password.</p>
+        <p className="mt-1 text-muted">Enter the email you use for NotchLift and we will send you a link to choose a new password.</p>
       </div>
       {linkInvalid ? (
         <p role="alert" className="rounded-2xl bg-danger-soft px-4 py-3 text-sm text-danger">

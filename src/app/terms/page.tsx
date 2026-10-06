@@ -10,14 +10,14 @@ export default function TermsPage() {
       <section>
         <h2>Early access</h2>
         <p>
-          Splitmate is in early access. Founding members use it free of charge and their founding membership continues after paid plans are
+          NotchLift is in early access. Founding members use it free of charge and their founding membership continues after paid plans are
           introduced. Features may change as we improve the app, and we welcome your feedback.
         </p>
       </section>
       <section>
         <h2>Not medical advice</h2>
         <p>
-          Splitmate records what you do and can suggest targets based on your own logs. It does not know your health, injuries or circumstances.
+          NotchLift records what you do and can suggest targets based on your own logs. It does not know your health, injuries or circumstances.
           Suggestions are optional and are not medical, physiotherapy or coaching advice. Train within your limits and speak to a qualified
           professional if you are unsure whether an exercise or load is right for you.
         </p>
@@ -34,7 +34,7 @@ export default function TermsPage() {
       <section>
         <h2>Availability</h2>
         <p>
-          We work to keep Splitmate available and your data safe, but the service is provided as it is, without guarantees that it will always be
+          We work to keep NotchLift available and your data safe, but the service is provided as it is, without guarantees that it will always be
           available or error-free. Export your data if you want your own copy. If we ever close the service, we will give reasonable notice so
           you can export it first.
         </p>

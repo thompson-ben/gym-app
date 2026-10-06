@@ -10,7 +10,7 @@ export function contactLine(): ReactNode {
   return email ? (
     <a href={`mailto:${email}`} className="text-accent-text underline underline-offset-4">{email}</a>
   ) : (
-    "the person who invited you to Splitmate"
+    "the person who invited you to NotchLift"
   );
 }
 

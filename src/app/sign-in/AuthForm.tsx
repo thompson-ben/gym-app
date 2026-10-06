@@ -120,7 +120,7 @@ export function AuthForm({ initialMode, next, error }: { initialMode: Mode; next
         {mode === "sign-in" ? "Sign in" : "Create account"}
       </Button>
       <p className="text-center text-sm text-muted">
-        {mode === "sign-in" ? "New to Splitmate?" : "Already have an account?"}{" "}
+        {mode === "sign-in" ? "New to NotchLift?" : "Already have an account?"}{" "}
         <button
           type="button"
           className="font-medium text-accent-text underline-offset-4 hover:underline"

@@ -1,4 +1,6 @@
-# splitmate.
+# notchlift.
+
+> Formerly **Splitmate**. User-facing text now says NotchLift; internal identifiers (on-device storage keys such as `splitmate:v1:…`, the local Supabase `project_id`, fixture accounts) keep the old name on purpose so existing devices and data are unaffected.
 
 **Workout Planner & Tracker.** A phone-first web app for planning training splits and logging workouts, with your previous sets beside today's inputs.
 
@@ -51,7 +53,7 @@ Emails sent by the local stack (sign-up confirmation, password reset) are caught
 
 ## Deployment (Supabase + Vercel)
 
-Use a **dedicated** Supabase project for Splitmate: the migrations create tables and functions in `public`, so never point it at another product's project. The app needs **no service-role key**; all data access runs as the signed-in user under Row Level Security.
+Use a **dedicated** Supabase project for NotchLift: the migrations create tables and functions in `public`, so never point it at another product's project. The app needs **no service-role key**; all data access runs as the signed-in user under Row Level Security.
 
 ### 1. Supabase project
 
@@ -59,7 +61,7 @@ Use a **dedicated** Supabase project for Splitmate: the migrations create tables
 2. From this repository:
    ```bash
    npx supabase login                       # opens a browser; no token goes in the repo
-   npx supabase link --project-ref <ref>    # confirm the prompt names the Splitmate project
+   npx supabase link --project-ref <ref>    # confirm the prompt names the app's own project (created as "splitmate")
    npx supabase db push                     # applies supabase/migrations/* (schema, functions, catalogue, past workouts, profile backfill, backdated activation, quick workouts)
    ```
    `db push` never runs `supabase/seed.sql`, so no demo data reaches the hosted project.
@@ -75,8 +77,8 @@ Use a **dedicated** Supabase project for Splitmate: the migrations create tables
      ```
      The last two let Vercel preview deployments use sign-up and password reset. Links whose redirect is not on this list fall back to the Site URL and will not complete.
 5. **Authentication → Emails → Templates**: paste the two templates from this repository so links work on any device (the default templates use PKCE links that only work in the browser that asked for them; the app accepts both):
-   - *Confirm signup*: subject `Confirm your Splitmate account`, body `supabase/templates/confirmation.html`
-   - *Reset password*: subject `Reset your Splitmate password`, body `supabase/templates/recovery.html`
+   - *Confirm signup*: subject `Confirm your NotchLift account`, body `supabase/templates/confirmation.html`
+   - *Reset password*: subject `Reset your NotchLift password`, body `supabase/templates/recovery.html`
 6. **Authentication → Emails → SMTP**: configure a real SMTP provider before inviting users. Supabase's built-in sender is heavily rate-limited and meant for testing.
 7. **Project Settings → API Keys**: copy the Project URL and the **Publishable** key (`sb_publishable_…`; the legacy anon key also works).
 

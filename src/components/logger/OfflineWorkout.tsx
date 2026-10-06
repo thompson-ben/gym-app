@@ -30,7 +30,7 @@ function Shell() {
       <Wordmark />
       <h1 className="mt-8 text-2xl font-semibold">You are offline</h1>
       <p className="mt-2 text-muted">
-        There is no workout on this device to continue. Splitmate needs a connection to load your splits and history. Workouts you have already opened keep working offline.
+        There is no workout on this device to continue. NotchLift needs a connection to load your splits and history. Workouts you have already opened keep working offline.
       </p>
       <Link href="/train" className={buttonClass("primary", "lg", "mt-8")}>Try again</Link>
     </main>

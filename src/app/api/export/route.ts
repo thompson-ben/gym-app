@@ -60,7 +60,7 @@ export async function GET(request: Request) {
   const stamp = new Date().toISOString().slice(0, 10);
   const headers = (type: string, ext: string) => ({
     "Content-Type": type,
-    "Content-Disposition": `attachment; filename="splitmate-${stamp}.${ext}"`,
+    "Content-Disposition": `attachment; filename="notchlift-${stamp}.${ext}"`,
     "Cache-Control": "private, no-store",
   });
 
@@ -102,7 +102,7 @@ export async function GET(request: Request) {
   if (failed) return NextResponse.json({ error: "Could not export your data. Please try again." }, { status: 500 });
 
   const body = {
-    format: "splitmate-export",
+    format: "notchlift-export",
     version: 1,
     exported_at: new Date().toISOString(),
     time_zone: tz,
