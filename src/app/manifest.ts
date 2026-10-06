@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Splitmate: Workout Planner & Tracker",
-    short_name: "Splitmate",
+    name: "NotchLift: Workout Planner & Tracker",
+    short_name: "NotchLift",
     description: "Plan training splits and log workouts with your previous sets in view.",
     start_url: "/train",
     scope: "/",

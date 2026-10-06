@@ -251,11 +251,11 @@ otp_expiry = 3600
 # (the default PKCE links only work in the browser that requested them).
 # Copy the same templates into the hosted project: see README "Email templates".
 [auth.email.template.confirmation]
-subject = "Confirm your Splitmate account"
+subject = "Confirm your NotchLift account"
 content_path = "./supabase/templates/confirmation.html"
 
 [auth.email.template.recovery]
-subject = "Reset your Splitmate password"
+subject = "Reset your NotchLift password"
 content_path = "./supabase/templates/recovery.html"
 
 # [auth.email.template.invite]

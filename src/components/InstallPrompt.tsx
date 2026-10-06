@@ -8,6 +8,7 @@ type Platform = "ios" | "android" | "other";
 type BeforeInstallPromptEvent = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: string }> };
 
 // Not under the "splitmate:v1:" prefix, which is reserved for per-account workout data.
+// (Storage keys keep the app's original name so existing devices keep their settings.)
 const DISMISSED_KEY = "splitmate-install-hint-dismissed";
 
 let deferred: BeforeInstallPromptEvent | null = null;
@@ -54,8 +55,8 @@ function Steps({ platform, browser, canPrompt, onInstall }: { platform: Platform
   if (canPrompt) {
     return (
       <div className="space-y-3">
-        <p className="text-muted">Splitmate installs like an app: its own icon, full screen, no browser bars.</p>
-        <Button variant="primary" size="lg" className="w-full" onClick={onInstall}>Install Splitmate</Button>
+        <p className="text-muted">NotchLift installs like an app: its own icon, full screen, no browser bars.</p>
+        <Button variant="primary" size="lg" className="w-full" onClick={onInstall}>Install NotchLift</Button>
       </div>
     );
   }
@@ -68,7 +69,7 @@ function Steps({ platform, browser, canPrompt, onInstall }: { platform: Platform
           <li>Tap the <strong className="text-fg">Share</strong> button (the square with an arrow) in the address bar.</li>
         )}
         <li>Scroll down and tap <strong className="text-fg">Add to Home Screen</strong>.</li>
-        <li>Tap <strong className="text-fg">Add</strong>. Open Splitmate from the new icon from now on.</li>
+        <li>Tap <strong className="text-fg">Add</strong>. Open NotchLift from the new icon from now on.</li>
       </ol>
     );
   }
@@ -77,7 +78,7 @@ function Steps({ platform, browser, canPrompt, onInstall }: { platform: Platform
       <ol className="list-decimal space-y-2 pl-5 text-muted">
         <li>Tap the browser menu <strong className="text-fg">⋮</strong> (top right).</li>
         <li>Tap <strong className="text-fg">Install app</strong> or <strong className="text-fg">Add to Home screen</strong>.</li>
-        <li>Confirm. Open Splitmate from the new icon from now on.</li>
+        <li>Confirm. Open NotchLift from the new icon from now on.</li>
       </ol>
     );
   }
@@ -109,7 +110,7 @@ export function InstallCard() {
   return (
     <div className="mt-3 flex items-center gap-3 rounded-2xl border border-accent-text/30 bg-accent-soft px-4 py-3">
       <button type="button" onClick={() => (s.canPrompt ? void install() : setOpen(true))} className="min-w-0 flex-1 text-left">
-        <span className="block font-medium">Add Splitmate to your Home Screen</span>
+        <span className="block font-medium">Add NotchLift to your Home Screen</span>
         <span className="block text-sm text-muted">Opens full screen like an app. Takes 10 seconds.</span>
       </button>
       <IconButton label="Dismiss" onClick={dismiss} className="-mr-2"><IconX size={18} /></IconButton>
@@ -129,14 +130,14 @@ export function InstallRow() {
       <button type="button" onClick={() => setOpen(true)} className="flex min-h-13 w-full items-center gap-3 px-4 py-3 text-left hover:bg-surface-2/50">
         <span className="min-w-0 flex-1">
           <span className="block font-medium">Add to Home Screen</span>
-          <span className="block text-sm text-muted">{s.standalone ? "Installed: you’re using the app version." : "Use Splitmate like an app, full screen."}</span>
+          <span className="block text-sm text-muted">{s.standalone ? "Installed: you’re using the app version." : "Use NotchLift like an app, full screen."}</span>
         </span>
         <IconChevronRight className="shrink-0 text-faint" />
       </button>
       <Sheet open={open} onClose={() => setOpen(false)} title="Add to Home Screen">
         <div className="pb-2">
           {s.standalone ? (
-            <p className="text-muted">You’re already using Splitmate from your Home Screen. Nothing else to do.</p>
+            <p className="text-muted">You’re already using NotchLift from your Home Screen. Nothing else to do.</p>
           ) : (
             <Steps platform={s.platform} browser={s.browser} canPrompt={s.canPrompt} onInstall={() => void install()} />
           )}

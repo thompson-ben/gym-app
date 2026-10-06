@@ -4,7 +4,7 @@ import { db, newUser, signIn } from "./helpers";
 test("a new account is welcomed, can start from a template and train straight away", async ({ page }) => {
   const user = await newUser("first-run");
   await signIn(page, user);
-  await expect(page.getByRole("heading", { name: "Welcome to Splitmate" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Welcome to NotchLift" })).toBeVisible();
   await page.getByRole("button", { name: "Start from a template" }).click();
   await page.getByRole("button", { name: /Full Body \(3 days\)/ }).click();
   await expect(page.getByText("Back squat · Barbell bench press")).toBeVisible();
@@ -29,18 +29,18 @@ test("feedback is sent with the screen it came from", async ({ page }) => {
   expect(rows).toEqual([{ kind: "idea", message: "Would love a dark-green theme", page: "/progress" }]);
 });
 
-test("phone browsers are shown how to add Splitmate to the Home Screen, and can dismiss it", async ({ page }) => {
+test("phone browsers are shown how to add NotchLift to the Home Screen, and can dismiss it", async ({ page }) => {
   const user = await newUser("install");
   await signIn(page, user);
-  const card = page.getByRole("button", { name: /Add Splitmate to your Home Screen/ });
+  const card = page.getByRole("button", { name: /Add NotchLift to your Home Screen/ });
   await expect(card).toBeVisible();
   await card.click();
-  await expect(page.getByRole("dialog", { name: "Add to Home Screen" })).toContainText(/Install app|Install Splitmate/);
+  await expect(page.getByRole("dialog", { name: "Add to Home Screen" })).toContainText(/Install app|Install NotchLift/);
   await page.getByRole("button", { name: "Close" }).click();
   await page.getByRole("button", { name: "Dismiss" }).click();
   await expect(card).toHaveCount(0);
   await page.reload();
-  await expect(page.getByRole("button", { name: /Add Splitmate to your Home Screen/ })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /Add NotchLift to your Home Screen/ })).toHaveCount(0);
   // Always available later from Profile.
   await page.goto("/profile");
   await page.getByRole("button", { name: /Add to Home Screen/ }).click();

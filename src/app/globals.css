@@ -1,7 +1,6 @@
 @import "tailwindcss";
 
-/* Splitmate design tokens. Dark is the primary experience; light follows the system. */
-/* Splitmate design tokens (PM look-and-feel concept). Dark is the primary experience. */
+/* NotchLift design tokens (PM look-and-feel concept). Dark is the primary experience. */
 :root {
   --bg: #131416;
   --surface: #1c2023;

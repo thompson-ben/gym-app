@@ -212,7 +212,7 @@ export default async function TrainPage() {
           </section>
         ) : (
           <section className="pt-6" aria-labelledby="welcome-title">
-            <h1 id="welcome-title" className="text-[32px] leading-tight font-semibold tracking-tight">Welcome to Splitmate</h1>
+            <h1 id="welcome-title" className="text-[32px] leading-tight font-semibold tracking-tight">Welcome to NotchLift</h1>
             <p className="mt-2 text-muted">
               Plan your split, log every set with last time’s numbers beside it, and keep your progress whenever you change splits.
             </p>

@@ -1,5 +1,5 @@
 /*
- * Splitmate service worker.
+ * NotchLift service worker.
  *
  * Deliberately conservative: it never caches authenticated pages, RSC payloads or API
  * responses, so nothing private can leak between accounts on a shared device. It only

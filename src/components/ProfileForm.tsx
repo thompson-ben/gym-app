@@ -130,7 +130,7 @@ export function ProfileForm({ userId, email, profile, membership }: { userId: st
               />
               {displayName.trim() !== savedName ? <Button type="submit" variant="secondary">Save</Button> : null}
             </div>
-            <StatusLine id="display-name-status" status={status.name} hint="Only you see this. Splitmate has no public profiles." />
+            <StatusLine id="display-name-status" status={status.name} hint="Only you see this. NotchLift has no public profiles." />
           </form>
           <div className="px-4 py-3">
             <label htmlFor="default-rest" className="block text-sm font-medium text-muted">Default rest</label>

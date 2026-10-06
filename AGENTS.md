@@ -8,7 +8,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 <!-- END:nextjs-agent-rules -->
 
-# Splitmate project notes
+# NotchLift project notes
 
 - Product rules live in the database: see `supabase/migrations/`. History is keyed by (user_id, exercise_id); sessions snapshot templates; ownership is enforced by composite (id, user_id) foreign keys plus RLS.
 - Mutations that must be atomic are SQL functions (`activate_split`, `start_session`, `sync_session`, `finish_session`, `copy_shared_split`, …). Call them via `supabase.rpc`.

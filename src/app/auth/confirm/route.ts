@@ -4,7 +4,7 @@ import { safeNext } from "@/lib/safe-next";
 import { supabaseServer } from "@/lib/supabase/server";
 
 /**
- * Email-confirmation callback. Accepts the `token_hash` links produced by Splitmate's email
+ * Email-confirmation callback. Accepts the `token_hash` links produced by NotchLift's email
  * templates (work on any device) and the PKCE `code` links of Supabase's default template
  * (work only in the browser that signed up). Failed or expired links go back to sign-in.
  */

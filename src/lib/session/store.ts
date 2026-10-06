@@ -47,6 +47,7 @@ export const DEFAULT_SETTINGS: LoggerSettings = { defaultRestSeconds: 120, autoS
 
 export type KeyValueStorage = Pick<Storage, "getItem" | "setItem" | "removeItem" | "key" | "length">;
 
+// Keeps the app's original name: changing it would orphan workouts saved on devices.
 const PREFIX = "splitmate:v1:";
 const LAST_USER_KEY = `${PREFIX}last-user`;
 
@@ -105,7 +106,7 @@ export function listRecords(storage: KeyValueStorage, userId: string): LocalReco
 export const hasUnsyncedChanges = (record: LocalRecord) =>
   record.pending !== null || record.localVersion > record.syncedVersion || record.conflict !== null;
 
-/** Removes all local Splitmate data of one user (used on sign-out). */
+/** Removes all local app data of one user (used on sign-out). */
 export function clearUser(storage: KeyValueStorage, userId: string) {
   try {
     for (const key of userKeys(storage, userId)) storage.removeItem(key);

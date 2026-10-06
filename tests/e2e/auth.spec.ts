@@ -23,7 +23,7 @@ test("sign-up requires email confirmation and continues to the original destinat
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page.getByText("Please confirm your email first")).toBeVisible();
 
-  const link = await emailLink(email, /Confirm your Splitmate account/);
+  const link = await emailLink(email, /Confirm your NotchLift account/);
   expect(link).toContain("/auth/confirm?token_hash=");
   await page.goto(link);
   await page.waitForURL(`**/s/${share.token}`);
@@ -56,7 +56,7 @@ test("password reset: neutral request, email link, new password, invalid and reu
   await page.getByRole("button", { name: "Send reset link" }).click();
   await expect(page.getByText(`If an account exists for ${nobody}, we have sent a link`)).toBeVisible();
 
-  const link = await emailLink(user.email, /Reset your Splitmate password/);
+  const link = await emailLink(user.email, /Reset your NotchLift password/);
   expect(link).toContain("/auth/reset?token_hash=");
   expect(await emailCount(nobody)).toBe(0);
 
@@ -166,7 +166,7 @@ test("the app is installable: manifest, icons and an active service worker", asy
   // app-side criterion (manifest, icons, service worker, HTTPS/localhost) must pass.
   expect(installabilityErrors.filter((e) => e.errorId !== "in-incognito")).toEqual([]);
   const manifest = await (await page.request.get("/manifest.webmanifest")).json();
-  expect(manifest).toMatchObject({ name: "Splitmate: Workout Planner & Tracker", display: "standalone", start_url: "/train" });
+  expect(manifest).toMatchObject({ name: "NotchLift: Workout Planner & Tracker", display: "standalone", start_url: "/train" });
 });
 
 test("profile works for an account whose profile row is missing (signed up before the schema)", async ({ page }) => {
