@@ -120,7 +120,7 @@ const FAQ: { q: string; a: ReactNode }[] = [
   },
   {
     q: "What does it cost?",
-    a: "NotchLift is free during early access, with no card needed. Everyone who joins now is a founding member. If pricing ever changes, you’ll hear from us first, and nothing is ever charged automatically.",
+    a: "NotchLift is free during early access, with no card needed. If pricing ever changes, you’ll hear from us first, and nothing is ever charged automatically.",
   },
 ];
 
@@ -251,11 +251,11 @@ export function Landing() {
             <div className="mx-auto max-w-2xl text-center">
               <Eyebrow>Pricing</Eyebrow>
               <h2 className="mt-4 text-3xl font-bold tracking-[-0.03em] text-balance sm:text-5xl">Free during early access.</h2>
-              <p className="mt-4 text-lg text-muted">Every feature, no card, no catch. Join now and you’re a founding member.</p>
+              <p className="mt-4 text-lg text-muted">Every feature, no card, no catch.</p>
             </div>
             <div className="mx-auto mt-12 max-w-md rounded-[2rem] border border-accent-text/40 bg-surface p-8 shadow-[0_0_0_6px_rgb(195_237_137/0.06)]">
               <div className="flex items-baseline justify-between gap-4">
-                <h3 className="text-xl font-semibold">Founding member</h3>
+                <h3 className="text-xl font-semibold">NotchLift</h3>
                 <span className="rounded-full bg-accent-soft px-3 py-1 text-xs font-semibold text-accent-text">Early access</span>
               </div>
               <p className="mt-4"><span className="text-5xl font-bold tracking-tight">Free</span></p>
@@ -267,7 +267,7 @@ export function Landing() {
                   </li>
                 ))}
               </ul>
-              <Cta className="mt-8 w-full" label="Become a founding member" />
+              <Cta className="mt-8 w-full" label="Start training free" />
               <p className="mt-4 text-center text-sm text-faint">If pricing ever changes, you’ll hear from us first.</p>
             </div>
           </div>
@@ -318,7 +318,6 @@ export function Landing() {
             <Link href="/sign-in" className="hover:text-fg">Sign in</Link>
             <Link href="/privacy" className="hover:text-fg">Privacy</Link>
             <Link href="/terms" className="hover:text-fg">Terms</Link>
-            <a href="mailto:hello@notchlift.com" className="hover:text-fg">hello@notchlift.com</a>
           </nav>
           <p className="text-faint">© {new Date().getFullYear()} NotchLift</p>
         </div>
