@@ -356,7 +356,9 @@ function MembershipSection({ membership }: { membership: NonNullable<Membership>
   const state = membershipState(membership);
   const line =
     state.kind === "free"
-      ? "Free access. Nothing to pay."
+      ? state.early
+        ? "Early access: free for now. When paid membership launches you’ll get a 14-day free trial, and nothing you’ve logged changes."
+        : "Free access. Nothing to pay."
       : state.kind === "trial"
         ? `Free trial: ${state.daysLeft === 1 ? "last day" : `${state.daysLeft} days left`} (ends ${formatDate(state.endsAt, undefined, { year: undefined })}).`
         : state.kind === "trial_ended"

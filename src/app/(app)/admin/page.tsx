@@ -3,6 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BarStrip, Funnel, StatTile } from "@/components/admin/AdminCharts";
 import { FreeAccess, type FreeAccessList } from "@/components/admin/FreeAccess";
+import { LaunchPanel } from "@/components/admin/LaunchPanel";
+import { paymentsConfigured } from "@/lib/billing/server";
 import { cx } from "@/components/styles";
 import { PageHeader, SectionTitle } from "@/components/ui";
 import { pct, pounds, type AdminOverview } from "@/lib/admin";
@@ -164,6 +166,18 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
         <section className="mt-8" aria-labelledby="free-title">
           <SectionTitle><span id="free-title">Free access for friends</span></SectionTitle>
           <FreeAccess list={freeList.data as FreeAccessList} emailReady={emailConfigured()} />
+        </section>
+      ) : null}
+
+      {freeList.data && "live" in (freeList.data as FreeAccessList) ? (
+        <section className="mt-8" aria-labelledby="launch-title">
+          <SectionTitle><span id="launch-title">Launch</span></SectionTitle>
+          <LaunchPanel
+            live={Boolean((freeList.data as FreeAccessList).live)}
+            earlyCount={(freeList.data as FreeAccessList).early?.length ?? 0}
+            freeCount={(freeList.data as FreeAccessList).free.length}
+            paymentsReady={paymentsConfigured()}
+          />
         </section>
       ) : null}
 

@@ -288,6 +288,7 @@ Migrations are additive and versioned; never reset a deployed database.
    Then `…0012_group_workouts.sql`: adds group workouts (three new tables, a nullable `workout_sessions.group_workout_id`, and functions). Additive; old app versions keep working.
    Then `…0013_analytics.sql`: first-party analytics and the admin dashboard (new tables and functions only).
    Then `…0014_payments.sql`: paid membership (Stripe), the free-trial gate, trial reminders and free access for friends. Additive; see Payments below.
+   Then `…0015_free_access_and_launch.sql`: separates free access (stays free) from early access (trial at launch) and adds the launch switch. Additive.
 2. **Then deploy the app.** Old app versions keep working against the migrated database (they ignore the new columns). If the app were deployed first, the workout editor would fail to load until the migration runs, while the logger and summaries simply show no targets.
 3. Offline compatibility: workouts already open on a device keep working; local records saved by the previous version have no `targets` field and load normally. The service worker is now registered per build (`/sw.js?v=<commit>`), so each deployment installs a fresh offline shell and removes the old cache; pages themselves are always fetched from the network first.
 
@@ -319,9 +320,11 @@ Migrations are additive and versioned; never reset a deployed database.
    `select cron.schedule('trial-reminders', '0 9 * * *', $$ select net.http_post(url := 'https://notchlift.com/api/cron/trial-reminders', headers := jsonb_build_object('Authorization', 'Bearer <CRON_SECRET>')) $$);`
 6. Go live:
    - Repeat step 3 in Stripe live mode, and swap the live keys into Vercel.
-   - Then `update public.app_settings set auto_founder = false;` so new sign-ups start the trial. The landing page's pricing switches with it (`paid_plans_live()`).
+   - Then **Admin → Launch**, typing `LAUNCH`. New sign-ups start the trial, and every early-access member starts a 14-day trial that day and gets a short email. Anyone with free access is untouched. The landing page's pricing switches with it (`paid_plans_live()`).
 
-**Free access for friends:** Admin → Free access. An existing account becomes free immediately. Anyone else is emailed an invite and gets free access when they sign up with that address (`free_access_invites`).
+**Free access vs early access:** both have status `founder`; `memberships.free_access` marks people who stay free for good.
+- Admin → Free access: an existing account becomes free immediately. Anyone else is emailed an invite and gets free access when they sign up with that address (`free_access_invites`).
+- The Early access list shows everyone else who signed up before launch. Each can be given free access with one tap.
 
 ## Group workouts
 

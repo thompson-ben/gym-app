@@ -24,10 +24,11 @@ export async function POST(request: Request) {
   return NextResponse.json({ ...result, emailed });
 }
 
+/** Cancels a pending invite, or (with member: true) takes free access away from an account. */
 export async function DELETE(request: Request) {
   const supabase = await supabaseServer();
-  const body = (await request.json().catch(() => ({}))) as { email?: string };
-  const { error } = await supabase.rpc("admin_revoke_invite", { p_email: body.email ?? "" });
-  if (error) return NextResponse.json({ error: "Couldn’t remove the invite." }, { status: 400 });
+  const body = (await request.json().catch(() => ({}))) as { email?: string; member?: boolean };
+  const { error } = await supabase.rpc(body.member ? "admin_remove_free_access" : "admin_revoke_invite", { p_email: body.email ?? "" });
+  if (error) return NextResponse.json({ error: "Couldn’t make that change." }, { status: 400 });
   return NextResponse.json({ ok: true });
 }

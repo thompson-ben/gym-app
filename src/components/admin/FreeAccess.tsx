@@ -7,8 +7,11 @@ import { IconX } from "../icons";
 import { Button, ErrorNote, Field, IconButton, Input } from "../ui";
 
 export type FreeAccessList = {
+  /** Migration 15: whether paid plans are live, and early-access members (trial at launch). */
+  live?: boolean;
   pending: { email: string; note: string | null; invited_at: string }[];
   free: { email: string; note: string | null; since: string }[];
+  early?: { email: string; since: string }[];
 };
 
 /** Give friends free access by email. Shows email addresses: admin page only. */
@@ -44,10 +47,19 @@ export function FreeAccess({ list, emailReady }: { list: FreeAccessList; emailRe
     router.refresh();
   }
 
-  async function revoke(address: string) {
-    await fetch("/api/admin/free-access", { method: "DELETE", headers: { "content-type": "application/json" }, body: JSON.stringify({ email: address }) });
+  async function revoke(address: string, member = false) {
+    if (member && !window.confirm(`Remove free access for ${address}? ${list.live ? "They’ll start a 14-day trial." : "They’ll move to early access."}`)) return;
+    await fetch("/api/admin/free-access", { method: "DELETE", headers: { "content-type": "application/json" }, body: JSON.stringify({ email: address, member }) });
     router.refresh();
   }
+
+  async function promote(address: string) {
+    await fetch("/api/admin/free-access", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email: address }) });
+    router.refresh();
+  }
+
+  const [showEarly, setShowEarly] = useState(false);
+  const early = list.early ?? [];
 
   const free = showAll ? list.free : list.free.slice(0, 8);
   return (
@@ -86,13 +98,16 @@ export function FreeAccess({ list, emailReady }: { list: FreeAccessList; emailRe
       ) : null}
 
       <div>
-        <h3 className="mb-2 text-sm font-medium text-muted">Free access ({list.free.length})</h3>
+        <h3 className="mb-1 text-sm font-medium text-muted">Free access: stays free for good ({list.free.length})</h3>
         {list.free.length ? (
           <ul className="divide-y divide-line overflow-hidden rounded-3xl border border-line bg-surface">
             {free.map((f) => (
-              <li key={f.email} className="px-4 py-2.5">
-                <span className="block truncate text-sm font-medium">{f.email}</span>
-                <span className="block truncate text-xs text-muted">{f.note ?? "Founding member"}</span>
+              <li key={f.email} className="flex items-center gap-2 py-1 pr-1 pl-4">
+                <span className="min-w-0 flex-1 py-1.5">
+                  <span className="block truncate text-sm font-medium">{f.email}</span>
+                  <span className="block truncate text-xs text-muted">{f.note ?? "Free access"}</span>
+                </span>
+                <IconButton label={`Remove free access for ${f.email}`} onClick={() => void revoke(f.email, true)}><IconX size={18} /></IconButton>
               </li>
             ))}
           </ul>
@@ -103,6 +118,28 @@ export function FreeAccess({ list, emailReady }: { list: FreeAccessList; emailRe
           <Button size="sm" variant="quiet" className="mt-1" onClick={() => setShowAll(true)}>Show all {list.free.length}</Button>
         ) : null}
       </div>
+
+      {list.early ? (
+        <div>
+          <h3 className="mb-1 text-sm font-medium text-muted">Early access ({early.length})</h3>
+          <p className="mb-2 text-xs text-faint">Free until you launch paid membership, then they start a 14-day trial. Give anyone here free access to keep them free.</p>
+          {early.length ? (
+            <ul className="divide-y divide-line overflow-hidden rounded-3xl border border-line bg-surface">
+              {(showEarly ? early : early.slice(0, 8)).map((e) => (
+                <li key={e.email} className="flex items-center gap-2 py-1.5 pr-2 pl-4">
+                  <span className="min-w-0 flex-1 truncate text-sm">{e.email}</span>
+                  <Button size="sm" variant="secondary" onClick={() => void promote(e.email)} aria-label={`Give ${e.email} free access`}>Free access</Button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-faint">Nobody.</p>
+          )}
+          {early.length > 8 && !showEarly ? (
+            <Button size="sm" variant="quiet" className="mt-1" onClick={() => setShowEarly(true)}>Show all {early.length}</Button>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }
