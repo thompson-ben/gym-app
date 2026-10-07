@@ -31,7 +31,7 @@ const MEMBERSHIP_LABEL: Record<NonNullable<Membership>["status"], string> = {
   lapsed: "Membership ended",
 };
 
-export function ProfileForm({ userId, email, profile, membership }: { userId: string; email: string | null; profile: Profile; membership: Membership }) {
+export function ProfileForm({ userId, email, profile, membership, isAdmin = false }: { userId: string; email: string | null; profile: Profile; membership: Membership; isAdmin?: boolean }) {
   const router = useRouter();
   const [displayName, setDisplayName] = useState(profile.display_name ?? "");
   const [savedName, setSavedName] = useState(profile.display_name ?? "");
@@ -216,6 +216,15 @@ export function ProfileForm({ userId, email, profile, membership }: { userId: st
       <section>
         <SectionTitle>App</SectionTitle>
         <div className="divide-y divide-line overflow-hidden rounded-3xl border border-line bg-surface">
+          {isAdmin ? (
+            <Link href="/admin" className="flex min-h-13 items-center gap-3 px-4 py-3 hover:bg-surface-2/50">
+              <span className="min-w-0 flex-1">
+                <span className="block font-medium">Admin dashboard</span>
+                <span className="block text-sm text-muted">Visits, sign-ups, campaigns and feature use</span>
+              </span>
+              <IconChevronRight className="shrink-0 text-faint" />
+            </Link>
+          ) : null}
           <InstallRow />
           <FeedbackRow />
           <ShowTipsAgainRow />

@@ -286,8 +286,16 @@ Migrations are additive and versioned; never reset a deployed database.
    Then `supabase/migrations/20261003000009_memberships_and_account_deletion.sql` and `…0010_feedback_and_starter_splits.sql`, and (memberships, `app_settings`, `delete_my_account`). Apply both in filename order; each is additive and safe to run before the app that uses it.
    Then `…0011_weight_units.sql`: allows `profiles.weight_unit = 'lb'` and widens `session_sets.weight_kg` / `progression_increment_kg` to 4 decimal places. Existing values are unchanged; old app versions keep working.
    Then `…0012_group_workouts.sql`: adds group workouts (three new tables, a nullable `workout_sessions.group_workout_id`, and functions). Additive; old app versions keep working.
+   Then `…0013_analytics.sql`: first-party analytics and the admin dashboard (new tables and functions only).
 2. **Then deploy the app.** Old app versions keep working against the migrated database (they ignore the new columns). If the app were deployed first, the workout editor would fail to load until the migration runs, while the logger and summaries simply show no targets.
 3. Offline compatibility: workouts already open on a device keep working; local records saved by the previous version have no `targets` field and load normally. The service worker is now registered per build (`/sw.js?v=<commit>`), so each deployment installs a fresh offline shell and removes the old cache; pages themselves are always fetched from the network first.
+
+## Monitoring and analytics
+
+- **Errors (Sentry):** off unless `NEXT_PUBLIC_SENTRY_DSN` is set (Vercel → Settings → Environment Variables, Production). Server errors are reported from `src/instrumentation.ts` (`onRequestError`), browser errors from `src/instrumentation-client.ts` and the error pages. The SDK is loaded on demand, so it adds nothing to first load. `src/lib/monitoring.ts` strips user, cookies, headers, request data and emails, and blanks invite/share tokens and auth parameters in URLs (unit-tested). Errors only: no tracing or session replay. Stack traces are minified (no source map upload).
+- **Analytics (first party, migration 13):** anonymous visits to public pages (`visit`, once per tab session) and sign-up form views, recorded through `/api/track` → `track_event()`. No visitor id, IP or user agent is stored; device and country come from the request. Campaign tags (`utm_*`), Facebook ad clicks (`fbclid`, not stored) and referring sites set a 30-day `nl_src` cookie with no identifier; after sign-in it becomes the account's first-touch attribution (`record_attribution()`, new accounts only). GPC/DNT browsers and bots are skipped.
+- **Admin dashboard (`/admin`):** funnel, daily visits/sign-ups/workouts, sources and campaigns, retention, feature use and memberships, from `admin_overview()` (totals only). Only accounts in `public.admins` can open it; add yourself in the SQL Editor:
+  `insert into public.admins (user_id) select id from auth.users where email = 'you@example.com';`
 
 ## Group workouts
 
