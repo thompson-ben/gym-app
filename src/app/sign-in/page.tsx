@@ -24,7 +24,7 @@ export default async function SignInPage({ searchParams }: { searchParams: Promi
           Your account and all its data have been deleted.
         </p>
       ) : null}
-      <AuthForm initialMode={params.mode === "sign-up" ? "sign-up" : "sign-in"} next={next} error={params.error ?? null} />
+      <AuthForm initialMode={params.mode === "sign-up" ? "sign-up" : "sign-in"} next={next} error={params.error ?? null} initialEmail={params.email && params.email.length <= 254 && params.email.includes("@") ? params.email : ""} />
     </main>
   );
 }

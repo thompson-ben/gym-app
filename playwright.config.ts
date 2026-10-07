@@ -22,6 +22,17 @@ if (!process.env.SUPABASE_LOCAL_SECRET_KEY) {
 const PORT = Number(process.env.E2E_PORT ?? 3100);
 
 /**
+ * Test-only billing settings for the app under test (never real keys): lets the e2e suite send
+ * signed Stripe webhook events to the local app and call the secret-guarded billing functions.
+ */
+export const E2E_BILLING = {
+  BILLING_SECRET: "e2e-billing-secret-not-for-production-0123456789",
+  CRON_SECRET: "e2e-cron-secret-not-for-production-0123456789abcd",
+  STRIPE_WEBHOOK_SECRET: "whsec_e2e_not_for_production",
+  STRIPE_SECRET_KEY: "sk_test_e2e_not_a_real_key",
+};
+
+/**
  * End-to-end tests against a production build and the local Supabase stack
  * (`npm run db:start`). Run with `npm run test:e2e`.
  */
@@ -46,6 +57,7 @@ export default defineConfig({
     command: `npx next start -p ${PORT}`,
     url: `http://localhost:${PORT}/sign-in`,
     reuseExistingServer: true,
+    env: { ...(process.env as Record<string, string>), ...E2E_BILLING },
     timeout: 120_000,
   },
 });

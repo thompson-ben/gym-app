@@ -3,11 +3,14 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { formatDuration } from "@/lib/format";
+import { membershipState, type MembershipRow } from "@/lib/billing/membership";
+import { PLANS } from "@/lib/billing/plans";
+import { formatDate, formatDuration } from "@/lib/format";
 import { clearUser, hasUnsyncedChanges, listRecords } from "@/lib/session/store";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { friendlyError } from "@/lib/supabase/errors";
 import { isWeightUnit, type WeightUnit } from "@/lib/units";
+import { ManageBillingButton } from "./billing/ManageBillingButton";
 import { FeedbackRow } from "./FeedbackButton";
 import { IconChevronRight } from "./icons";
 import { InstallRow } from "./InstallPrompt";
@@ -22,7 +25,7 @@ type Status = { kind: "idle" } | { kind: "saving" } | { kind: "saved" } | { kind
  * depends on finding a Save button (which the bottom navigation used to cover) and a failed
  * save is never silent.
  */
-type Membership = { status: "founder" | "trial" | "paid" | "lapsed"; trial_ends_at: string | null } | null;
+type Membership = MembershipRow;
 
 const MEMBERSHIP_LABEL: Record<NonNullable<Membership>["status"], string> = {
   founder: "Founding member",
@@ -50,6 +53,15 @@ export function ProfileForm({ userId, email, profile, membership, isAdmin = fals
     if (deleteText.trim().toUpperCase() !== "DELETE") return setDeleteError("Type DELETE to confirm.");
     setDeleteBusy(true);
     setDeleteError(null);
+    // Stop any subscription first, so nobody is charged for an account that no longer exists.
+    if (membership?.status === "paid") {
+      const res = await fetch("/api/billing/cancel", { method: "POST" });
+      if (!res.ok) {
+        setDeleteBusy(false);
+        const json = (await res.json().catch(() => ({}))) as { error?: string };
+        return setDeleteError(json.error ?? "Couldn’t cancel your subscription. Nothing was deleted; please try again.");
+      }
+    }
     const supabase = supabaseBrowser();
     const { error } = await supabase.rpc("delete_my_account");
     if (error) {
@@ -192,6 +204,8 @@ export function ProfileForm({ userId, email, profile, membership, isAdmin = fals
           </div>
         </div>
       </section>
+
+      {membership ? <MembershipSection membership={membership} /> : null}
 
       <section>
         <SectionTitle>Account</SectionTitle>
@@ -336,4 +350,33 @@ function StatusLine({ status, hint, id }: { status?: Status; hint?: string; id?:
       {text}
     </p>
   ) : null;
+}
+
+function MembershipSection({ membership }: { membership: NonNullable<Membership> }) {
+  const state = membershipState(membership);
+  const line =
+    state.kind === "free"
+      ? "Free access. Nothing to pay."
+      : state.kind === "trial"
+        ? `Free trial: ${state.daysLeft === 1 ? "last day" : `${state.daysLeft} days left`} (ends ${formatDate(state.endsAt, undefined, { year: undefined })}).`
+        : state.kind === "trial_ended"
+          ? "Your free trial has ended. Your history is safe; choose a plan to keep logging."
+          : state.kind === "lapsed"
+            ? "Your membership has ended. Your history is safe; choose a plan to keep logging."
+            : `${state.plan ? `${PLANS[state.plan].label} plan, ${PLANS[state.plan].price}/${PLANS[state.plan].per}. ` : ""}${
+                state.renewsAt ? `${state.canceling ? "Ends" : "Renews"} ${formatDate(state.renewsAt, undefined, { year: "numeric" })}.` : ""
+              }${state.billingIssue ? " Your last payment didn’t go through: please update your card." : ""}`;
+  return (
+    <section>
+      <SectionTitle>Membership</SectionTitle>
+      <div className="rounded-3xl border border-line bg-surface p-4">
+        <p className="text-[15px]">{line}</p>
+        {state.kind === "paid" ? (
+          <div className="mt-3"><ManageBillingButton /></div>
+        ) : state.kind !== "free" ? (
+          <Link href="/upgrade" className="mt-3 inline-flex h-11 items-center rounded-2xl bg-accent px-4 font-semibold text-accent-ink">See plans</Link>
+        ) : null}
+      </div>
+    </section>
+  );
 }

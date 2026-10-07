@@ -7,7 +7,9 @@ import { PageTip } from "@/components/PageTip";
 import { QuickWorkoutButton } from "@/components/QuickWorkoutButton";
 import { StarterSplits } from "@/components/StarterSplits";
 import { LogPastWorkoutButton, StartWorkoutButton } from "@/components/StartWorkoutButton";
+import { MembershipBanner } from "@/components/billing/MembershipBanner";
 import { GroupWorkoutsSection, type UpcomingGroup } from "@/components/together/GroupWorkoutsSection";
+import { MEMBERSHIP_COLUMNS, membershipState, type MembershipRow } from "@/lib/billing/membership";
 import { Wordmark } from "@/components/Wordmark";
 import { formatDate, formatElapsed, formatShortDate } from "@/lib/format";
 import { suggestNextWorkout, type NextWorkout } from "@/lib/next-workout";
@@ -30,7 +32,7 @@ export default async function TrainPage() {
 
   // Two round trips: the active split with its workouts (one nested query) plus the open and
   // recent sessions, then the split's performed dates and period count together.
-  const [{ data: period, error: periodError }, { data: open, error: openError }, recent, myGroups] = await Promise.all([
+  const [{ data: period, error: periodError }, { data: open, error: openError }, recent, myGroups, membership] = await Promise.all([
     supabase
       .from("split_active_periods")
       .select("id, started_at, split_id, splits(id, name, workout_templates(id, name, position, created_at, template_exercises(target_sets)))")
@@ -47,6 +49,7 @@ export default async function TrainPage() {
       .neq("status", "completed")
       .order("joined_at", { ascending: false })
       .limit(5),
+    supabase.from("memberships").select(MEMBERSHIP_COLUMNS).maybeSingle(),
   ]);
   if (periodError) throw periodError;
   if (openError) throw openError;
@@ -106,6 +109,7 @@ export default async function TrainPage() {
         <Wordmark />
         {split && !open && startable.length ? <LogPastWorkoutButton workouts={startable} size="sm" label="Log past workout" /> : null}
       </div>
+      <MembershipBanner state={membershipState((membership.data as MembershipRow) ?? null)} />
       {!open ? <InstallCard /> : null}
 
       {open ? (

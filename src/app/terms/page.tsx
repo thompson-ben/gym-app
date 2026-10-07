@@ -8,10 +8,20 @@ export default function TermsPage() {
     <LegalPage title="Terms of use">
       <p>By creating an account you agree to these terms. They are written to be readable; please contact {contactLine()} if anything is unclear.</p>
       <section>
-        <h2>Early access</h2>
+        <h2>Membership and payment</h2>
         <p>
-          NotchLift is in early access. Founding members use it free of charge and their founding membership continues after paid plans are
-          introduced. Features may change as we improve the app, and we welcome your feedback.
+          New accounts start with a 14-day free trial; no card is needed. After the trial, a membership costs £3.99 a month or £30 a year.
+          Without one, everything you have logged stays available to view and export, and starting new workouts is paused. Founding members and
+          people given free access use NotchLift free of charge.
+        </p>
+        <p>
+          Payments are handled by Stripe; we never see or store your card details. Subscriptions renew automatically at the end of each month or
+          year until you cancel. You can cancel at any time from Profile (Manage subscription); you keep access until the end of the period you
+          have paid for, and you will not be charged again. If we ever change the price, we will tell you by email before it applies to you.
+        </p>
+        <p>
+          Your right to cancel: you can cancel within 14 days of first subscribing and receive a full refund by contacting us. Deleting your
+          account cancels your subscription immediately. Nothing in these terms affects your statutory rights.
         </p>
       </section>
       <section>

@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BarStrip, Funnel, StatTile } from "@/components/admin/AdminCharts";
+import { FreeAccess, type FreeAccessList } from "@/components/admin/FreeAccess";
 import { cx } from "@/components/styles";
 import { PageHeader, SectionTitle } from "@/components/ui";
-import { pct, type AdminOverview } from "@/lib/admin";
+import { pct, pounds, type AdminOverview } from "@/lib/admin";
+import { emailConfigured } from "@/lib/emails/send";
 import { requireUser } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Admin", robots: { index: false, follow: false } };
@@ -26,7 +28,10 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const { days: daysParam } = await searchParams;
   const days = RANGES.find((d) => String(d) === daysParam) ?? 30;
   const { supabase } = await requireUser();
-  const { data, error } = await supabase.rpc("admin_overview", { p_days: days });
+  const [{ data, error }, freeList] = await Promise.all([
+    supabase.rpc("admin_overview", { p_days: days }),
+    supabase.rpc("admin_free_access_list"),
+  ]);
   // Not an admin (or migration 13 not applied): the page does not exist for them.
   if (error || !data) notFound();
   const o = data as AdminOverview;
@@ -141,6 +146,27 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
         </ul>
       </section>
 
+      {o.billing ? (
+        <section className="mt-8" aria-labelledby="revenue-title">
+          <SectionTitle><span id="revenue-title">Revenue</span></SectionTitle>
+          <div className="grid grid-cols-2 gap-3">
+            <StatTile label="Paying members" value={o.billing.paying} hint={`${o.billing.monthly} monthly · ${o.billing.yearly} yearly`} />
+            <StatTileText label="Monthly recurring" value={pounds(o.billing.mrr_pence)} hint="Yearly plans counted as ÷12" />
+            <StatTileText label="Collected" value={pounds(o.billing.revenue_pence)} hint={`In the last ${days} days`} />
+            <StatTile label="Trials → paid" value={o.billing.trials_converted} hint={`of ${o.billing.trials_started} trials started (${pct(o.billing.trials_converted, o.billing.trials_started)})`} />
+            <StatTile label="Trials running" value={o.billing.trials_active} hint={`${o.billing.trials_ended_unpaid} ended without paying`} />
+            <StatTile label="Cancelling" value={o.billing.canceling} hint={o.billing.billing_issue ? `${o.billing.billing_issue} with a failed payment` : "At the end of their period"} />
+          </div>
+        </section>
+      ) : null}
+
+      {freeList.data ? (
+        <section className="mt-8" aria-labelledby="free-title">
+          <SectionTitle><span id="free-title">Free access for friends</span></SectionTitle>
+          <FreeAccess list={freeList.data as FreeAccessList} emailReady={emailConfigured()} />
+        </section>
+      ) : null}
+
       <section className="mt-8 mb-6" aria-labelledby="members-title">
         <SectionTitle><span id="members-title">Memberships</span></SectionTitle>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -148,9 +174,19 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
             <StatTile key={s} label={s[0].toUpperCase() + s.slice(1)} value={o.memberships[s] ?? 0} />
           ))}
         </div>
-        <p className="mt-3 text-sm text-faint">All figures are totals. Days are UTC. No emails or training data are shown here.</p>
+        <p className="mt-3 text-sm text-faint">Figures are totals; days are UTC. No training data is shown here. Email addresses appear only in Free access.</p>
       </section>
     </>
+  );
+}
+
+function StatTileText({ label, value, hint }: { label: string; value: string; hint?: string }) {
+  return (
+    <div className="rounded-3xl border border-line bg-surface p-4">
+      <p className="text-sm text-muted">{label}</p>
+      <p className="mt-1 text-3xl font-semibold tracking-tight tabular">{value}</p>
+      {hint ? <p className="mt-1 text-xs text-faint">{hint}</p> : null}
+    </div>
   );
 }
 

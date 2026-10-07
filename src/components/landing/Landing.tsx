@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { IconChart, IconCheck, IconCloudOff, IconDumbbell, IconHistory, IconLayers, IconShare, IconTimer, IconArrowUpRight } from "../icons";
 import { buttonClass, cx } from "../styles";
 import { Wordmark } from "../Wordmark";
+import { PLANS, YEARLY_PER_MONTH, YEARLY_SAVING_PCT } from "@/lib/billing/plans";
 
 /**
  * Public landing page (signed-out visitors to /). Every screenshot is the real app, captured
@@ -130,13 +131,14 @@ const FAQ: { q: string; a: ReactNode }[] = [
       </>
     ),
   },
-  {
-    q: "What does it cost?",
-    a: "NotchLift is free during early access, with no card needed. If pricing ever changes, you’ll hear from us first, and nothing is ever charged automatically.",
-  },
 ];
 
-export function Landing() {
+const COST_FREE = "NotchLift is free during early access, with no card needed. If pricing ever changes, you’ll hear from us first, and nothing is ever charged automatically.";
+const COST_PAID = `Every account starts with a 14-day free trial, no card needed. After that it’s ${PLANS.monthly.price} a month or ${PLANS.yearly.price} a year (${YEARLY_PER_MONTH} a month). Cancel any time. Nothing you’ve logged is ever deleted for not paying, and you can always export it.`;
+
+/** paidPlans: new sign-ups get a 14-day trial then a paid plan (otherwise: free early access). */
+export function Landing({ paidPlans = false }: { paidPlans?: boolean }) {
+  const faq = [...FAQ, { q: "What does it cost?", a: paidPlans ? COST_PAID : COST_FREE }];
   return (
     <div className="min-h-dvh overflow-x-clip bg-bg text-fg">
       {/* Navigation */}
@@ -173,7 +175,7 @@ export function Landing() {
                 <Cta className="w-full sm:w-auto" label="Start training free" />
                 <a href="#how-it-works" className={buttonClass("secondary", "lg", "w-full px-7 sm:w-auto")}>See how it works</a>
               </div>
-              <p className="mt-5 text-sm text-faint">Free during early access · No card needed · iPhone &amp; Android</p>
+              <p className="mt-5 text-sm text-faint">{paidPlans ? "14-day free trial" : "Free during early access"} · No card needed · iPhone &amp; Android</p>
             </div>
             <div className="relative mx-auto h-[31rem] w-full max-w-[22rem] sm:h-[36rem] sm:max-w-[26rem]">
               <Phone src="/landing/target-hit.png" alt="" className="absolute top-12 right-0 w-[56%] rotate-[4deg]" />
@@ -262,26 +264,39 @@ export function Landing() {
           <div className="mx-auto max-w-6xl px-5 py-24">
             <div className="mx-auto max-w-2xl text-center">
               <Eyebrow>Pricing</Eyebrow>
-              <h2 className="mt-4 text-3xl font-bold tracking-[-0.03em] text-balance sm:text-5xl">Free during early access.</h2>
-              <p className="mt-4 text-lg text-muted">Every feature, no card, no catch.</p>
+              <h2 className="mt-4 text-3xl font-bold tracking-[-0.03em] text-balance sm:text-5xl">{paidPlans ? "Try it free for 14 days." : "Free during early access."}</h2>
+              <p className="mt-4 text-lg text-muted">{paidPlans ? "Every feature from day one. No card needed to start." : "Every feature, no card, no catch."}</p>
             </div>
-            <div className="mx-auto mt-12 max-w-md rounded-[2rem] border border-accent-text/40 bg-surface p-8 shadow-[0_0_0_6px_rgb(195_237_137/0.06)]">
-              <div className="flex items-baseline justify-between gap-4">
-                <h3 className="text-xl font-semibold">NotchLift</h3>
-                <span className="rounded-full bg-accent-soft px-3 py-1 text-xs font-semibold text-accent-text">Early access</span>
+            {paidPlans ? (
+              <div className="mx-auto mt-12 grid max-w-3xl gap-5 md:grid-cols-2">
+                <PriceCard
+                  highlight
+                  title="Yearly"
+                  badge={`Save ${YEARLY_SAVING_PCT}%`}
+                  price={PLANS.yearly.price}
+                  per="/ year"
+                  note={`Just ${YEARLY_PER_MONTH} a month`}
+                />
+                <PriceCard title="Monthly" price={PLANS.monthly.price} per="/ month" note="Cancel any time" />
               </div>
-              <p className="mt-4"><span className="text-5xl font-bold tracking-tight">Free</span></p>
-              <ul className="mt-7 space-y-3">
-                {["Unlimited splits, workouts and history", "Targets, records and progress charts", "Offline logging and rest timer", "Kilograms or pounds", "Spreadsheet and JSON export"].map((p) => (
-                  <li key={p} className="flex gap-3">
-                    <IconCheck size={18} className="mt-0.5 shrink-0 text-accent-text" />
-                    <span className="text-fg/90">{p}</span>
-                  </li>
-                ))}
-              </ul>
-              <Cta className="mt-8 w-full" label="Start training free" />
-              <p className="mt-4 text-center text-sm text-faint">If pricing ever changes, you’ll hear from us first.</p>
-            </div>
+            ) : (
+              <div className="mx-auto mt-12 max-w-md rounded-[2rem] border border-accent-text/40 bg-surface p-8 shadow-[0_0_0_6px_rgb(195_237_137/0.06)]">
+                <div className="flex items-baseline justify-between gap-4">
+                  <h3 className="text-xl font-semibold">NotchLift</h3>
+                  <span className="rounded-full bg-accent-soft px-3 py-1 text-xs font-semibold text-accent-text">Early access</span>
+                </div>
+                <p className="mt-4"><span className="text-5xl font-bold tracking-tight">Free</span></p>
+                <Included />
+                <Cta className="mt-8 w-full" label="Start training free" />
+                <p className="mt-4 text-center text-sm text-faint">If pricing ever changes, you’ll hear from us first.</p>
+              </div>
+            )}
+            {paidPlans ? (
+              <div className="mx-auto mt-8 max-w-3xl text-center">
+                <Cta label="Start your free trial" />
+                <p className="mt-4 text-sm text-faint">14 days free, then choose a plan. Nothing you log is ever deleted, and you can always export it.</p>
+              </div>
+            ) : null}
           </div>
         </section>
 
@@ -293,7 +308,7 @@ export function Landing() {
               <h2 className="mt-4 text-3xl font-bold tracking-[-0.03em] sm:text-5xl">Questions, answered.</h2>
             </div>
             <div className="mt-12 divide-y divide-line rounded-3xl border border-line bg-surface">
-              {FAQ.map(({ q, a }) => (
+              {faq.map(({ q, a }) => (
                 <details key={q} className="group px-6 py-5 [&_summary::-webkit-details-marker]:hidden">
                   <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-lg font-medium">
                     {q}
@@ -311,7 +326,7 @@ export function Landing() {
           <div className="relative mx-auto max-w-6xl px-5 py-24">
             <div className="relative overflow-hidden rounded-[2.5rem] bg-accent px-6 py-16 text-center text-accent-ink sm:px-12">
               <h2 className="text-3xl font-bold tracking-[-0.03em] text-balance sm:text-5xl">Your next PR starts with your next set.</h2>
-              <p className="mx-auto mt-4 max-w-xl text-lg text-accent-ink/80">Set up your split in under a minute. Free during early access.</p>
+              <p className="mx-auto mt-4 max-w-xl text-lg text-accent-ink/80">Set up your split in under a minute. {paidPlans ? "14 days free, no card needed." : "Free during early access."}</p>
               <Link href={SIGN_UP} className="mt-8 inline-flex h-14 items-center justify-center gap-2 rounded-2xl bg-[#131416] px-8 text-[17px] font-semibold text-[#eaebed] transition hover:bg-black">
                 Start training free <IconArrowUpRight size={18} />
               </Link>
@@ -334,6 +349,35 @@ export function Landing() {
           <p className="text-faint">© {new Date().getFullYear()} NotchLift</p>
         </div>
       </footer>
+    </div>
+  );
+}
+
+const INCLUDED = ["Unlimited splits, workouts and history", "Targets, records and progress charts", "Group workouts with friends", "Offline logging and rest timer", "Kilograms or pounds, export any time"];
+
+function Included() {
+  return (
+    <ul className="mt-7 space-y-3">
+      {INCLUDED.map((p) => (
+        <li key={p} className="flex gap-3">
+          <IconCheck size={18} className="mt-0.5 shrink-0 text-accent-text" />
+          <span className="text-fg/90">{p}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function PriceCard({ title, price, per, note, badge, highlight }: { title: string; price: string; per: string; note: string; badge?: string; highlight?: boolean }) {
+  return (
+    <div className={cx("rounded-[2rem] border bg-surface p-8", highlight ? "border-accent-text/50 shadow-[0_0_0_6px_rgb(195_237_137/0.06)]" : "border-line")}>
+      <div className="flex items-baseline justify-between gap-4">
+        <h3 className="text-xl font-semibold">{title}</h3>
+        {badge ? <span className="rounded-full bg-accent px-3 py-1 text-xs font-semibold text-accent-ink">{badge}</span> : null}
+      </div>
+      <p className="mt-4"><span className="text-5xl font-bold tracking-tight">{price}</span> <span className="text-muted">{per}</span></p>
+      <p className="mt-1 text-sm text-muted">{note}</p>
+      <Included />
     </div>
   );
 }

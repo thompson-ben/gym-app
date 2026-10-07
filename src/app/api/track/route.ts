@@ -1,7 +1,6 @@
-import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import { deviceFromUserAgent, isBot } from "@/lib/attribution";
-import { supabaseEnv } from "@/lib/supabase/env";
+import { supabaseAnon } from "@/lib/supabase/anon";
 
 export const dynamic = "force-dynamic";
 
@@ -26,9 +25,7 @@ export async function POST(request: Request) {
     props.device = deviceFromUserAgent(ua);
     const country = request.headers.get("x-vercel-ip-country");
     if (country) props.country = country;
-    const { url, key } = supabaseEnv();
-    const supabase = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
-    await supabase.rpc("track_event", { p_name: body.name, p_props: props });
+    await supabaseAnon().rpc("track_event", { p_name: body.name, p_props: props });
   } catch {
     /* never fail the page */
   }

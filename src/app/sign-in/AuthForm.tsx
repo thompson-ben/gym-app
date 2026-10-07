@@ -14,13 +14,13 @@ const ERRORS: Record<string, string> = {
   missing_code: "The sign-in link was incomplete. Please try again.",
 };
 
-export function AuthForm({ initialMode, next, error }: { initialMode: Mode; next: string; error: string | null }) {
+export function AuthForm({ initialMode, next, error, initialEmail = "" }: { initialMode: Mode; next: string; error: string | null; initialEmail?: string }) {
   const router = useRouter();
   const [mode, setMode] = useState<Mode>(initialMode);
   useEffect(() => {
     if (mode === "sign-up") trackSignupView();
   }, [mode]);
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(error ? (ERRORS[error] ?? "Something went wrong. Please try again.") : null);
