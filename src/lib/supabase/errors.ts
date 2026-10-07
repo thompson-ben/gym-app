@@ -26,6 +26,11 @@ const MESSAGES: Record<string, string> = {
   workout_date_too_old: "That date is too far in the past.",
   workout_date_required: "Choose the date the workout was performed.",
   workout_name_required: "Give the workout a name.",
+  display_name_required: "Add the name your training partners will see.",
+  group_not_found: "This group workout is no longer available.",
+  group_full: "This group workout is full (10 people).",
+  group_plan_empty: "The host hasn’t added any exercises yet.",
+  group_session_completed: "You’ve already finished this group workout.",
   catalogue_exercise_missing: "An exercise in this split is no longer in the catalogue.",
 };
 
