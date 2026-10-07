@@ -110,6 +110,27 @@ test("landing screenshots", async ({ page }) => {
   await expect(page.getByRole("button", { name: "Start Push" })).toBeVisible();
   await shot(page, "train");
 
+  // Train together: the host's group page with two friends (sample names).
+  const { data: tpl } = await user.client.from("workout_templates").select("id").eq("name", "Push").single().throwOnError();
+  const { data: groupId } = await user.client.rpc("create_group_workout", { p_name: "Thursday push", p_display_name: "Alex", p_template_id: tpl!.id }).throwOnError();
+  const { data: group } = await user.client.from("group_workouts").select("invite_token").eq("id", groupId).single().throwOnError();
+  const friends = [await newUser("landing-sam"), await newUser("landing-jordan")];
+  for (const [i, f] of friends.entries()) {
+    await f.client.rpc("join_group_workout", { p_token: group!.invite_token, p_display_name: ["Sam", "Jordan"][i] }).throwOnError();
+    const { data: doc } = await f.client.rpc("start_group_session", { p_session_id: crypto.randomUUID(), p_group_id: groupId }).throwOnError();
+    if (i === 0) {
+      const exercises = doc.exercises.map((ex: object, pos: number) => ({ ...ex, position: pos, sets: [{ id: crypto.randomUUID(), position: 0, set_type: "working", weight_kg: 50, reps: 10, completed_at: new Date().toISOString() }] }));
+      const { data: synced } = await f.client.rpc("sync_session", { p_session_id: doc.id, p_base_revision: 0, p_write_id: crypto.randomUUID(), p_doc: { notes: null, exercises } }).throwOnError();
+      await f.client.rpc("finish_session", { p_session_id: doc.id, p_expected_revision: synced.revision }).throwOnError();
+    }
+  }
+  await page.goto(`/together/${groupId}`);
+  await expect(page.getByText("Jordan")).toBeVisible();
+  // Show the production address rather than the local test server's.
+  await page.getByLabel("Invite link").evaluate((el, token) => (el.textContent = `https://notchlift.com/join/${token}`), group!.invite_token);
+  await page.getByRole("heading", { name: /Invite your training partners/ }).evaluate((el) => window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 24));
+  await shot(page, "together");
+
   const bench = await catalogueId("barbell-bench-press");
   await page.goto(`/progress/${bench}`);
   await page.getByRole("link", { name: "Heaviest" }).click();
