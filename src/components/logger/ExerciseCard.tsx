@@ -10,7 +10,7 @@ import { formatTargetSets, targetMet, topOfRangeLastTime, topOfRangeNow } from "
 import type { TargetInfo } from "@/lib/targets";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import type { PreviousPerformance, SessionExercise, SessionSet, SetType } from "@/lib/types";
-import { IconArrowUpRight, IconChevronDown, IconHistory, IconMore, IconPlus, IconSwap } from "../icons";
+import { IconArrowUpRight, IconChevronDown, IconHistory, IconMinus, IconMore, IconPlus, IconSwap } from "../icons";
 import { cx } from "../styles";
 import { Button, IconButton, Spinner } from "../ui";
 import { GRID_REPS_ONLY, GRID_WITH_WEIGHT, SetRow, type SetRowHandle } from "./SetRow";
@@ -31,6 +31,7 @@ export function ExerciseCard({
   onComplete,
   onUncomplete,
   onAddSet,
+  onRemoveSet,
   onOpenMenu,
   onOpenSetMenu,
   onUnskip,
@@ -57,6 +58,7 @@ export function ExerciseCard({
   onComplete: (setId: string) => void;
   onUncomplete: (setId: string) => void;
   onAddSet: (type: SetType) => void;
+  onRemoveSet: (setId: string) => void;
   onOpenMenu: () => void;
   onOpenSetMenu: (set: SessionSet, ordinal: string) => void;
   onUnskip: () => void;
@@ -70,6 +72,11 @@ export function ExerciseCard({
   const mode = entry.tracking_mode;
   const prescription = formatTargetLong(entry.target_sets, entry.rep_min, entry.rep_max);
   const done = entry.sets.filter((s) => s.completed_at).length;
+  // An extra set beyond the plan can be removed in one tap while it is not confirmed (nothing
+  // logged is lost). Any set can still be removed from its own menu (tap the set number).
+  const lastSet = entry.sets.at(-1);
+  const extra = entry.sets.filter((s) => s.set_type === "working").length > (entry.target_sets ?? 0);
+  const removable = extra && entry.sets.length > 1 && lastSet && !lastSet.completed_at ? lastSet : null;
   const currentId = entry.sets.find((s) => !s.completed_at)?.id ?? null;
   const shownTarget = target && target.exerciseId === entry.exercise_id && !targetHidden ? target : null;
   const unconfirmedWorking = entry.sets.filter((s) => s.set_type === "working" && !s.completed_at);
@@ -267,11 +274,16 @@ export function ExerciseCard({
         {mode === "added_weight_reps" ? <p className="mt-2 px-1 text-xs text-faint">+{unit} is load added to your bodyweight. Leave 0 for bodyweight only.</p> : null}
       </div>
 
-      <div className="mt-2 flex items-center justify-between gap-2">
-        <div className="flex gap-1">
+      <div className="mt-2 flex flex-wrap items-center justify-between gap-x-2">
+        <div className="flex flex-wrap gap-1">
           <Button size="sm" variant="quiet" onClick={() => onAddSet("working")}>
             <IconPlus size={16} /> Add set
           </Button>
+          {removable ? (
+            <Button size="sm" variant="quiet" onClick={() => onRemoveSet(removable.id)} aria-label={`Remove the last set of ${entry.exercise_name}`}>
+              <IconMinus size={16} /> Remove
+            </Button>
+          ) : null}
           {done === 0 ? (
             <Button size="sm" variant="quiet" onClick={onSwap} aria-label={`Swap ${entry.exercise_name} for another exercise this session`}>
               <IconSwap size={16} /> Swap

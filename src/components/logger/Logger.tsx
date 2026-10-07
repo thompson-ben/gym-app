@@ -323,7 +323,7 @@ export default function Logger({ userId, initial, timeZone }: { userId: string; 
 
         <PageTip id="workout" title="Logging a set">
           <p>Previous shows what you did last time. Weights are filled in; type your reps and tick ✓ to record the set. Nothing counts until it’s ticked.</p>
-          <p>Use ⋯ on an exercise for warm-ups, swaps, notes and next-session targets. Everything saves as you go, even offline.</p>
+          <p>Use ⋯ on an exercise for warm-ups, swaps, notes and next-session targets. Tap a set number to remove that set or mark it as a warm-up. Everything saves as you go, even offline.</p>
         </PageTip>
         {doc.exercises.map((entry) => (
           <ExerciseCard
@@ -335,6 +335,7 @@ export default function Logger({ userId, initial, timeZone }: { userId: string; 
             onComplete={(setId) => complete(entry.id, setId)}
             onUncomplete={(setId) => edit((d) => uncompleteSet(d, entry.id, setId))}
             onAddSet={(type) => edit((d) => addSet(d, entry.id, type, recordRef.current.previous, newId))}
+            onRemoveSet={(setId) => edit((d) => removeSet(d, entry.id, setId))}
             onOpenMenu={() => setExerciseMenu(entry.id)}
             onOpenSetMenu={(set, ordinal) => setSetMenu({ entryId: entry.id, set, ordinal })}
             onUnskip={() => edit((d) => addSet(setSkipped(d, entry.id, false), entry.id, "working", recordRef.current.previous, newId))}
