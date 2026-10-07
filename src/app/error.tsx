@@ -1,10 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect } from "react";
 import { Button } from "@/components/ui";
 import { buttonClass } from "@/components/styles";
+import { reportClientError } from "@/lib/monitoring";
 
 export default function ErrorPage({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+  useEffect(() => {
+    // Offline is expected, not a bug.
+    if (navigator.onLine) reportClientError(error);
+  }, [error]);
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center px-6 pt-safe pb-safe">
       <h1 className="text-2xl font-semibold">Something went wrong</h1>

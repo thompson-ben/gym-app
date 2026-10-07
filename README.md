@@ -289,6 +289,11 @@ Migrations are additive and versioned; never reset a deployed database.
 2. **Then deploy the app.** Old app versions keep working against the migrated database (they ignore the new columns). If the app were deployed first, the workout editor would fail to load until the migration runs, while the logger and summaries simply show no targets.
 3. Offline compatibility: workouts already open on a device keep working; local records saved by the previous version have no `targets` field and load normally. The service worker is now registered per build (`/sw.js?v=<commit>`), so each deployment installs a fresh offline shell and removes the old cache; pages themselves are always fetched from the network first.
 
+## Monitoring and analytics
+
+- **Errors (Sentry):** off unless `NEXT_PUBLIC_SENTRY_DSN` is set (Vercel → Settings → Environment Variables, Production). Server errors are reported from `src/instrumentation.ts` (`onRequestError`), browser errors from `src/instrumentation-client.ts` and the error pages. The SDK is loaded on demand, so it adds nothing to first load. `src/lib/monitoring.ts` strips user, cookies, headers, request data and emails, and blanks invite/share tokens and auth parameters in URLs (unit-tested). Errors only: no tracing or session replay. Stack traces are minified (no source map upload).
+- **Page views (Vercel Web Analytics):** `<PrivateAnalytics />` in the root layout. Cookie-free; the same URL scrubbing runs before each page view. Enable it in Vercel → Analytics.
+
 ## Group workouts
 
 Train together from one shared plan (`/together`, invite links at `/join/<token>`). The host creates a group workout from one of their workouts or from scratch, edits the plan (host only) and shares the link. Anyone with the link can see the plan and join, up to 10 people. Everyone starts their own session from the plan and logs their own sets in their own history. Members see each other's chosen display names and whether each has started or finished, never weights, reps or history: sessions stay owner-only. A host's custom exercise becomes the member's own copy the first time they train it (reused afterwards, so their history continues).
