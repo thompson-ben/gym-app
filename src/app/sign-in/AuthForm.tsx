@@ -21,6 +21,19 @@ export function AuthForm({ initialMode, next, error }: { initialMode: Mode; next
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(error ? (ERRORS[error] ?? "Something went wrong. Please try again.") : null);
   const [checkEmail, setCheckEmail] = useState(false);
+  const [unconfirmed, setUnconfirmed] = useState(false);
+  const [resend, setResend] = useState<"idle" | "sending" | "sent" | "error">("idle");
+
+  async function resendConfirmation() {
+    if (!email || resend === "sending") return;
+    setResend("sending");
+    const { error } = await supabaseBrowser().auth.resend({
+      type: "signup",
+      email,
+      options: { emailRedirectTo: `${window.location.origin}/auth/confirm` },
+    });
+    setResend(error ? "error" : "sent");
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -31,7 +44,10 @@ export function AuthForm({ initialMode, next, error }: { initialMode: Mode; next
       if (mode === "sign-in") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) {
-          setMessage(error.message === "Email not confirmed" ? "Please confirm your email first. Check your inbox for the link." : "Incorrect email or password.");
+          const notConfirmed = error.message === "Email not confirmed";
+          setUnconfirmed(notConfirmed);
+          setResend("idle");
+          setMessage(notConfirmed ? "Please confirm your email first. Check your inbox for the link." : "Incorrect email or password.");
           return;
         }
         router.replace(next);
@@ -68,8 +84,9 @@ export function AuthForm({ initialMode, next, error }: { initialMode: Mode; next
       <div className="space-y-4">
         <h1 className="text-2xl font-semibold">Check your email</h1>
         <p className="text-muted">
-          We sent a confirmation link to <span className="text-fg">{email}</span>. Open it on this device to finish creating your account.
+          We sent a confirmation link to <span className="text-fg">{email}</span>. Open it to finish creating your account. It can take a minute; check spam too.
         </p>
+        <ResendLine state={resend} onResend={resendConfirmation} />
         <Button variant="secondary" onClick={() => { setCheckEmail(false); setMode("sign-in"); }}>
           Back to sign in
         </Button>
@@ -109,6 +126,7 @@ export function AuthForm({ initialMode, next, error }: { initialMode: Mode; next
         )}
       </Field>
       <ErrorNote>{message}</ErrorNote>
+      {unconfirmed && mode === "sign-in" ? <ResendLine state={resend} onResend={resendConfirmation} /> : null}
       {mode === "sign-up" ? (
         <p className="text-sm text-faint">
           By creating an account you agree to the{" "}
@@ -130,5 +148,19 @@ export function AuthForm({ initialMode, next, error }: { initialMode: Mode; next
         </button>
       </p>
     </form>
+  );
+}
+
+function ResendLine({ state, onResend }: { state: "idle" | "sending" | "sent" | "error"; onResend: () => void }) {
+  if (state === "sent") {
+    return <p role="status" className="text-sm text-muted">A new confirmation email is on its way. Use the newest one; older links stop working.</p>;
+  }
+  return (
+    <p className="text-sm text-muted">
+      {state === "error" ? "Could not send just now. Wait a minute and " : "No email? "}
+      <button type="button" onClick={onResend} disabled={state === "sending"} className="font-medium text-accent-text underline-offset-4 hover:underline disabled:opacity-50">
+        {state === "sending" ? "Sending…" : state === "error" ? "try again" : "Resend confirmation email"}
+      </button>
+    </p>
   );
 }

@@ -5,6 +5,16 @@ const PUBLIC_PATHS = ["/sign-in", "/forgot-password", "/reset-password", "/auth"
 
 /** Refreshes the Supabase session cookie and keeps signed-out visitors out of the app. */
 export async function proxy(request: NextRequest) {
+  // If an email link's redirect address isn't on Supabase's allow-list, Supabase falls back to
+  // the Site URL (e.g. "/?token_hash=…"). Forward such links to the right callback instead of
+  // silently dropping the token, so confirming or resetting still works.
+  const params = request.nextUrl.searchParams;
+  if (!request.nextUrl.pathname.startsWith("/auth/") && (params.has("token_hash") || params.has("code"))) {
+    const target = request.nextUrl.clone();
+    target.pathname = params.get("type") === "recovery" ? "/auth/reset" : "/auth/confirm";
+    return NextResponse.redirect(target);
+  }
+
   let response = NextResponse.next({ request });
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
