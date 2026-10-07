@@ -74,6 +74,14 @@ const FEATURES: { eyebrow: string; title: string; body: string; points: string[]
     alt: "A NotchLift progress chart showing the heaviest bench press set rising from 60 kg to 67.5 kg over twelve weeks",
   },
   {
+    eyebrow: "Train together",
+    title: "Bring your training partner.",
+    body: "Plan a group workout, send the link, and everyone trains from the same plan on their own phone. Each person logs their own sets and keeps their own history and targets.",
+    points: ["Share a link on WhatsApp; friends join in a tap", "See who’s training and who’s finished", "Your weights and reps stay private to you"],
+    src: "/landing/together.png",
+    alt: "A NotchLift group workout: an invite link, and three people training together with Sam finished and Jordan training",
+  },
+  {
     eyebrow: "Your plan",
     title: "Always know what’s next.",
     body: "Open the app and your next workout is waiting: whichever one in your split you did longest ago. Start it in one tap, or log a quick one-off session.",
@@ -110,10 +118,14 @@ const FAQ: { q: string; a: ReactNode }[] = [
     a: "Targets use double progression. If every working set reached the top of your rep range last time, your target adds your chosen increment. If not, it keeps the weight and aims for more reps. They’re suggestions: nothing counts until you confirm a set.",
   },
   {
+    q: "Can I train with a friend?",
+    a: "Yes. Plan a group workout from one of your workouts, or build one on the spot, and share the link. Friends join (signing up first if they’re new), and at the gym everyone starts the same plan on their own phone. You’ll see who’s training and who’s finished. Nobody sees anyone else’s weights or reps.",
+  },
+  {
     q: "Who can see my workouts?",
     a: (
       <>
-        Only you. There are no public profiles and no feed. Sharing a split shares its structure, never your numbers. You can export everything as a spreadsheet or JSON, or delete your account, at any time.{" "}
+        Only you. There are no public profiles and no feed. Sharing a split or a group workout shares the plan, never your numbers. You can export everything as a spreadsheet or JSON, or delete your account, at any time.{" "}
         <Link href="/privacy" className="text-accent-text underline underline-offset-4">Privacy notice</Link>
       </>
     ),
