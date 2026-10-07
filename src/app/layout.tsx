@@ -1,14 +1,18 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
+import { SITE_URL } from "@/lib/site";
 import "./globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: { default: "NotchLift", template: "%s · NotchLift" },
-  description: "Workout Planner & Tracker",
+  description: "Workout planner & tracker: plan your split, log every set, and know when to add weight.",
+  openGraph: { type: "website", siteName: "NotchLift", url: "/", locale: "en_GB" },
+  twitter: { card: "summary_large_image" },
   applicationName: "NotchLift",
   appleWebApp: { capable: true, title: "NotchLift", statusBarStyle: "black-translucent" },
   icons: { icon: [{ url: "/icons/favicon-32.png", sizes: "32x32" }, { url: "/icons/icon-192.png", sizes: "192x192" }], apple: "/icons/apple-touch-icon.png" },
