@@ -4,9 +4,10 @@ import { SessionView, type SessionInsights } from "@/components/SessionView";
 import { meaningfulDurationMinutes } from "@/lib/format";
 import type { HistorySession } from "@/lib/progress";
 import { compareWithPrevious, recordsFor } from "@/lib/records";
-import { requireUser, viewerTimeZone } from "@/lib/supabase/server";
+import { requireUser, viewerTimeZone, viewerUnit } from "@/lib/supabase/server";
 import { loadTargets } from "@/lib/targets";
 import type { SessionDoc } from "@/lib/types";
+import type { WeightUnit } from "@/lib/units";
 
 export const metadata: Metadata = { title: "Workout" };
 
@@ -22,14 +23,15 @@ export default async function SessionPage({ params, searchParams }: { params: Pr
   if (doc.status === "in_progress") redirect(`/workout/${sessionId}`);
   if (doc.status === "discarded") notFound();
 
-  return <SessionView doc={doc} timeZone={await viewerTimeZone()} justFinished={finished === "1"} insights={await insightsFor(supabase, doc)} />;
+  const [timeZone, unit] = await Promise.all([viewerTimeZone(), viewerUnit()]);
+  return <SessionView doc={doc} timeZone={timeZone} unit={unit} justFinished={finished === "1"} insights={await insightsFor(supabase, doc, unit)} />;
 }
 
 /**
  * Records, like-for-like changes and next targets, all derived from current history so they
  * stay correct after any workout is edited, re-dated or deleted.
  */
-async function insightsFor(supabase: Awaited<ReturnType<typeof requireUser>>["supabase"], doc: SessionDoc): Promise<SessionInsights> {
+async function insightsFor(supabase: Awaited<ReturnType<typeof requireUser>>["supabase"], doc: SessionDoc, unit: WeightUnit): Promise<SessionInsights> {
   const performed = [...new Map(doc.exercises.filter((e) => e.sets.some((s) => s.set_type === "working")).map((e) => [e.exercise_id, e])).values()];
   const [histories, others, targets] = await Promise.all([
     Promise.all(performed.map((e) => supabase.rpc("exercise_history", { p_exercise_id: e.exercise_id }))),
@@ -38,6 +40,7 @@ async function insightsFor(supabase: Awaited<ReturnType<typeof requireUser>>["su
       supabase,
       doc.exercises.map((e) => ({ key: e.id, exerciseId: e.exercise_id, entryId: e.template_exercise_id, mode: e.tracking_mode, targetSets: e.target_sets, repMin: e.rep_min, repMax: e.rep_max })),
       null,
+      unit,
     ),
   ]);
   const byExercise: SessionInsights["byExercise"] = {};
@@ -53,8 +56,8 @@ async function insightsFor(supabase: Awaited<ReturnType<typeof requireUser>>["su
     if (!current) return;
     const previous = history.filter((h) => h.performedAt < current.performedAt).sort((a, b) => b.performedAt.localeCompare(a.performedAt))[0];
     byExercise[e.exercise_id] = {
-      records: recordsFor(e.tracking_mode, current, history),
-      change: compareWithPrevious(e.tracking_mode, current.sets, previous?.sets),
+      records: recordsFor(e.tracking_mode, current, history, unit),
+      change: compareWithPrevious(e.tracking_mode, current.sets, previous?.sets, unit),
     };
   });
   // Next targets are shown only where this workout is the performance they build on.

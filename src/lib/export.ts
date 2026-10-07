@@ -1,4 +1,5 @@
 import type { SetType, TrackingMode } from "./types";
+import { formatWeightValue, type WeightUnit } from "./units";
 
 /** One completed workout as loaded for export (names are the session's own snapshot). */
 export type ExportSession = {
@@ -19,7 +20,8 @@ export type ExportSession = {
   }[];
 };
 
-export const CSV_HEADER = [
+/** Column names. The weight column is named after the unit it is in (weight_kg / weight_lb). */
+export const csvHeader = (unit: WeightUnit) => [
   "date",
   "time",
   "workout",
@@ -27,12 +29,12 @@ export const CSV_HEADER = [
   "exercise",
   "set_number",
   "set_type",
-  "weight_kg",
+  `weight_${unit}`,
   "reps",
   "weight_meaning",
   "logged_afterwards",
   "session_id",
-] as const;
+];
 
 /**
  * Quotes a CSV field when needed and neutralises spreadsheet formulas: user-entered names
@@ -61,9 +63,10 @@ function localParts(iso: string, timeZone: string): [string, string] {
 /**
  * One row per completed set, oldest workout first, sets in the order logged. Working sets are
  * numbered 1, 2, 3…; warm-ups are numbered separately. Unconfirmed sets are never exported.
+ * Weights are written in the user's unit (pounds rounded to 0.01 lb).
  */
-export function sessionsToCsv(sessions: ExportSession[], timeZone: string): string {
-  const lines = [CSV_HEADER.join(",")];
+export function sessionsToCsv(sessions: ExportSession[], timeZone: string, unit: WeightUnit = "kg"): string {
+  const lines = [csvHeader(unit).join(",")];
   for (const s of [...sessions].sort((a, b) => a.performed_at.localeCompare(b.performed_at))) {
     const [date, time] = localParts(s.performed_at, timeZone);
     for (const e of [...s.exercises].sort((a, b) => a.position - b.position)) {
@@ -80,7 +83,7 @@ export function sessionsToCsv(sessions: ExportSession[], timeZone: string): stri
             e.name,
             n,
             set.set_type === "warmup" ? "warm-up" : "working",
-            e.tracking_mode === "bodyweight_reps" ? null : (set.weight_kg ?? 0),
+            e.tracking_mode === "bodyweight_reps" ? null : Number(formatWeightValue(set.weight_kg ?? 0, unit)),
             set.reps,
             MEANING[e.tracking_mode],
             s.backdated ? "yes" : "no",

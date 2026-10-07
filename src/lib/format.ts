@@ -1,4 +1,5 @@
 import type { TrackingMode } from "./types";
+import { formatWeightValue, type WeightUnit } from "./units";
 
 const LABELS: Record<string, string> = {
   full_body: "Full body",
@@ -17,18 +18,18 @@ export function formatKg(kg: number | null | undefined): string {
   return String(Math.round(kg * 100) / 100);
 }
 
-/** Weight and reps as shown in the Previous column, e.g. "72.5 × 9", "+10 × 10", "12 reps". */
-export function formatSet(mode: TrackingMode, weight: number | null, reps: number | null): string {
+/** Weight (stored in kg) and reps as shown in the Previous column, e.g. "72.5 × 9", "+10 × 10", "12 reps", in the user's unit. */
+export function formatSet(mode: TrackingMode, weight: number | null, reps: number | null, unit: WeightUnit = "kg"): string {
   const r = reps ?? "–";
   if (mode === "bodyweight_reps") return `${r} reps`;
   if (mode === "added_weight_reps") {
-    return !weight ? `BW × ${r}` : `+${formatKg(weight)} × ${r}`;
+    return !weight ? `BW × ${r}` : `+${formatWeightValue(weight, unit)} × ${r}`;
   }
-  return `${formatKg(weight)} × ${r}`;
+  return `${formatWeightValue(weight, unit)} × ${r}`;
 }
 
-export function weightLabel(mode: TrackingMode): string {
-  return mode === "added_weight_reps" ? "+kg" : "kg";
+export function weightLabel(mode: TrackingMode, unit: WeightUnit = "kg"): string {
+  return mode === "added_weight_reps" ? `+${unit}` : unit;
 }
 
 export function formatTarget(sets: number | null, repMin: number | null, repMax: number | null): string {

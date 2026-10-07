@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { TemplateBuilder, type Entry } from "@/components/splits/TemplateBuilder";
 import { EXERCISE_COLUMNS } from "@/lib/exercises";
 import { requireUser } from "@/lib/supabase/server";
+import { isWeightUnit } from "@/lib/units";
 
 export const metadata: Metadata = { title: "Edit workout" };
 
@@ -18,7 +19,7 @@ export default async function TemplatePage({ params }: { params: Promise<{ split
       .eq("template_id", templateId)
       .order("position")
       .order("created_at"),
-    supabase.from("profiles").select("default_rest_seconds").maybeSingle(),
+    supabase.from("profiles").select("default_rest_seconds, weight_unit").maybeSingle(),
   ]);
   if (tpl.error) throw tpl.error;
   if (!tpl.data) notFound();
@@ -32,6 +33,7 @@ export default async function TemplatePage({ params }: { params: Promise<{ split
       template={{ id: tpl.data.id, name: tpl.data.name }}
       initialEntries={entries.data as unknown as Entry[]}
       defaultRest={profile.data?.default_rest_seconds ?? 120}
+      unit={isWeightUnit(profile.data?.weight_unit) ? profile.data.weight_unit : "kg"}
     />
   );
 }

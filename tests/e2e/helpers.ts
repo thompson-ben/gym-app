@@ -90,7 +90,7 @@ export async function expectNoHorizontalScroll(page: Page) {
 /** Types reps (and optionally weight) for a set row and confirms it. */
 export async function logSet(page: Page, exercise: string, set: number, reps: number, weight?: number) {
   const row = page.getByRole("group", { name: `${exercise}, set ${set}` });
-  if (weight !== undefined) await row.getByLabel(/weight in kg|added weight/).fill(String(weight));
+  if (weight !== undefined) await row.getByLabel(/weight in (kg|lb)|added weight/).fill(String(weight));
   await row.getByLabel(/reps$/).fill(String(reps));
   await row.getByRole("button", { name: new RegExp(`Confirm ${exercise}, set ${set}`) }).click();
   await expect(row.getByRole("button", { name: /completed/ })).toBeVisible();

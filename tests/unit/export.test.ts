@@ -38,6 +38,13 @@ describe("CSV export", () => {
     ]);
   });
 
+  it("writes weights in pounds for a user who tracks in lb", () => {
+    const rows = sessionsToCsv([session()], "Europe/London", "lb").replace("\uFEFF", "").trim().split("\r\n");
+    expect(rows[0]).toContain(",weight_lb,");
+    expect(rows[2]).toContain(",working,159.84,9,load,");
+    expect(rows[4]).toContain(",working,0,12,added to bodyweight,");
+  });
+
   it("quotes commas and quotes, and neutralises formulas in names", () => {
     expect(csvField('Press, "wide"')).toBe('"Press, ""wide"""');
     expect(csvField("=HYPERLINK(\"x\")")).toBe("\"'=HYPERLINK(\"\"x\"\")\"");

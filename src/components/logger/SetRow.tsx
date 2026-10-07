@@ -1,7 +1,8 @@
 "use client";
 
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
-import { formatKg, formatSet } from "@/lib/format";
+import { formatSet } from "@/lib/format";
+import { formatWeightValue, fromUnit, type WeightUnit } from "@/lib/units";
 import type { PreviousSet, SessionSet, TrackingMode } from "@/lib/types";
 import { isValidNumber, parseReps, parseWeight } from "@/lib/validation";
 import { IconCheck } from "../icons";
@@ -21,6 +22,8 @@ type Props = {
   onOpenMenu: () => void;
   /** Where this set is in the exercise: confirmed, the next one to do, or later. */
   state: "done" | "current" | "upcoming";
+  /** Display and input unit; the set itself is always stored in kg. */
+  unit: WeightUnit;
 };
 
 export const GRID_WITH_WEIGHT =
@@ -46,7 +49,7 @@ function useNumberField(value: number | null, parse: (s: string) => number | nul
 }
 
 export const SetRow = forwardRef<SetRowHandle, Props>(function SetRow(
-  { set, label, ordinal, previous, mode, exerciseName, onChange, onToggleDone, onOpenMenu, state },
+  { set, label, ordinal, previous, mode, exerciseName, onChange, onToggleDone, onOpenMenu, state, unit },
   ref,
 ) {
   const weightRef = useRef<HTMLInputElement>(null);
@@ -56,7 +59,7 @@ export const SetRow = forwardRef<SetRowHandle, Props>(function SetRow(
     focusReps: () => repsRef.current?.focus(),
   }));
   const done = Boolean(set.completed_at);
-  const weight = useNumberField(set.weight_kg, parseWeight, (n) => formatKg(n));
+  const weight = useNumberField(set.weight_kg, (t) => parseWeight(t, unit), (n) => formatWeightValue(n, unit));
   const reps = useNumberField(set.reps, parseReps, (n) => (n === null ? "" : String(n)));
   const [flash, setFlash] = useState(false);
   // A second tap within this window is treated as the same tap (no confirm-then-undo).
@@ -93,8 +96,8 @@ export const SetRow = forwardRef<SetRowHandle, Props>(function SetRow(
         {state === "current" ? <span aria-hidden="true" className="mr-0.5 text-[11px] text-muted">▸</span> : null}
         {label}
       </button>
-      <div className="min-w-0 truncate text-center text-[13px] text-fg/85 tabular min-[380px]:text-[14px]" aria-label={previous ? `Previous: ${formatSet(mode, previous.weight_kg, previous.reps)}` : "No previous set"}>
-        {previous ? formatSet(mode, previous.weight_kg, previous.reps) : <span className="text-faint">—</span>}
+      <div className="min-w-0 truncate text-center text-[13px] text-fg/85 tabular min-[380px]:text-[14px]" aria-label={previous ? `Previous: ${formatSet(mode, previous.weight_kg, previous.reps, unit)}` : "No previous set"}>
+        {previous ? formatSet(mode, previous.weight_kg, previous.reps, unit) : <span className="text-faint">—</span>}
       </div>
       {showWeight ? (
         <input
@@ -102,19 +105,19 @@ export const SetRow = forwardRef<SetRowHandle, Props>(function SetRow(
           inputMode="decimal"
           enterKeyHint="next"
           autoComplete="off"
-          aria-label={`${setName} ${mode === "added_weight_reps" ? "added weight in kg" : "weight in kg"}`}
+          aria-label={`${setName} ${mode === "added_weight_reps" ? `added weight in ${unit}` : `weight in ${unit}`}`}
           aria-invalid={weight.invalid || undefined}
-          placeholder={mode === "added_weight_reps" ? "0" : "kg"}
+          placeholder={mode === "added_weight_reps" ? "0" : unit}
           value={weight.text}
           onFocus={(e) => { weight.setFocused(true); e.currentTarget.select(); }}
           onBlur={() => {
             weight.setFocused(false);
-            if (weight.invalid) weight.setText(formatKg(set.weight_kg));
+            if (weight.invalid) weight.setText(formatWeightValue(set.weight_kg, unit));
           }}
           onChange={(e) => {
             weight.setText(e.target.value);
-            const v = parseWeight(e.target.value);
-            if (v === null || isValidNumber(v)) onChange({ weight_kg: v });
+            const v = parseWeight(e.target.value, unit);
+            if (v === null || isValidNumber(v)) onChange({ weight_kg: v === null ? null : fromUnit(v, unit) });
           }}
           onKeyDown={(e) => {
             if (e.key === "Enter") {

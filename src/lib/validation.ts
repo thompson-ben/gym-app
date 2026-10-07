@@ -1,13 +1,18 @@
-export const MAX_WEIGHT_KG = 1000;
+import { maxWeightIn, type WeightUnit } from "./units";
+
+export { MAX_WEIGHT_KG } from "./units";
 export const MAX_REPS = 1000;
 
-/** Parses a weight field. Accepts "72.5" or "72,5". Returns null for empty, NaN for invalid. */
-export function parseWeight(input: string): number | null {
+/**
+ * Parses a weight field in the user's unit. Accepts "72.5" or "72,5". Returns the value in that
+ * unit (convert with fromUnit before storing), null for empty, NaN for invalid.
+ */
+export function parseWeight(input: string, unit: WeightUnit = "kg"): number | null {
   const trimmed = input.trim().replace(",", ".");
   if (trimmed === "") return null;
   if (!/^\d{1,4}(\.\d{1,2})?$/.test(trimmed)) return Number.NaN;
   const value = Number(trimmed);
-  return Number.isFinite(value) && value >= 0 && value <= MAX_WEIGHT_KG ? value : Number.NaN;
+  return Number.isFinite(value) && value >= 0 && value <= maxWeightIn(unit) ? value : Number.NaN;
 }
 
 /** Parses a reps field: whole numbers only. */

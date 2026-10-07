@@ -284,12 +284,16 @@ Migrations are additive and versioned; never reset a deployed database.
 
 1. **Apply `supabase/migrations/20261002000008_progression_targets.sql` first** (`npx supabase db push`, or paste it into the SQL Editor). It adds `template_exercises.progression_enabled` (default `false`) and `progression_increment_kg` (nullable), re-creates `duplicate_split`/`duplicate_template` so copies keep those settings, and adds the read-only `progression_candidates` function. It does not touch sessions, sets, snapshots or exercise identities.
    Then `supabase/migrations/20261003000009_memberships_and_account_deletion.sql` and `…0010_feedback_and_starter_splits.sql`, and (memberships, `app_settings`, `delete_my_account`). Apply both in filename order; each is additive and safe to run before the app that uses it.
+   Then `…0011_weight_units.sql`: allows `profiles.weight_unit = 'lb'` and widens `session_sets.weight_kg` / `progression_increment_kg` to 4 decimal places. Existing values are unchanged; old app versions keep working.
 2. **Then deploy the app.** Old app versions keep working against the migrated database (they ignore the new columns). If the app were deployed first, the workout editor would fail to load until the migration runs, while the logger and summaries simply show no targets.
 3. Offline compatibility: workouts already open on a device keep working; local records saved by the previous version have no `targets` field and load normally. The service worker is now registered per build (`/sw.js?v=<commit>`), so each deployment installs a fresh offline shell and removes the old cache; pages themselves are always fetched from the network first.
 
+## Weight units
+
+Every weight is stored in kilograms with 4 decimal places. Profile → Weight unit (kg or lb) only changes how weights are entered and shown (`src/lib/units.ts`): a pound value typed to 0.01 lb converts to kg and back exactly, so switching units never changes logged data. Targets, records, charts and the CSV export (`weight_kg` or `weight_lb` column) follow the chosen unit; the JSON export stays in kg.
+
 ## Known limitations (V1)
 
-- Kilograms only (the `weight_unit` column exists for a later lb option).
 - Email + password sign-in only (no social or magic-link sign-in).
 - A custom exercise cannot be merged into a catalogue exercise afterwards (deliberately: no silent merging). If the demo incline press turns out to be a catalogue variation, future sessions can use that exercise, but past sets stay on the custom one.
 - Finishing, discarding and starting workouts need a connection. The app as a whole is not offline-first.

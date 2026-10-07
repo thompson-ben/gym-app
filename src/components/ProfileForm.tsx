@@ -7,6 +7,7 @@ import { formatDuration } from "@/lib/format";
 import { clearUser, hasUnsyncedChanges, listRecords } from "@/lib/session/store";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { friendlyError } from "@/lib/supabase/errors";
+import { isWeightUnit, type WeightUnit } from "@/lib/units";
 import { FeedbackRow } from "./FeedbackButton";
 import { IconChevronRight } from "./icons";
 import { InstallRow } from "./InstallPrompt";
@@ -36,6 +37,7 @@ export function ProfileForm({ userId, email, profile, membership }: { userId: st
   const [savedName, setSavedName] = useState(profile.display_name ?? "");
   const [rest, setRest] = useState(profile.default_rest_seconds);
   const [autoRest, setAutoRest] = useState(profile.auto_start_rest);
+  const [unit, setUnit] = useState<WeightUnit>(isWeightUnit(profile.weight_unit) ? profile.weight_unit : "kg");
   const [status, setStatus] = useState<Record<string, Status>>({});
   const [busy, setBusy] = useState(false);
   const [confirmSignOut, setConfirmSignOut] = useState(false);
@@ -162,9 +164,31 @@ export function ProfileForm({ userId, email, profile, membership }: { userId: st
             />
             <StatusLine status={status.auto} />
           </div>
-          <div className="flex items-center justify-between gap-3 px-4 py-3">
-            <span className="text-sm font-medium text-muted">Weight unit</span>
-            <span>Kilograms (kg)</span>
+          <div className="px-4 py-3">
+            <p id="weight-unit-label" className="text-sm font-medium text-muted">Weight unit</p>
+            <div role="radiogroup" aria-labelledby="weight-unit-label" className="mt-1.5 grid grid-cols-2 gap-1 rounded-2xl bg-surface-2 p-1">
+              {(["kg", "lb"] as const).map((u) => (
+                <button
+                  key={u}
+                  type="button"
+                  role="radio"
+                  aria-checked={unit === u}
+                  onClick={() => {
+                    if (u === unit) return;
+                    const before = unit;
+                    setUnit(u);
+                    void save("unit", { weight_unit: u }, () => setUnit(before));
+                  }}
+                  className={cx(
+                    "h-11 rounded-xl text-sm font-medium transition-colors",
+                    unit === u ? "bg-accent text-accent-ink" : "text-muted hover:text-fg",
+                  )}
+                >
+                  {u === "kg" ? "Kilograms (kg)" : "Pounds (lb)"}
+                </button>
+              ))}
+            </div>
+            <StatusLine status={status.unit} hint="For entering and showing weights. Switching converts everything you have logged; nothing is lost." />
           </div>
         </div>
       </section>

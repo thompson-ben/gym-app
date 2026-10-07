@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { validateCompletion, type CompleteError } from "@/lib/session/doc";
 import { matchPrevious } from "@/lib/session/previous";
-import { formatDate, formatKg, formatSet, formatShortDate, formatTargetLong, weightLabel } from "@/lib/format";
+import { formatDate, formatSet, formatShortDate, formatTargetLong, weightLabel } from "@/lib/format";
+import { formatWeight, type WeightUnit } from "@/lib/units";
 import { formatTargetSets, targetMet, topOfRangeLastTime, topOfRangeNow } from "@/lib/progression";
 import type { TargetInfo } from "@/lib/targets";
 import { supabaseBrowser } from "@/lib/supabase/client";
@@ -39,7 +40,9 @@ export function ExerciseCard({
   onUseTarget,
   onSwap,
   onSetupTargets,
+  unit,
 }: {
+  unit: WeightUnit;
   /** Opens target settings for this entry; absent when targets are not available for it. */
   onSetupTargets?: () => void;
   target?: TargetInfo;
@@ -184,7 +187,7 @@ export function ExerciseCard({
           <div className="flex items-baseline justify-between gap-2">
             <p>
               <span className="mr-2 text-xs font-semibold tracking-[0.12em] text-accent-text uppercase">Target</span>
-              <span className="font-medium tabular">{formatTargetSets(shownTarget.target)}</span>
+              <span className="font-medium tabular">{formatTargetSets(shownTarget.target, unit)}</span>
             </p>
             <button type="button" onClick={onHideTarget} className="-my-2 h-10 shrink-0 px-1 text-sm text-muted hover:text-fg">Hide</button>
           </div>
@@ -196,7 +199,7 @@ export function ExerciseCard({
           </p>
           {unconfirmedWorking.some((s) => s.weight_kg !== shownTarget.target!.weightKg) ? (
             <Button size="sm" variant="ghost" className="-ml-2 mt-1 text-accent-text" onClick={() => onUseTarget(shownTarget.target!.weightKg)}>
-              Use {formatKg(shownTarget.target.weightKg)} kg for remaining sets
+              Use {formatWeight(shownTarget.target.weightKg, unit)} for remaining sets
             </Button>
           ) : null}
         </div>
@@ -214,7 +217,7 @@ export function ExerciseCard({
         <div className={cx(mode === "bodyweight_reps" ? GRID_REPS_ONLY : GRID_WITH_WEIGHT, "pb-2 text-[14px] font-medium text-muted")} aria-hidden="true">
           <span className="text-center">Set</span>
           <span className="text-center">Previous</span>
-          {mode !== "bodyweight_reps" ? <span className="text-center">{weightLabel(mode)}</span> : null}
+          {mode !== "bodyweight_reps" ? <span className="text-center">{weightLabel(mode, unit)}</span> : null}
           <span className="text-center">Reps</span>
           <span className="text-center">Done</span>
         </div>
@@ -240,6 +243,7 @@ export function ExerciseCard({
                 onToggleDone={() => tryComplete(set)}
                 onOpenMenu={() => onOpenSetMenu(set, ordinal)}
                 state={set.completed_at ? "done" : set.id === currentId ? "current" : "upcoming"}
+                unit={unit}
               />
             );
           })}
@@ -253,14 +257,14 @@ export function ExerciseCard({
                 <span className="font-semibold text-fg">{hit === "target" ? "Target hit!" : "Top of your range!"}</span>{" "}
                 <span className="text-muted">
                   {hit === "target" && goal
-                    ? `Every set at ${formatTargetSets(goal)} or better.`
+                    ? `Every set at ${formatTargetSets(goal, unit)} or better.`
                     : `Every working set reached ${entry.rep_max} reps. Time to go heavier next session.`}
                 </span>
               </span>
             </p>
           ) : null}
         </div>
-        {mode === "added_weight_reps" ? <p className="mt-2 px-1 text-xs text-faint">+kg is load added to your bodyweight. Leave 0 for bodyweight only.</p> : null}
+        {mode === "added_weight_reps" ? <p className="mt-2 px-1 text-xs text-faint">+{unit} is load added to your bodyweight. Leave 0 for bodyweight only.</p> : null}
       </div>
 
       <div className="mt-2 flex items-center justify-between gap-2">
@@ -297,7 +301,7 @@ export function ExerciseCard({
                     {h.sets.map((s, i) => (
                       <span key={i} className={cx("mr-3 inline-block", s.set_type === "warmup" && "text-faint")}>
                         {s.set_type === "warmup" ? "W " : ""}
-                        {formatSet(mode, s.weight_kg, s.reps)}
+                        {formatSet(mode, s.weight_kg, s.reps, unit)}
                       </span>
                     ))}
                   </p>

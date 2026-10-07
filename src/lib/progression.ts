@@ -1,4 +1,5 @@
-import { formatKg } from "./format";
+import type { WeightUnit } from "./units";
+import { formatWeight, formatWeightValue } from "./units";
 import type { PreviousSet, TrackingMode } from "./types";
 
 /**
@@ -75,6 +76,8 @@ export function computeTarget(input: {
   prescription: Prescription;
   entryId: string | null;
   candidates: Candidate[];
+  /** Unit for the explanation text only; weights are always kg. */
+  unit?: WeightUnit;
 }): TargetResult {
   const { mode, settings, prescription } = input;
   if (!settings.enabled) return { target: null, note: null };
@@ -115,18 +118,19 @@ export function computeTarget(input: {
       weightKg: weight,
       reps: working.map((s) => Math.min(repMax, Math.max(repMin, s.reps + 1))),
       kind: "repeat",
-      reason: `Stay at ${formatKg(weight)} kg and add reps until every set reaches ${repMax}.`,
+      reason: `Stay at ${formatWeight(weight, input.unit ?? "kg")} and add reps until every set reaches ${repMax}.`,
       basis: meta,
     },
   };
 }
 
-const roundKg = (n: number) => Math.round(n * 100) / 100;
+/** Stored precision (4 dp), so a target built from pound values shows back as whole pounds. */
+const roundKg = (n: number) => Math.round(n * 10_000) / 10_000;
 
-/** "32.5 kg × 8, 8, 8" or "32.5 kg × 8" when all goals are equal. */
-export function formatTargetSets(t: Target): string {
+/** "32.5 kg × 8, 8, 8" or "32.5 kg × 8" when all goals are equal (or lb). */
+export function formatTargetSets(t: Pick<Target, "weightKg" | "reps">, unit: WeightUnit = "kg"): string {
   const allSame = t.reps.every((r) => r === t.reps[0]);
-  return `${formatKg(t.weightKg)} kg × ${allSame ? t.reps[0] : t.reps.join(", ")}`;
+  return `${formatWeightValue(t.weightKg, unit)} ${unit} × ${allSame ? t.reps[0] : t.reps.join(", ")}`;
 }
 
 /**
