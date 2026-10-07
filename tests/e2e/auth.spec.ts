@@ -38,6 +38,35 @@ test("sign-up requires email confirmation and continues to the original destinat
   await other.close();
 });
 
+test("an unconfirmed account can resend its email, and a link that falls back to the home page still confirms", async ({ page }) => {
+  const email = uniqueEmail("fallback");
+  await page.goto("/sign-in?mode=sign-up");
+  await page.getByLabel("Email").fill(email);
+  await page.getByLabel("Password").fill("correct-horse-battery");
+  await page.getByRole("button", { name: "Create account" }).click();
+  await expect(page.getByRole("heading", { name: "Check your email" })).toBeVisible();
+  await emailLink(email, /Confirm your NotchLift account/);
+
+  await page.getByRole("button", { name: "Back to sign in" }).click();
+  await page.getByLabel("Email").fill(email);
+  await page.getByLabel("Password").fill("correct-horse-battery");
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(page.getByText("Please confirm your email first")).toBeVisible();
+  await page.waitForTimeout(1100); // local stack allows one email per second
+  await page.getByRole("button", { name: "Resend confirmation email" }).click();
+  await expect(page.getByText("A new confirmation email is on its way.")).toBeVisible();
+  await expect.poll(() => emailCount(email)).toBe(2);
+
+  // Simulate Supabase falling back to the Site URL when a redirect address isn't allow-listed:
+  // the token lands on the home page and must still confirm the account.
+  const link = await emailLink(email, /Confirm your NotchLift account/);
+  const fallback = new URL(link);
+  fallback.pathname = "/";
+  await page.goto(fallback.toString());
+  await page.waitForURL("**/train");
+  await expect(page.getByRole("heading", { name: "Welcome to NotchLift" })).toBeVisible();
+});
+
 test("password reset: neutral request, email link, new password, invalid and reused links", async ({ page }) => {
   const user = await newUser("reset");
   await page.goto("/sign-in");
