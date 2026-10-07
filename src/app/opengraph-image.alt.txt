@@ -1,0 +1,1 @@
+NotchLift workout logger showing last session beside each set and a target weight
