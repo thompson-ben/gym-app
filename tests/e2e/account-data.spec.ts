@@ -76,7 +76,8 @@ test("deleting an account removes everything and signs out; other accounts are u
   await page.getByLabel("Email").fill(me.email);
   await page.getByLabel("Password").fill(me.password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
-  await expect(page.getByRole("alert")).toBeVisible();
+  // The specific message: Next.js also renders an (empty) role="alert" route announcer after client navigations.
+  await expect(page.getByRole("alert").filter({ hasText: "Incorrect email or password." })).toBeVisible();
 });
 
 test("privacy and terms pages are public and linked from sign-up", async ({ page }) => {

@@ -18,9 +18,15 @@ export default function PrivacyPage() {
           <li><strong>Training data:</strong> the splits, workouts, exercises, sets, notes and dates you enter.</li>
           <li><strong>Membership:</strong> whether you are a founding member, on a trial or subscribed.</li>
           <li>
-            <strong>Usage and errors:</strong> anonymous page-view counts (which pages are visited, the browser and country, with no cookies and
-            nothing that identifies you), and technical reports when something breaks (the error, the page and the browser). Error reports never
-            include your email, account, IP address or training data, and secret links (such as invite links) are blanked out.
+            <strong>Visits to our public pages</strong> (not the app itself): the page, the site that linked to it, campaign tags in the link (for
+            example from an ad), your device type and country. No IP address and no ID for you are stored. If you came from a campaign or another
+            site, a small cookie remembers where from (not who you are) for up to 30 days. If you then create an account, that source is attached to
+            your account so we can see which campaigns bring people who keep training, and the cookie is deleted. Browsers that send Global
+            Privacy Control or Do Not Track are not counted.
+          </li>
+          <li>
+            <strong>Errors:</strong> technical reports when something breaks (the error, the page and the browser). They never include your email,
+            account, IP address or training data, and secret links (such as invite links) are blanked out.
           </li>
           <li>
             <strong>On your device:</strong> a workout in progress is kept in your browser’s storage so a set is never lost to a bad connection, plus
@@ -39,7 +45,7 @@ export default function PrivacyPage() {
         <h2>Who stores it</h2>
         <ul>
           <li><strong>Supabase</strong> hosts the database and sign-in, in the EU (Ireland).</li>
-          <li><strong>Vercel</strong> hosts the app; requests are handled in the EU (Dublin). Vercel Web Analytics provides the anonymous page-view counts.</li>
+          <li><strong>Vercel</strong> hosts the app; requests are handled in the EU (Dublin).</li>
           <li><strong>Resend</strong> sends account emails (confirming your address and resetting your password).</li>
           <li><strong>Sentry</strong> receives the technical error reports described above, stored in the EU.</li>
         </ul>

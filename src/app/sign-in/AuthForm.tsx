@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button, ErrorNote, Field, Input } from "@/components/ui";
 import { supabaseBrowser } from "@/lib/supabase/client";
+import { trackSignupView } from "@/lib/track";
 
 type Mode = "sign-in" | "sign-up";
 
@@ -16,6 +17,9 @@ const ERRORS: Record<string, string> = {
 export function AuthForm({ initialMode, next, error }: { initialMode: Mode; next: string; error: string | null }) {
   const router = useRouter();
   const [mode, setMode] = useState<Mode>(initialMode);
+  useEffect(() => {
+    if (mode === "sign-up") trackSignupView();
+  }, [mode]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);

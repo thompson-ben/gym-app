@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { PrivateAnalytics } from "@/components/PrivateAnalytics";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
+import { VisitTracker } from "@/components/VisitTracker";
 import { SITE_URL } from "@/lib/site";
 import "./globals.css";
 
@@ -37,7 +37,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {children}
         <ServiceWorkerRegister />
-        <PrivateAnalytics />
+        <VisitTracker />
       </body>
     </html>
   );
