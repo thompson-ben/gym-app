@@ -6,6 +6,7 @@ import type { HistorySession } from "@/lib/progress";
 import { compareWithPrevious, recordsFor } from "@/lib/records";
 import { requireUser, viewerTimeZone, viewerUnit } from "@/lib/supabase/server";
 import { loadTargets } from "@/lib/targets";
+import type { GroupDoc } from "@/lib/group";
 import type { SessionDoc } from "@/lib/types";
 import type { WeightUnit } from "@/lib/units";
 
@@ -23,8 +24,19 @@ export default async function SessionPage({ params, searchParams }: { params: Pr
   if (doc.status === "in_progress") redirect(`/workout/${sessionId}`);
   if (doc.status === "discarded") notFound();
 
-  const [timeZone, unit] = await Promise.all([viewerTimeZone(), viewerUnit()]);
-  return <SessionView doc={doc} timeZone={timeZone} unit={unit} justFinished={finished === "1"} insights={await insightsFor(supabase, doc, unit)} />;
+  const [timeZone, unit, together] = await Promise.all([viewerTimeZone(), viewerUnit(), togetherFor(supabase, doc.id)]);
+  return <SessionView doc={doc} timeZone={timeZone} unit={unit} together={together} justFinished={finished === "1"} insights={await insightsFor(supabase, doc, unit)} />;
+}
+
+/** The group a workout was done with, if any, and who else was in it. */
+async function togetherFor(supabase: Awaited<ReturnType<typeof requireUser>>["supabase"], sessionId: string) {
+  const { data } = await supabase.from("workout_sessions").select("group_workout_id").eq("id", sessionId).maybeSingle();
+  const groupId = (data as { group_workout_id?: string | null } | null)?.group_workout_id;
+  if (!groupId) return null;
+  const { data: group } = await supabase.rpc("group_workout_document", { p_group_id: groupId });
+  // Left or removed since: the workout is still theirs, the group just isn't shown.
+  if (!group) return null;
+  return { groupId, names: (group as GroupDoc).members.filter((m) => !m.is_me).map((m) => m.display_name) };
 }
 
 /**

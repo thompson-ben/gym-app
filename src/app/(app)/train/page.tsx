@@ -7,6 +7,7 @@ import { PageTip } from "@/components/PageTip";
 import { QuickWorkoutButton } from "@/components/QuickWorkoutButton";
 import { StarterSplits } from "@/components/StarterSplits";
 import { LogPastWorkoutButton, StartWorkoutButton } from "@/components/StartWorkoutButton";
+import { GroupWorkoutsSection, type UpcomingGroup } from "@/components/together/GroupWorkoutsSection";
 import { Wordmark } from "@/components/Wordmark";
 import { formatDate, formatElapsed, formatShortDate } from "@/lib/format";
 import { suggestNextWorkout, type NextWorkout } from "@/lib/next-workout";
@@ -24,12 +25,12 @@ type TemplateRow = {
 type WorkoutSummary = { id: string; name: string; position: number; exerciseCount: number; workingSets: number; lastPerformed: string | null };
 
 export default async function TrainPage() {
-  const { supabase } = await requireUser();
+  const { supabase, userId } = await requireUser();
   const tz = await viewerTimeZone();
 
   // Two round trips: the active split with its workouts (one nested query) plus the open and
   // recent sessions, then the split's performed dates and period count together.
-  const [{ data: period, error: periodError }, { data: open, error: openError }, recent] = await Promise.all([
+  const [{ data: period, error: periodError }, { data: open, error: openError }, recent, myGroups] = await Promise.all([
     supabase
       .from("split_active_periods")
       .select("id, started_at, split_id, splits(id, name, workout_templates(id, name, position, created_at, template_exercises(target_sets)))")
@@ -37,10 +38,23 @@ export default async function TrainPage() {
       .maybeSingle(),
     supabase.from("workout_sessions").select("id, template_name, split_name, started_at, is_backdated").eq("status", "in_progress").maybeSingle(),
     supabase.from("workout_sessions").select("id, template_name, completed_at, split_id").eq("status", "completed").order("completed_at", { ascending: false }).limit(3),
+    // Group workouts this user is in and hasn't finished. Before migration 12 this errors and
+    // the section simply shows only "Plan a group workout".
+    supabase
+      .from("group_workout_members")
+      .select("status, role, group_workouts(id, name, planned_for)")
+      .eq("user_id", userId)
+      .neq("status", "completed")
+      .order("joined_at", { ascending: false })
+      .limit(5),
   ]);
   if (periodError) throw periodError;
   if (openError) throw openError;
   if (recent.error) throw recent.error;
+  const groups: UpcomingGroup[] = (myGroups.data ?? []).flatMap((m) => {
+    const g = m.group_workouts as unknown as { id: string; name: string; planned_for: string | null } | null;
+    return g ? [{ id: g.id, name: g.name, planned_for: g.planned_for, status: m.status as UpcomingGroup["status"], isHost: m.role === "host" }] : [];
+  });
 
   const split = period?.splits as unknown as { id: string; name: string; workout_templates: (TemplateRow & { created_at: string })[] } | null;
   let workouts: WorkoutSummary[] = [];
@@ -160,7 +174,7 @@ export default async function TrainPage() {
             </section>
           ) : null}
 
-          {workouts.length ? (
+          {(open ? workouts : others).length ? (
             <section className="mt-6" aria-labelledby="workouts-title">
               <h2 id="workouts-title" className="mb-2 text-sm font-medium tracking-wide text-muted uppercase">
                 {suggested && !open ? "Other workouts" : "Workouts"}
@@ -187,7 +201,7 @@ export default async function TrainPage() {
               </ul>
               {open ? <p className="mt-2 text-sm text-faint">Finish or discard the workout in progress to start another.</p> : null}
             </section>
-          ) : (
+          ) : workouts.length ? null : (
             <div className="mt-4 rounded-3xl border border-dashed border-line px-6 py-8 text-center">
               <p className="font-medium">This split has no workouts yet</p>
               <Link href={`/splits/${split.id}`} className={buttonClass("primary", "md", "mt-4")}>Add a workout</Link>
@@ -241,6 +255,8 @@ export default async function TrainPage() {
           </section>
         )
       )}
+
+      <GroupWorkoutsSection groups={groups} timeZone={tz} />
 
       {recent.data.length ? (
         <section className="mt-8" aria-labelledby="recent-title">

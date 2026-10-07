@@ -31,12 +31,15 @@ export function SessionView({
   justFinished,
   insights,
   unit,
+  together,
 }: {
   doc: SessionDoc;
   timeZone: string;
   justFinished: boolean;
   insights: SessionInsights;
   unit: WeightUnit;
+  /** For a group workout: the group and the other people in it. */
+  together?: { groupId: string; names: string[] } | null;
 }) {
   const router = useRouter();
   const [doc, setDoc] = useState(initial);
@@ -125,6 +128,12 @@ export function SessionView({
           )
         }
       />
+      {together ? (
+        <p className="-mt-3 mb-4 text-sm text-muted">
+          {together.names.length ? `Trained with ${listNames(together.names)} · ` : "Group workout · "}
+          <Link href={`/together/${together.groupId}`} className="text-accent-text underline-offset-4 hover:underline">Group</Link>
+        </p>
+      ) : null}
       {justFinished ? (
         <div className="-mt-2 mb-4 flex items-center gap-3 rounded-3xl bg-accent-soft p-4" role="status">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent text-accent-ink"><IconCheck /></span>
@@ -323,4 +332,9 @@ function EditNumber({
       <span className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-xs text-faint">{suffix}</span>
     </label>
   );
+}
+
+/** "Sam", "Sam and Alex", "Sam, Alex and Jo". */
+function listNames(names: string[]) {
+  return names.length < 2 ? names.join("") : `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`;
 }
