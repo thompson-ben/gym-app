@@ -7,7 +7,7 @@ import { PageHeader } from "@/components/ui";
 import { exerciseLabel } from "@/lib/exercises";
 import { formatSet, formatShortDate, formatTargetLong } from "@/lib/format";
 import { formatTargetSets } from "@/lib/progression";
-import { requireUser, viewerTimeZone } from "@/lib/supabase/server";
+import { requireUser, viewerTimeZone, viewerUnit } from "@/lib/supabase/server";
 import { loadTargets } from "@/lib/targets";
 import type { PreviousPerformance, TrackingMode } from "@/lib/types";
 
@@ -29,7 +29,7 @@ export default async function WorkoutPreviewPage({ params }: { params: Promise<{
   const { templateId } = await params;
   if (!/^[0-9a-f-]{36}$/i.test(templateId)) notFound();
   const { supabase } = await requireUser();
-  const tz = await viewerTimeZone();
+  const [tz, unit] = await Promise.all([viewerTimeZone(), viewerUnit()]);
 
   const [tpl, entries, open, last] = await Promise.all([
     supabase.from("workout_templates").select("id, name, split_id, splits(id, name)").eq("id", templateId).maybeSingle(),
@@ -55,6 +55,7 @@ export default async function WorkoutPreviewPage({ params }: { params: Promise<{
       supabase,
       rows.map((r) => ({ key: r.id, exerciseId: r.exercise!.id, entryId: r.id, mode: r.exercise!.tracking_mode, targetSets: r.target_sets, repMin: r.rep_min, repMax: r.rep_max })),
       null,
+      unit,
     ),
   ]);
   if (prev.error) throw prev.error;
@@ -96,7 +97,7 @@ export default async function WorkoutPreviewPage({ params }: { params: Promise<{
                       <span className="text-faint">Last: </span>
                       {working.length ? (
                         <span className="tabular">
-                          {working.map((s) => formatSet(e.tracking_mode, s.weight_kg, s.reps)).join(", ")}
+                          {working.map((s) => formatSet(e.tracking_mode, s.weight_kg, s.reps, unit)).join(", ")}
                           <span className="text-faint"> · {formatShortDate(p!.completed_at, tz)}</span>
                         </span>
                       ) : (
@@ -106,7 +107,7 @@ export default async function WorkoutPreviewPage({ params }: { params: Promise<{
                     {t?.target ? (
                       <p className="mt-1 text-sm">
                         <span className="rounded-md border border-accent-text/40 px-1.5 py-0.5 text-xs font-medium text-accent-text">Target</span>{" "}
-                        <span className="tabular">{formatTargetSets(t.target)}</span>
+                        <span className="tabular">{formatTargetSets(t.target, unit)}</span>
                       </p>
                     ) : null}
                     {r.notes ? <p className="mt-1 text-sm whitespace-pre-line text-muted">{r.notes}</p> : null}

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { ClientBoot } from "@/components/ClientBoot";
 import { LoggerLoader } from "@/components/logger/LoggerLoader";
-import { requireUser, viewerTimeZone } from "@/lib/supabase/server";
+import { requireUser, viewerTimeZone, viewerUnit } from "@/lib/supabase/server";
 import { loadTargets } from "@/lib/targets";
 import type { PreviousMap, PreviousPerformance, SessionDoc } from "@/lib/types";
 
@@ -13,7 +13,7 @@ export default async function WorkoutPage({ params }: { params: Promise<{ sessio
   const { supabase, userId } = await requireUser();
   if (!/^[0-9a-f-]{36}$/i.test(sessionId)) notFound();
 
-  const { data: doc, error } = await supabase.rpc("session_document", { p_session_id: sessionId });
+  const [{ data: doc, error }, unit] = await Promise.all([supabase.rpc("session_document", { p_session_id: sessionId }), viewerUnit()]);
   if (error) throw error;
   if (!doc) notFound();
   const session = doc as SessionDoc;
@@ -37,6 +37,7 @@ export default async function WorkoutPage({ params }: { params: Promise<{ sessio
         repMax: e.rep_max,
       })),
       session.is_backdated ? session.started_at : null,
+      unit,
     ),
   ]);
   if (prevError) throw prevError;
@@ -49,7 +50,7 @@ export default async function WorkoutPage({ params }: { params: Promise<{ sessio
         userId={userId}
         server={session}
         previous={previous}
-        settings={{ defaultRestSeconds: profile?.default_rest_seconds ?? 120, autoStartRest: profile?.auto_start_rest ?? false }}
+        settings={{ defaultRestSeconds: profile?.default_rest_seconds ?? 120, autoStartRest: profile?.auto_start_rest ?? false, weightUnit: unit }}
         timeZone={await viewerTimeZone()}
         targets={targets}
       />

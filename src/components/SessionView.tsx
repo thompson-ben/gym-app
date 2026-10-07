@@ -11,6 +11,7 @@ import type { TargetMap } from "@/lib/targets";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { friendlyError } from "@/lib/supabase/errors";
 import type { SessionDoc } from "@/lib/types";
+import { formatWeightValue, fromUnit, type WeightUnit } from "@/lib/units";
 import { isValidNumber, parseReps, parseWeight } from "@/lib/validation";
 import { IconCheck, IconPlus, IconTrash } from "./icons";
 import { cx } from "./styles";
@@ -29,11 +30,13 @@ export function SessionView({
   timeZone,
   justFinished,
   insights,
+  unit,
 }: {
   doc: SessionDoc;
   timeZone: string;
   justFinished: boolean;
   insights: SessionInsights;
+  unit: WeightUnit;
 }) {
   const router = useRouter();
   const [doc, setDoc] = useState(initial);
@@ -215,10 +218,14 @@ export function SessionView({
                         <span className="w-8 text-center text-sm text-muted">{label}</span>
                         {ex.tracking_mode !== "bodyweight_reps" ? (
                           <EditNumber
-                            label={`${ex.exercise_name} set ${label} ${weightLabel(ex.tracking_mode)}`}
+                            label={`${ex.exercise_name} set ${label} ${weightLabel(ex.tracking_mode, unit)}`}
                             value={s.weight_kg}
-                            parse={parseWeight}
-                            suffix={weightLabel(ex.tracking_mode)}
+                            format={(kg) => formatWeightValue(kg, unit)}
+                            parse={(t) => {
+                              const v = parseWeight(t, unit);
+                              return v === null || Number.isNaN(v) ? v : fromUnit(v, unit);
+                            }}
+                            suffix={weightLabel(ex.tracking_mode, unit)}
                             onChange={(v) => setDoc((d) => updateSet(d, ex.id, s.id, { weight_kg: v }))}
                           />
                         ) : null}
@@ -242,7 +249,7 @@ export function SessionView({
                     return (
                       <li key={s.id} className={cx("rounded-xl bg-surface-2 px-3 py-1.5 text-sm tabular", s.set_type === "warmup" && "text-faint")}>
                         <span className="mr-2 text-muted">{label}</span>
-                        {formatSet(ex.tracking_mode, s.weight_kg, s.reps)}
+                        {formatSet(ex.tracking_mode, s.weight_kg, s.reps, unit)}
                       </li>
                     );
                   })}
@@ -259,7 +266,7 @@ export function SessionView({
             {targets.map(({ e, t }) => (
               <li key={e.id}>
                 <span className="font-medium">{e.exercise_name}</span>
-                <span className="ml-2 tabular">{formatTargetSets(t.target)}</span>
+                <span className="ml-2 tabular">{formatTargetSets(t.target, unit)}</span>
                 <span className="block text-sm text-muted">{t.target.reason}</span>
               </li>
             ))}
@@ -281,8 +288,22 @@ export function SessionView({
   );
 }
 
-function EditNumber({ label, value, parse, suffix, onChange }: { label: string; value: number | null; parse: (s: string) => number | null; suffix: string; onChange: (v: number | null) => void }) {
-  const [text, setText] = useState(value === null ? "" : String(value));
+function EditNumber({
+  label,
+  value,
+  format = String,
+  parse,
+  suffix,
+  onChange,
+}: {
+  label: string;
+  value: number | null;
+  format?: (v: number) => string;
+  parse: (s: string) => number | null;
+  suffix: string;
+  onChange: (v: number | null) => void;
+}) {
+  const [text, setText] = useState(value === null ? "" : format(value));
   const parsed = parse(text);
   const invalid = parsed !== null && !isValidNumber(parsed);
   return (

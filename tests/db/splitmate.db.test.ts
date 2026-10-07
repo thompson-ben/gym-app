@@ -543,7 +543,7 @@ describe("E/F. session writes are idempotent and never record unperformed sets",
          left join session_sets ss on ss.session_exercise_id = se.id where se.session_id = $1 order by se.position`, [doc.id]),
     );
     expect(rows).toEqual([
-      { exercise_id: incline, skipped: false, weight_kg: "72.50", reps: 9 },
+      { exercise_id: incline, skipped: false, weight_kg: "72.5000", reps: 9 },
       { exercise_id: pulldown, skipped: true, weight_kg: null, reps: null },
     ]);
   });
@@ -561,7 +561,7 @@ describe("E/F. session writes are idempotent and never record unperformed sets",
     const sets = await as(user(me), (q) =>
       q("select se.exercise_id, ss.weight_kg from session_sets ss join session_exercises se on se.id = ss.session_exercise_id order by se.position"),
     );
-    expect(sets).toEqual([{ exercise_id: dip, weight_kg: "0.00" }, { exercise_id: pushUp, weight_kg: null }]);
+    expect(sets).toEqual([{ exercise_id: dip, weight_kg: "0.0000" }, { exercise_id: pushUp, weight_kg: null }]);
 
     await expect(sync(me, withSets(doc, [[], [], [{ weight: null, reps: 5, done: true }]]), 1)).rejects.toThrow(/completed_set_requires_weight/);
     await expect(sync(me, withSets(doc, [[], [], [{ weight: -5, reps: 5, done: true }]]), 1)).rejects.toThrow();
@@ -666,7 +666,7 @@ describe("H. access control", () => {
     hijack.exercises[0].sets[0].id = victimSet.id;
     await expect(sync(intruder, hijack, 0)).rejects.toThrow();
     const [intact] = await pool.query("select weight_kg, reps from session_sets where id = $1", [victimSet.id]).then((r) => r.rows);
-    expect(intact).toEqual({ weight_kg: "72.50", reps: 9 });
+    expect(intact).toEqual({ weight_kg: "72.5000", reps: 9 });
 
     // Using another user's template exercise entry or custom exercise is rejected.
     const ownerCustom = await as(user(owner), async (q) =>
@@ -856,5 +856,20 @@ describe("feedback and starter splits (migration 10)", () => {
     await expect(as(user(me), (q) => q("select create_split_from_plan($1::jsonb)", [JSON.stringify({ name: "Empty", workouts: [] })]))).rejects.toThrow(/invalid_plan/);
     expect(await as(user(me), (q) => q("select id from splits"))).toEqual([]);
     await expect(as(anon, (q) => q("select create_split_from_plan('{}'::jsonb)"))).rejects.toThrow();
+  });
+});
+
+describe("weight units (migration 11)", () => {
+  it("lets a user choose pounds and stores weights precisely enough to round-trip them", async () => {
+    const me = await newUser("units");
+    await as(user(me), (q) => q("update profiles set weight_unit = 'lb' where id = $1", [me]));
+    await expect(as(user(me), (q) => q("update profiles set weight_unit = 'stone' where id = $1", [me]))).rejects.toThrow();
+    const split = await createSplit(me, "S");
+    const { templateId } = await createTemplate(me, split, "A", [{ exerciseId: incline }]);
+    // 135 lb = 61.235 kg, as the app converts it.
+    await logWorkout(me, templateId, [[{ weight: 61.235, reps: 8, done: true }]]);
+    const [row] = await as(user(me), (q) => q("select weight_kg::float as kg from session_sets"));
+    expect(row.kg).toBe(61.235);
+    expect(Math.round((row.kg / 0.45359237) * 100) / 100).toBe(135);
   });
 });

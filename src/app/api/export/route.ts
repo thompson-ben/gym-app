@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { sessionsToCsv, type ExportSession } from "@/lib/export";
-import { requireUser, viewerTimeZone } from "@/lib/supabase/server";
+import { requireUser, viewerTimeZone, viewerUnit } from "@/lib/supabase/server";
 import type { SetType, TrackingMode } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -39,7 +39,7 @@ type SessionRow = {
 export async function GET(request: Request) {
   const { supabase, email } = await requireUser();
   const format = new URL(request.url).searchParams.get("format") === "json" ? "json" : "csv";
-  const tz = await viewerTimeZone();
+  const [tz, unit] = await Promise.all([viewerTimeZone(), viewerUnit()]);
 
   const sessions: SessionRow[] = [];
   for (let from = 0; ; from += PAGE) {
@@ -84,7 +84,7 @@ export async function GET(request: Request) {
           sets: e.session_sets.map((x) => ({ ...x, weight_kg: x.weight_kg === null ? null : Number(x.weight_kg) })),
         })),
       }));
-    return new NextResponse(sessionsToCsv(completed, tz), { headers: headers("text/csv; charset=utf-8", "csv") });
+    return new NextResponse(sessionsToCsv(completed, tz, unit), { headers: headers("text/csv; charset=utf-8", "csv") });
   }
 
   const [profile, membership, exercises, splits] = await Promise.all([
@@ -112,7 +112,7 @@ export async function GET(request: Request) {
     custom_exercises: exercises.data,
     splits: splits.data,
     workouts: sessions,
-    notes: "Weights are in kilograms. Catalogue exercises are referenced by id; workout and exercise names are as they were when logged.",
+    notes: "Weights are stored and exported here in kilograms (weight_kg, progression_increment_kg), whatever display unit is chosen. Catalogue exercises are referenced by id; workout and exercise names are as they were when logged.",
   };
   return new NextResponse(JSON.stringify(body, null, 2), { headers: headers("application/json; charset=utf-8", "json") });
 }

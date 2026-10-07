@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { computeTarget, type Candidate, type Target } from "./progression";
 import type { PreviousSet, TrackingMode } from "./types";
+import type { WeightUnit } from "./units";
 
 /** A workout entry that may receive a next-session target. */
 export type TargetEntry = {
@@ -35,7 +36,7 @@ type CandidateRow = {
  * targets switched on get a result. Failure (for example before the migration that adds
  * targets has been applied) yields no targets rather than an error: targets are optional.
  */
-export async function loadTargets(supabase: SupabaseClient, entries: TargetEntry[], before: string | null): Promise<TargetMap> {
+export async function loadTargets(supabase: SupabaseClient, entries: TargetEntry[], before: string | null, unit: WeightUnit = "kg"): Promise<TargetMap> {
   const entryIds = [...new Set(entries.map((e) => e.entryId).filter((x): x is string => Boolean(x)))];
   if (!entryIds.length) return {};
   const settings = await supabase.from("template_exercises").select("id, progression_enabled, progression_increment_kg").in("id", entryIds);
@@ -72,6 +73,7 @@ export async function loadTargets(supabase: SupabaseClient, entries: TargetEntry
       prescription: { targetSets: e.targetSets, repMin: e.repMin, repMax: e.repMax },
       entryId: e.entryId,
       candidates: byExercise.get(e.exerciseId) ?? [],
+      unit,
       }),
     };
   }

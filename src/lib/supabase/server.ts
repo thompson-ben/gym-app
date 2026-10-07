@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 import { supabaseEnv } from "./env";
+import { isWeightUnit, type WeightUnit } from "../units";
 
 export async function supabaseServer() {
   const cookieStore = await cookies();
@@ -51,3 +52,10 @@ export async function viewerTimeZone(): Promise<string> {
   }
   return "UTC";
 }
+
+/** The signed-in user's weight unit (kg unless they chose lb). Never fails a page. */
+export const viewerUnit = cache(async (): Promise<WeightUnit> => {
+  const { supabase, userId } = await requireUser();
+  const { data } = await supabase.from("profiles").select("weight_unit").eq("id", userId).maybeSingle();
+  return isWeightUnit(data?.weight_unit) ? data.weight_unit : "kg";
+});

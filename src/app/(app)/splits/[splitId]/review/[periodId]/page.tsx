@@ -3,9 +3,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { IconChevronRight } from "@/components/icons";
 import { Card, EmptyState, PageHeader } from "@/components/ui";
-import { formatDate, formatElapsed, formatKg, formatSet, formatShortDate } from "@/lib/format";
+import { formatDate, formatElapsed, formatSet, formatShortDate } from "@/lib/format";
 import { repeatedExercises, weeklyWorkingSets, workoutBreakdown, type ReviewSession } from "@/lib/split-review";
-import { requireUser, viewerTimeZone } from "@/lib/supabase/server";
+import { requireUser, viewerTimeZone, viewerUnit } from "@/lib/supabase/server";
+import { formatWeightValue } from "@/lib/units";
 import type { SetType, TrackingMode } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Split review" };
@@ -30,7 +31,7 @@ export default async function SplitReviewPage({ params }: { params: Promise<{ sp
   const uuid = /^[0-9a-f-]{36}$/i;
   if (!uuid.test(splitId) || !uuid.test(periodId)) notFound();
   const { supabase } = await requireUser();
-  const tz = await viewerTimeZone();
+  const [tz, unit] = await Promise.all([viewerTimeZone(), viewerUnit()]);
 
   const { data: period, error } = await supabase
     .from("split_active_periods")
@@ -141,11 +142,11 @@ export default async function SplitReviewPage({ params }: { params: Promise<{ sp
                       <span className="min-w-0 flex-1">
                         <span className="block font-medium break-words">{r.name}</span>
                         <span className="block text-sm text-muted tabular">
-                          Best set: {formatSet(r.mode, r.first.set.weight_kg, r.first.set.reps)} ({formatShortDate(r.first.date, tz)}) →{" "}
-                          {formatSet(r.mode, r.latest.set.weight_kg, r.latest.set.reps)} ({formatShortDate(r.latest.date, tz)})
+                          Best set: {formatSet(r.mode, r.first.set.weight_kg, r.first.set.reps, unit)} ({formatShortDate(r.first.date, tz)}) →{" "}
+                          {formatSet(r.mode, r.latest.set.weight_kg, r.latest.set.reps, unit)} ({formatShortDate(r.latest.date, tz)})
                         </span>
                         {r.e1rm ? (
-                          <span className="block text-sm text-faint tabular">Est. 1RM {formatKg(r.e1rm.first)} → {formatKg(r.e1rm.latest)} kg (estimate)</span>
+                          <span className="block text-sm text-faint tabular">Est. 1RM {formatWeightValue(r.e1rm.first, unit)} → {formatWeightValue(r.e1rm.latest, unit)} {unit} (estimate)</span>
                         ) : null}
                         <span className="block text-xs text-faint">{r.sessions} sessions in this period</span>
                       </span>

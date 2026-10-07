@@ -3,10 +3,11 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { exerciseLabel } from "@/lib/exercises";
-import { formatDuration, formatKg, formatTarget, humanize } from "@/lib/format";
+import { formatDuration, formatTarget, humanize } from "@/lib/format";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { friendlyError } from "@/lib/supabase/errors";
 import type { Exercise } from "@/lib/types";
+import { formatWeight, INCREMENT_RANGE, formatWeightValue, parseIncrement, type WeightUnit } from "@/lib/units";
 import { ExercisePicker } from "../ExercisePicker";
 import { IconArrowDown, IconArrowUp, IconEdit, IconMinus, IconPlus, IconSwap, IconTrash } from "../icons";
 import { cx } from "../styles";
@@ -33,12 +34,14 @@ export function TemplateBuilder({
   template,
   initialEntries,
   defaultRest,
+  unit,
 }: {
   splitId: string;
   splitName: string;
   template: { id: string; name: string };
   initialEntries: Entry[];
   defaultRest: number;
+  unit: WeightUnit;
 }) {
   const router = useRouter();
   const supabase = supabaseBrowser();
@@ -170,7 +173,7 @@ export function TemplateBuilder({
                 </button>
                 {entry.progression_enabled ? (
                   <button type="button" onClick={() => setEditing(entry)} className="h-11 rounded-2xl border border-accent-text/40 px-3 text-sm text-accent-text hover:bg-surface-2">
-                    Targets on · +{formatKg(entry.progression_increment_kg)} kg
+                    Targets on{entry.progression_increment_kg ? ` · +${formatWeight(Number(entry.progression_increment_kg), unit)}` : ""}
                   </button>
                 ) : null}
               </div>
@@ -208,6 +211,7 @@ export function TemplateBuilder({
           key={editing.id}
           entry={editing}
           defaultRest={defaultRest}
+          unit={unit}
           onClose={() => setEditing(null)}
           onSave={async (patch) => {
             await update(editing.id, patch);
@@ -222,11 +226,13 @@ export function TemplateBuilder({
 function TargetsSheet({
   entry,
   defaultRest,
+  unit,
   onClose,
   onSave,
 }: {
   entry: Entry;
   defaultRest: number;
+  unit: WeightUnit;
   onClose: () => void;
   onSave: (patch: Partial<Entry>) => Promise<void>;
 }) {
@@ -235,7 +241,7 @@ function TargetsSheet({
   const [rest, setRest] = useState<number | null>(entry.rest_seconds);
   const [notes, setNotes] = useState(entry.notes ?? "");
   const [progress, setProgress] = useState(entry.progression_enabled);
-  const [increment, setIncrement] = useState(entry.progression_increment_kg?.toString() ?? "");
+  const [increment, setIncrement] = useState(entry.progression_increment_kg === null ? "" : formatWeightValue(Number(entry.progression_increment_kg), unit));
   const [error, setError] = useState<string | null>(null);
   const canProgress = entry.exercise.tracking_mode === "weight_reps";
 
@@ -246,10 +252,12 @@ function TargetsSheet({
     const valid = (n: number | null) => n === null || (Number.isInteger(n) && n >= 1 && n <= 100);
     if (!valid(rmin) || !valid(rmax)) return setError("Reps must be whole numbers from 1 to 100.");
     if (rmin !== null && rmax !== null && rmin > rmax) return setError("The minimum cannot exceed the maximum.");
-    const inc = increment ? Number(increment.replace(",", ".")) : null;
+    const parsed = parseIncrement(increment, unit);
+    const inc = "kg" in parsed ? parsed.kg : null;
     if (progress) {
       if (rmin === null || rmax === null) return setError("Targets need a rep range with a minimum and a maximum.");
-      if (inc === null || !Number.isFinite(inc) || inc <= 0 || inc > 50) return setError("Choose a weight increment between 0.25 and 50 kg.");
+      if ("error" in parsed) return setError(parsed.error);
+      if (inc === null) return setError(`Choose a weight increment between ${INCREMENT_RANGE[unit].min} and ${INCREMENT_RANGE[unit].max} ${unit}.`);
     }
     void onSave({
       rep_min: rmin,
@@ -257,7 +265,7 @@ function TargetsSheet({
       rest_seconds: rest,
       notes: notes.trim() || null,
       progression_enabled: progress && canProgress,
-      progression_increment_kg: inc !== null && Number.isFinite(inc) && inc > 0 && inc <= 50 ? Math.round(inc * 100) / 100 : null,
+      progression_increment_kg: inc,
     });
   }
 
@@ -297,9 +305,12 @@ function TargetsSheet({
                 description="When every working set reaches the top of the rep range, the next target adds your increment. Otherwise it keeps the weight and aims for more reps."
               />
               {progress ? (
-                <Field label="Weight increment (kg)" hint="What you add when you move up, e.g. 2.5 for a barbell or the next pin on a stack.">
+                <Field
+                  label={`Weight increment (${unit})`}
+                  hint={unit === "lb" ? "What you add when you move up, e.g. 5 for a barbell or the next pin on a stack." : "What you add when you move up, e.g. 2.5 for a barbell or the next pin on a stack."}
+                >
                   {(id, d) => (
-                    <Input id={id} aria-describedby={d} inputMode="decimal" value={increment} onChange={(e) => setIncrement(e.target.value.replace(/[^\d.,]/g, ""))} placeholder="2.5" />
+                    <Input id={id} aria-describedby={d} inputMode="decimal" value={increment} onChange={(e) => setIncrement(e.target.value.replace(/[^\d.,]/g, ""))} placeholder={INCREMENT_RANGE[unit].example} />
                   )}
                 </Field>
               ) : null}

@@ -1,4 +1,51 @@
-<h2 style="font-family:system-ui,sans-serif">Reset your NotchLift password</h2>
-<p style="font-family:system-ui,sans-serif">Tap the link below to choose a new password. The link expires in one hour and can be used once.</p>
-<p style="font-family:system-ui,sans-serif"><a href="{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=recovery">Choose a new password</a></p>
-<p style="font-family:system-ui,sans-serif;color:#666">If you did not ask to reset your password, you can ignore this email. Your password has not changed.</p>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light only">
+<meta name="supported-color-schemes" content="light only">
+<title>Reset your NotchLift password</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f3f4f2;-webkit-text-size-adjust:100%;">
+<!-- Preview text shown next to the subject in most inboxes -->
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">Choose a new password for your NotchLift account. The link expires in one hour.</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f3f4f2;">
+  <tr>
+    <td align="center" style="padding:32px 16px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:480px;">
+        <!-- Header -->
+        <tr>
+          <td style="background-color:#131416;border-radius:20px 20px 0 0;padding:28px 32px;">
+            <span style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:26px;font-weight:700;letter-spacing:-1px;color:#eaebed;">notchlift<span style="color:#c3ed89;">.</span></span>
+          </td>
+        </tr>
+        <!-- Body -->
+        <tr>
+          <td style="background-color:#ffffff;border-radius:0 0 20px 20px;padding:32px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#16191b;">
+            <h1 style="margin:0 0 12px;font-size:24px;line-height:30px;font-weight:700;letter-spacing:-0.4px;color:#16191b;">Reset your password</h1>
+            <p style="margin:0 0 28px;font-size:16px;line-height:24px;color:#4a5055;">We received a request to reset the password for {{ .Email }}. Tap the button below to choose a new one.</p>
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td align="center" style="border-radius:14px;background-color:#c3ed89;">
+                  <a href="{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=recovery" target="_blank" style="display:block;padding:16px 24px;font-size:17px;line-height:22px;font-weight:700;color:#172009;text-decoration:none;border-radius:14px;">Choose a new password</a>
+                </td>
+              </tr>
+            </table>
+            <p style="margin:24px 0 0;font-size:14px;line-height:21px;color:#6b7176;">The link expires in one hour and can be used once. Your workouts and history are not affected.</p>
+            <p style="margin:20px 0 0;padding-top:20px;border-top:1px solid #e0e3df;font-size:13px;line-height:20px;color:#6b7176;">Button not working? Copy this link into your browser:<br><a href="{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=recovery" target="_blank" style="color:#45700f;word-break:break-all;">{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=recovery</a></p>
+          </td>
+        </tr>
+        <!-- Footer -->
+        <tr>
+          <td align="center" style="padding:24px 16px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;line-height:18px;color:#8a9095;">
+            If you did not ask to reset your password, you can ignore this email. Your password has not changed.<br><br>
+            <a href="https://notchlift.com" target="_blank" style="color:#8a9095;text-decoration:underline;">notchlift.com</a> &middot; Workout planner &amp; tracker
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>

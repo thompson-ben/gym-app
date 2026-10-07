@@ -1,4 +1,4 @@
-import { formatKg } from "./format";
+import { formatWeight, type WeightUnit } from "./units";
 import { E1RM_REP_LIMIT, estimate1RM } from "./progress";
 import type { PreviousSet, TrackingMode } from "./types";
 
@@ -30,12 +30,12 @@ export type PersonalRecord = { kind: RecordKind; label: string; detail: string }
 
 const r1 = (n: number) => Math.round(n * 10) / 10;
 const working = (sets: PreviousSet[]) => sets.filter((s) => s.set_type === "working" && s.reps > 0);
-const load = (mode: TrackingMode, kg: number | null) => `${mode === "added_weight_reps" ? "+" : ""}${formatKg(kg ?? 0)} kg`;
+const load = (mode: TrackingMode, kg: number | null, unit: WeightUnit) => `${mode === "added_weight_reps" ? "+" : ""}${formatWeight(kg ?? 0, unit)}`;
 
 export const isE1RMEligible = (s: PreviousSet) => s.set_type === "working" && s.reps >= 1 && s.reps <= E1RM_MAX_REPS && (s.weight_kg ?? 0) > 0;
 
 /** Records set in `current`, compared with sessions performed before it. */
-export function recordsFor(mode: TrackingMode, current: DatedSets, history: DatedSets[]): PersonalRecord[] {
+export function recordsFor(mode: TrackingMode, current: DatedSets, history: DatedSets[], unit: WeightUnit = "kg"): PersonalRecord[] {
   const now = working(current.sets);
   if (!now.length) return [];
   const earlier = history
@@ -54,7 +54,7 @@ export function recordsFor(mode: TrackingMode, current: DatedSets, history: Date
   const top = Math.max(...now.map((s) => s.weight_kg ?? 0));
   const prevTop = Math.max(...earlier.map((s) => s.weight_kg ?? 0));
   if (top > prevTop && top > 0) {
-    out.push({ kind: "heaviest", label: "Heaviest load", detail: `${load(mode, top)} (previous ${load(mode, prevTop)})` });
+    out.push({ kind: "heaviest", label: "Heaviest load", detail: `${load(mode, top, unit)} (previous ${load(mode, prevTop, unit)})` });
   }
 
   // Rep record at a load done before; report the heaviest such load only.
@@ -70,7 +70,7 @@ export function recordsFor(mode: TrackingMode, current: DatedSets, history: Date
     .sort((a, b) => b.w - a.w);
   if (repRecords.length) {
     const { w, reps, prev } = repRecords[0];
-    out.push({ kind: "reps_at_load", label: `Rep record at ${load(mode, w)}`, detail: `${reps} reps (previous best ${prev})` });
+    out.push({ kind: "reps_at_load", label: `Rep record at ${load(mode, w, unit)}`, detail: `${reps} reps (previous best ${prev})` });
   }
 
   if (mode === "weight_reps") {
@@ -80,7 +80,7 @@ export function recordsFor(mode: TrackingMode, current: DatedSets, history: Date
       const best = Math.max(...eligibleNow.map((s) => r1(estimate1RM(s.weight_kg ?? 0, s.reps))));
       const before = Math.max(...eligibleBefore.map((s) => r1(estimate1RM(s.weight_kg ?? 0, s.reps))));
       if (best > before) {
-        out.push({ kind: "e1rm", label: "Estimated 1RM record", detail: `${formatKg(best)} kg estimated (previous ${formatKg(before)} kg)` });
+        out.push({ kind: "e1rm", label: "Estimated 1RM record", detail: `${formatWeight(best, unit)} estimated (previous ${formatWeight(before, unit)})` });
       }
     }
   }
@@ -92,7 +92,7 @@ export function recordsFor(mode: TrackingMode, current: DatedSets, history: Date
  * the sets both sessions have are compared, so doing extra sets is never called "better".
  * Returns null when there is nothing honest to say (no previous, or loads differ per set).
  */
-export function compareWithPrevious(mode: TrackingMode, current: PreviousSet[], previous: PreviousSet[] | undefined): string | null {
+export function compareWithPrevious(mode: TrackingMode, current: PreviousSet[], previous: PreviousSet[] | undefined, unit: WeightUnit = "kg"): string | null {
   const now = working(current);
   const before = working(previous ?? []);
   if (!now.length || !before.length) return null;
@@ -102,24 +102,24 @@ export function compareWithPrevious(mode: TrackingMode, current: PreviousSet[], 
 
   if (mode === "bodyweight_reps") {
     const diff = b.reduce((t, s) => t + s.reps, 0) - a.reduce((t, s) => t + s.reps, 0);
-    return repDiffText(diff, null, mode);
+    return repDiffText(diff, null, mode, unit);
   }
   const wA = new Set(a.map((s) => s.weight_kg ?? 0));
   const wB = new Set(b.map((s) => s.weight_kg ?? 0));
   if (wA.size === 1 && wB.size === 1) {
     const [x] = [...wA];
     const [y] = [...wB];
-    if (x === y) return repDiffText(b.reduce((t, s) => t + s.reps, 0) - a.reduce((t, s) => t + s.reps, 0), x, mode);
-    return `${y > x ? "Up" : "Down"} from ${load(mode, x)} to ${load(mode, y)}`;
+    if (x === y) return repDiffText(b.reduce((t, s) => t + s.reps, 0) - a.reduce((t, s) => t + s.reps, 0), x, mode, unit);
+    return `${y > x ? "Up" : "Down"} from ${load(mode, x, unit)} to ${load(mode, y, unit)}`;
   }
   const topA = Math.max(...a.map((s) => s.weight_kg ?? 0));
   const topB = Math.max(...b.map((s) => s.weight_kg ?? 0));
-  if (topA !== topB) return `Top set ${topB > topA ? "up" : "down"} from ${load(mode, topA)} to ${load(mode, topB)}`;
+  if (topA !== topB) return `Top set ${topB > topA ? "up" : "down"} from ${load(mode, topA, unit)} to ${load(mode, topB, unit)}`;
   return null;
 }
 
-function repDiffText(diff: number, weight: number | null, mode: TrackingMode): string {
-  const at = weight === null ? "" : ` at ${load(mode, weight)}`;
+function repDiffText(diff: number, weight: number | null, mode: TrackingMode, unit: WeightUnit): string {
+  const at = weight === null ? "" : ` at ${load(mode, weight, unit)}`;
   if (diff === 0) return `Same reps${at} as last time`;
   const n = Math.abs(diff);
   return `${n} ${diff > 0 ? "more" : "fewer"} ${n === 1 ? "rep" : "reps"}${at}`;

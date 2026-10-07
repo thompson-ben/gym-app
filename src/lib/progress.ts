@@ -1,4 +1,5 @@
 import type { PreviousSet, TrackingMode } from "./types";
+import { formatWeightValue, toUnit, type WeightUnit } from "./units";
 
 export type HistorySession = {
   session_id: string;
@@ -56,14 +57,14 @@ const round1 = (n: number) => Math.round(n * 10) / 10;
 export type MetricInfo = { id: Metric; label: string; title: string; unit: string; description: string };
 
 /** Metrics that are meaningful for a tracking mode, default first. */
-export function metricsFor(mode: TrackingMode): MetricInfo[] {
+export function metricsFor(mode: TrackingMode, unit: WeightUnit = "kg"): MetricInfo[] {
   if (mode === "weight_reps") {
     return [
       {
         id: "e1rm",
         label: "Est. 1RM",
         title: "Estimated 1RM per session",
-        unit: "kg",
+        unit,
         description:
           "An estimate from each session’s best working set of 12 reps or fewer, so sets in different rep ranges can be compared. Not a tested max.",
       },
@@ -71,14 +72,14 @@ export function metricsFor(mode: TrackingMode): MetricInfo[] {
         id: "volume",
         label: "Volume",
         title: "Session volume",
-        unit: "kg",
+        unit,
         description: "Weight × reps added up over all working sets in the session. Measures total work done, not strength.",
       },
       {
         id: "heaviest",
         label: "Heaviest",
         title: "Heaviest working set per session",
-        unit: "kg",
+        unit,
         description: "Top weight lifted in a working set, regardless of reps.",
       },
     ];
@@ -90,7 +91,7 @@ export function metricsFor(mode: TrackingMode): MetricInfo[] {
           id: "heaviest",
           label: "Heaviest",
           title: "Most added weight in a working set",
-          unit: "kg added",
+          unit: `${unit} added`,
           description: "Top load added to bodyweight in a working set. Bodyweight itself is not tracked, so no 1RM estimate is shown.",
         };
   return [
@@ -108,11 +109,12 @@ export type SeriesPoint = {
   workout: string;
 };
 
-const setText = (mode: TrackingMode, s: PreviousSet) =>
-  mode === "bodyweight_reps" ? `${s.reps} reps` : `${mode === "added_weight_reps" ? "+" : ""}${round1(s.weight_kg ?? 0)} kg × ${s.reps}`;
+const setText = (mode: TrackingMode, s: PreviousSet, unit: WeightUnit) =>
+  mode === "bodyweight_reps" ? `${s.reps} reps` : `${mode === "added_weight_reps" ? "+" : ""}${formatWeightValue(s.weight_kg ?? 0, unit)} ${unit} × ${s.reps}`;
 
-/** One point per session for the chosen metric, oldest first. Warm-ups never count. */
-export function progressSeries(history: HistorySession[], mode: TrackingMode, metric: Metric): SeriesPoint[] {
+/** One point per session for the chosen metric, oldest first, in the user's unit. Warm-ups never count. */
+export function progressSeries(history: HistorySession[], mode: TrackingMode, metric: Metric, unit: WeightUnit = "kg"): SeriesPoint[] {
+  const w = (kg: number) => round1(toUnit(kg, unit));
   const points: SeriesPoint[] = [];
   for (const s of history) {
     const working = s.sets.filter((x) => x.set_type === "working");
@@ -121,17 +123,17 @@ export function progressSeries(history: HistorySession[], mode: TrackingMode, me
     if (metric === "e1rm" && mode === "weight_reps") {
       const best = bestSet(working.filter(eligibleForE1RM), mode);
       if (!best) continue;
-      points.push({ ...base, value: round1(estimate1RM(best.weight_kg ?? 0, best.reps)), detail: setText(mode, best) });
+      points.push({ ...base, value: w(estimate1RM(best.weight_kg ?? 0, best.reps)), detail: setText(mode, best, unit) });
     } else if (metric === "volume" && mode === "weight_reps") {
       const total = working.reduce((n, x) => n + (x.weight_kg ?? 0) * x.reps, 0);
-      points.push({ ...base, value: round1(total), detail: `${working.length} working ${working.length === 1 ? "set" : "sets"}` });
+      points.push({ ...base, value: w(total), detail: `${working.length} working ${working.length === 1 ? "set" : "sets"}` });
     } else if (metric === "reps") {
       const total = working.reduce((n, x) => n + x.reps, 0);
       points.push({ ...base, value: total, detail: `${working.length} working ${working.length === 1 ? "set" : "sets"}` });
     } else {
       const [p] = heaviestSetPerSession([s], mode);
       const top = working.find((x) => (mode === "bodyweight_reps" ? x.reps : (x.weight_kg ?? 0)) === p.value && x.reps === p.reps)!;
-      points.push({ ...base, value: p.value, detail: setText(mode, top) });
+      points.push({ ...base, value: mode === "bodyweight_reps" ? p.value : Math.round(toUnit(p.value, unit) * 100) / 100, detail: setText(mode, top, unit) });
     }
   }
   return points.sort((a, b) => a.date.localeCompare(b.date));
@@ -166,19 +168,19 @@ export function bestSet(sets: PreviousSet[], mode: TrackingMode): PreviousSet | 
 }
 
 /** Best set across all sessions shown, with where it happened, for the summary line. */
-export function bestSetOverall(history: HistorySession[], mode: TrackingMode) {
+export function bestSetOverall(history: HistorySession[], mode: TrackingMode, unit: WeightUnit = "kg") {
   let best: { set: PreviousSet; date: string; workout: string; e1rm: number | null } | null = null;
   for (const s of history) {
     const top = bestSet(s.sets, mode);
     if (!top) continue;
-    const candidate = { set: top, date: s.completed_at, workout: s.template_name, e1rm: mode === "weight_reps" && eligibleForE1RM(top) ? round1(estimate1RM(top.weight_kg ?? 0, top.reps)) : null };
+    const candidate = { set: top, date: s.completed_at, workout: s.template_name, e1rm: mode === "weight_reps" && eligibleForE1RM(top) ? round1(toUnit(estimate1RM(top.weight_kg ?? 0, top.reps), unit)) : null };
     if (!best || setScore(mode, top) > setScore(mode, best.set)) best = candidate;
   }
-  return best && { ...best, text: setText(mode, best.set) };
+  return best && { ...best, text: setText(mode, best.set, unit) };
 }
 
 /** Estimated 1RM of a session's best eligible working set (loaded lifts, 1–12 reps), else null. */
-export function sessionE1RM(sets: PreviousSet[]): number | null {
+export function sessionE1RM(sets: PreviousSet[], unit: WeightUnit = "kg"): number | null {
   const top = bestSet(sets.filter(eligibleForE1RM), "weight_reps");
-  return top ? round1(estimate1RM(top.weight_kg ?? 0, top.reps)) : null;
+  return top ? round1(toUnit(estimate1RM(top.weight_kg ?? 0, top.reps), unit)) : null;
 }

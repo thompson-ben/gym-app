@@ -238,6 +238,7 @@ export default function Logger({ userId, initial, timeZone }: { userId: string; 
 
   const menuEntry = doc.exercises.find((e) => e.id === exerciseMenu);
   const targetsEntry = doc.exercises.find((e) => e.id === targetsFor);
+  const unit = record.settings.weightUnit ?? "kg";
   const notesEntry = notesFor && notesFor !== "session" ? doc.exercises.find((e) => e.id === notesFor) : null;
   const progress = summary.plannedSets ? summary.completedSets / summary.plannedSets : 0;
   const closed = status.kind === "closed";
@@ -342,6 +343,7 @@ export default function Logger({ userId, initial, timeZone }: { userId: string; 
             onHideTarget={() => patch({ hiddenTargets: [...(recordRef.current.hiddenTargets ?? []), entry.id] })}
             onUseTarget={(kg) => edit((d) => applyTargetWeight(d, entry.id, kg))}
             onSwap={() => setPicker({ mode: "substitute", entryId: entry.id })}
+            unit={unit}
             onSetupTargets={entry.template_exercise_id && entry.tracking_mode === "weight_reps" ? () => setTargetsFor(entry.id) : undefined}
           />
         ))}
@@ -462,6 +464,7 @@ export default function Logger({ userId, initial, timeZone }: { userId: string; 
         exerciseName={targetsEntry?.exercise_name ?? ""}
         entryId={targetsEntry?.template_exercise_id ?? ""}
         hasRange={Boolean(targetsEntry?.rep_min && targetsEntry?.rep_max)}
+        unit={unit}
         onSaved={async (enabled) => {
           const entry = targetsEntry;
           if (!entry) return;
@@ -472,6 +475,7 @@ export default function Logger({ userId, initial, timeZone }: { userId: string; 
             supabaseBrowser(),
             [{ key: entry.id, exerciseId: entry.exercise_id, entryId: entry.template_exercise_id, mode: entry.tracking_mode, targetSets: entry.target_sets, repMin: entry.rep_min, repMax: entry.rep_max }],
             recordRef.current.doc.is_backdated ? recordRef.current.doc.started_at : null,
+            unit,
           );
           patch({ targets: { ...rest, ...fresh }, hiddenTargets: (recordRef.current.hiddenTargets ?? []).filter((id) => id !== entry.id) });
         }}

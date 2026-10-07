@@ -1,4 +1,5 @@
 import type { TargetMap } from "../targets";
+import type { WeightUnit } from "../units";
 import type { PreviousMap, SessionDoc } from "../types";
 import type { SyncPayload } from "./doc";
 
@@ -42,7 +43,8 @@ export type LocalRecord = {
   updatedAt: number;
 };
 
-export type LoggerSettings = { defaultRestSeconds: number; autoStartRest: boolean };
+/** weightUnit is absent in records saved by older app versions (treated as kg). */
+export type LoggerSettings = { defaultRestSeconds: number; autoStartRest: boolean; weightUnit?: WeightUnit };
 export const DEFAULT_SETTINGS: LoggerSettings = { defaultRestSeconds: 120, autoStartRest: false };
 
 export type KeyValueStorage = Pick<Storage, "getItem" | "setItem" | "removeItem" | "key" | "length">;

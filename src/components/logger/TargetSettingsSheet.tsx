@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { formatKg } from "@/lib/format";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { friendlyError } from "@/lib/supabase/errors";
+import { formatWeightValue, INCREMENT_RANGE, parseIncrement, type WeightUnit } from "@/lib/units";
 import { Button, ErrorNote, Field, Input, Sheet, Toggle } from "../ui";
 
 /**
@@ -16,6 +16,7 @@ export function TargetSettingsSheet({
   exerciseName,
   entryId,
   hasRange,
+  unit,
   onSaved,
 }: {
   open: boolean;
@@ -23,12 +24,13 @@ export function TargetSettingsSheet({
   exerciseName: string;
   entryId: string;
   hasRange: boolean;
+  unit: WeightUnit;
   onSaved: (enabled: boolean) => Promise<void>;
 }) {
-  return open ? <Inner {...{ onClose, exerciseName, entryId, hasRange, onSaved }} /> : null;
+  return open ? <Inner {...{ onClose, exerciseName, entryId, hasRange, unit, onSaved }} /> : null;
 }
 
-function Inner({ onClose, exerciseName, entryId, hasRange, onSaved }: { onClose: () => void; exerciseName: string; entryId: string; hasRange: boolean; onSaved: (enabled: boolean) => Promise<void> }) {
+function Inner({ onClose, exerciseName, entryId, hasRange, unit, onSaved }: { onClose: () => void; exerciseName: string; entryId: string; hasRange: boolean; unit: WeightUnit; onSaved: (enabled: boolean) => Promise<void> }) {
   const [loaded, setLoaded] = useState(false);
   const [enabled, setEnabled] = useState(true);
   const [increment, setIncrement] = useState("");
@@ -48,28 +50,30 @@ function Inner({ onClose, exerciseName, entryId, hasRange, onSaved }: { onClose:
         if (data) {
           // Opening the sheet is usually to switch targets on, so it starts on.
           setEnabled(true);
-          setIncrement(data.progression_increment_kg === null ? "" : formatKg(Number(data.progression_increment_kg)));
+          setIncrement(data.progression_increment_kg === null ? "" : formatWeightValue(Number(data.progression_increment_kg), unit));
         }
         setLoaded(true);
       });
     return () => {
       live = false;
     };
-  }, [entryId]);
+  }, [entryId, unit]);
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
     if (!navigator.onLine) return setError("Target settings need a connection.");
-    const inc = increment ? Number(increment.replace(",", ".")) : null;
+    const parsed = parseIncrement(increment, unit);
+    const inc = "kg" in parsed ? parsed.kg : null;
     if (enabled) {
       if (!hasRange) return setError("This exercise needs a rep range (min and max) first. Set it in the workout editor.");
-      if (inc === null || !Number.isFinite(inc) || inc <= 0 || inc > 50) return setError("Choose a weight increment between 0.25 and 50 kg.");
+      if ("error" in parsed) return setError(parsed.error);
+      if (inc === null) return setError(`Choose a weight increment between ${INCREMENT_RANGE[unit].min} and ${INCREMENT_RANGE[unit].max} ${unit}.`);
     }
     setBusy(true);
     setError(null);
     const { error } = await supabaseBrowser()
       .from("template_exercises")
-      .update({ progression_enabled: enabled, progression_increment_kg: inc !== null && Number.isFinite(inc) && inc > 0 && inc <= 50 ? Math.round(inc * 100) / 100 : null })
+      .update({ progression_enabled: enabled, progression_increment_kg: inc })
       .eq("id", entryId);
     if (error) {
       setBusy(false);
@@ -90,9 +94,12 @@ function Inner({ onClose, exerciseName, entryId, hasRange, onSaved }: { onClose:
           description="When every working set reaches the top of the rep range, the next target adds your increment. Otherwise it keeps the weight and aims for more reps."
         />
         {enabled ? (
-          <Field label="Weight increment (kg)" hint="What you add when you move up, e.g. the next dumbbell (often 1–2.5 kg) or the next pin on a stack.">
+          <Field
+            label={`Weight increment (${unit})`}
+            hint={unit === "lb" ? "What you add when you move up, e.g. the next dumbbell (often 2.5–5 lb) or the next pin on a stack." : "What you add when you move up, e.g. the next dumbbell (often 1–2.5 kg) or the next pin on a stack."}
+          >
             {(id, d) => (
-              <Input id={id} aria-describedby={d} inputMode="decimal" value={increment} onChange={(e) => setIncrement(e.target.value.replace(/[^\d.,]/g, ""))} placeholder="2.5" disabled={!loaded} />
+              <Input id={id} aria-describedby={d} inputMode="decimal" value={increment} onChange={(e) => setIncrement(e.target.value.replace(/[^\d.,]/g, ""))} placeholder={INCREMENT_RANGE[unit].example} disabled={!loaded} />
             )}
           </Field>
         ) : null}
