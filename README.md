@@ -287,6 +287,7 @@ Migrations are additive and versioned; never reset a deployed database.
    Then `…0011_weight_units.sql`: allows `profiles.weight_unit = 'lb'` and widens `session_sets.weight_kg` / `progression_increment_kg` to 4 decimal places. Existing values are unchanged; old app versions keep working.
    Then `…0012_group_workouts.sql`: adds group workouts (three new tables, a nullable `workout_sessions.group_workout_id`, and functions). Additive; old app versions keep working.
    Then `…0013_analytics.sql`: first-party analytics and the admin dashboard (new tables and functions only).
+   Then `…0014_payments.sql`: paid membership (Stripe), the free-trial gate, trial reminders and free access for friends. Additive; see Payments below.
 2. **Then deploy the app.** Old app versions keep working against the migrated database (they ignore the new columns). If the app were deployed first, the workout editor would fail to load until the migration runs, while the logger and summaries simply show no targets.
 3. Offline compatibility: workouts already open on a device keep working; local records saved by the previous version have no `targets` field and load normally. The service worker is now registered per build (`/sw.js?v=<commit>`), so each deployment installs a fresh offline shell and removes the old cache; pages themselves are always fetched from the network first.
 
@@ -296,6 +297,31 @@ Migrations are additive and versioned; never reset a deployed database.
 - **Analytics (first party, migration 13):** anonymous visits to public pages (`visit`, once per tab session) and sign-up form views, recorded through `/api/track` → `track_event()`. No visitor id, IP or user agent is stored; device and country come from the request. Campaign tags (`utm_*`), Facebook ad clicks (`fbclid`, not stored) and referring sites set a 30-day `nl_src` cookie with no identifier; after sign-in it becomes the account's first-touch attribution (`record_attribution()`, new accounts only). GPC/DNT browsers and bots are skipped.
 - **Admin dashboard (`/admin`):** funnel, daily visits/sign-ups/workouts, sources and campaigns, retention, feature use and memberships, from `admin_overview()` (totals only). Only accounts in `public.admins` can open it; add yourself in the SQL Editor:
   `insert into public.admins (user_id) select id from auth.users where email = 'you@example.com';`
+
+## Payments (Stripe)
+
+**Model:** new accounts get a 14-day free trial, with no card needed. After that, membership is £3.99 a month or £30 a year (`src/lib/billing/plans.ts`).
+- When a trial ends unpaid, or a subscription ends, history, progress and export stay available. Starting new workouts is paused by a trigger on `workout_sessions` (`membership_required`), and the app shows the plans instead.
+- Founders, and friends given free access from `/admin`, never pay.
+- Stripe Checkout and Stripe's billing page handle all card details.
+- Webhooks (`/api/stripe/webhook`, signature-verified) update memberships through `billing_*` functions. These require the app's `BILLING_SECRET`; the database stores only its SHA-256. The app never holds a master database key.
+
+**Setup:**
+1. Run migration 14.
+2. Generate two random secrets (for example `openssl rand -hex 32`): `BILLING_SECRET` and `CRON_SECRET`. In the SQL Editor:
+   `update public.app_settings set billing_secret_hash = encode(extensions.digest('<BILLING_SECRET>', 'sha256'), 'hex');`
+3. Stripe (test mode first):
+   - Create a product **NotchLift** with two recurring GBP prices: £3.99 monthly (lookup key `notchlift_monthly`) and £30 yearly (lookup key `notchlift_yearly`).
+   - Customer portal: allow cancelling, updating the payment method and switching between the two prices.
+   - Webhook endpoint: `https://notchlift.com/api/stripe/webhook`, with the events `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted` and `invoice.paid`.
+4. Vercel → Environment Variables (Production): `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `BILLING_SECRET`, `CRON_SECRET`, `RESEND_API_KEY` (and optionally `EMAIL_FROM`). Then redeploy.
+5. Trial reminder email, once a day. In Supabase, enable the `pg_cron` and `pg_net` extensions, then:
+   `select cron.schedule('trial-reminders', '0 9 * * *', $$ select net.http_post(url := 'https://notchlift.com/api/cron/trial-reminders', headers := jsonb_build_object('Authorization', 'Bearer <CRON_SECRET>')) $$);`
+6. Go live:
+   - Repeat step 3 in Stripe live mode, and swap the live keys into Vercel.
+   - Then `update public.app_settings set auto_founder = false;` so new sign-ups start the trial. The landing page's pricing switches with it (`paid_plans_live()`).
+
+**Free access for friends:** Admin → Free access. An existing account becomes free immediately. Anyone else is emailed an invite and gets free access when they sign up with that address (`free_access_invites`).
 
 ## Group workouts
 

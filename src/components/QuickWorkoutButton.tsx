@@ -29,6 +29,11 @@ export function QuickWorkoutButton({ disabled }: { disabled?: boolean }) {
       p_performed_at: performedAt,
     });
     if (error) {
+      // Trial ended or membership lapsed: offer the plans instead of an error.
+      if (error.message === "membership_required") {
+        router.push("/upgrade?reason=trial_ended");
+        return null;
+      }
       setBusy(false);
       const message = friendlyError(error, "Could not start the workout.");
       setError(message);

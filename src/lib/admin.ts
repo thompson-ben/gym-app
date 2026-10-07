@@ -21,7 +21,23 @@ export type AdminOverview = {
   countries: { country: string; visits: number }[];
   features: Record<"active_split" | "targets_on" | "pounds" | "groups_created" | "group_joins" | "group_sessions" | "quick_workouts" | "feedback", number>;
   memberships: Record<string, number>;
+  /** Added by migration 14. */
+  billing?: {
+    paying: number;
+    monthly: number;
+    yearly: number;
+    canceling: number;
+    billing_issue: number;
+    revenue_pence: number;
+    mrr_pence: number;
+    trials_started: number;
+    trials_active: number;
+    trials_converted: number;
+    trials_ended_unpaid: number;
+  };
 };
+
+export const pounds = (pence: number) => `£${(pence / 100).toLocaleString("en-GB", { minimumFractionDigits: pence % 100 ? 2 : 0, maximumFractionDigits: 2 })}`;
 
 /**
  * "12%", or "–" when it isn't meaningful: nothing to divide by, or more in the later step than

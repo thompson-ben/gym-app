@@ -16,7 +16,7 @@ export default function PrivacyPage() {
           <li><strong>Account:</strong> your email address and password (stored only as a secure hash by our authentication provider).</li>
           <li><strong>Profile:</strong> an optional display name and app preferences such as default rest time.</li>
           <li><strong>Training data:</strong> the splits, workouts, exercises, sets, notes and dates you enter.</li>
-          <li><strong>Membership:</strong> whether you are a founding member, on a trial or subscribed.</li>
+          <li><strong>Membership:</strong> whether you are a founding member, on a trial or subscribed, your plan, renewal date and payments (amounts and dates). Near the end of a free trial we send one reminder email.</li>
           <li>
             <strong>Visits to our public pages</strong> (not the app itself): the page, the site that linked to it, campaign tags in the link (for
             example from an ad), your device type and country. No IP address and no ID for you are stored. If you came from a campaign or another
@@ -48,6 +48,7 @@ export default function PrivacyPage() {
           <li><strong>Vercel</strong> hosts the app; requests are handled in the EU (Dublin).</li>
           <li><strong>Resend</strong> sends account emails (confirming your address and resetting your password).</li>
           <li><strong>Sentry</strong> receives the technical error reports described above, stored in the EU.</li>
+          <li><strong>Stripe</strong> processes payments for memberships. Your card details go to Stripe directly and never reach us; we keep only whether you are a member, your plan and renewal date, and amounts paid.</li>
         </ul>
         <p>These providers process data on our behalf and do not use it for their own purposes.</p>
       </section>

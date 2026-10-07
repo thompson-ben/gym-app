@@ -30,6 +30,8 @@ const MESSAGES: Record<string, string> = {
   group_not_found: "This group workout is no longer available.",
   group_full: "This group workout is full (10 people).",
   group_plan_empty: "The host hasn’t added any exercises yet.",
+  membership_required: "Your free trial has ended. Choose a plan to keep logging workouts; your history is safe.",
+  invalid_email: "That doesn’t look like an email address.",
   group_session_completed: "You’ve already finished this group workout.",
   catalogue_exercise_missing: "An exercise in this split is no longer in the catalogue.",
 };

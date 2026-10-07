@@ -11,7 +11,9 @@ export const metadata: Metadata = {
 };
 
 export default async function Home() {
-  const { userId } = await getOptionalUser();
+  const { supabase, userId } = await getOptionalUser();
   if (userId) redirect("/train");
-  return <Landing />;
+  // Before migration 14 the function is missing: show free early access.
+  const { data: paidPlans } = await supabase.rpc("paid_plans_live");
+  return <Landing paidPlans={paidPlans === true} />;
 }

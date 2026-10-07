@@ -168,6 +168,11 @@ function StartPanel({ doc, otherOpenSessionId }: { doc: GroupDoc; otherOpenSessi
     sessionId.current ??= crypto.randomUUID();
     const { error } = await supabaseBrowser().rpc("start_group_session", { p_session_id: sessionId.current, p_group_id: doc.id });
     if (error) {
+      // Trial ended or membership lapsed: offer the plans instead of an error.
+      if (error.message === "membership_required") {
+        router.push("/upgrade?reason=trial_ended");
+        return;
+      }
       setBusy(false);
       return setError(friendlyError(error, "Could not start the workout."));
     }
