@@ -314,10 +314,10 @@ Migrations are additive and versioned; never reset a deployed database.
 3. Stripe (test mode first):
    - Create a product **NotchLift** with two recurring GBP prices: £3.99 monthly (lookup key `notchlift_monthly`) and £30 yearly (lookup key `notchlift_yearly`).
    - Customer portal: allow cancelling, updating the payment method and switching between the two prices.
-   - Webhook endpoint: `https://notchlift.com/api/stripe/webhook`, with the events `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted` and `invoice.paid`.
+   - Webhook endpoint: `https://www.notchlift.com/api/stripe/webhook` (the www address: notchlift.com redirects there, and Stripe doesn't follow redirects), with the events `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted` and `invoice.paid`.
 4. Vercel → Environment Variables (Production): `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `BILLING_SECRET`, `CRON_SECRET`, `RESEND_API_KEY` (and optionally `EMAIL_FROM`). Then redeploy.
 5. Trial reminder email, once a day. In Supabase, enable the `pg_cron` and `pg_net` extensions, then:
-   `select cron.schedule('trial-reminders', '0 9 * * *', $$ select net.http_post(url := 'https://notchlift.com/api/cron/trial-reminders', headers := jsonb_build_object('Authorization', 'Bearer <CRON_SECRET>')) $$);`
+   `select cron.schedule('trial-reminders', '0 9 * * *', $$ select net.http_post(url := 'https://www.notchlift.com/api/cron/trial-reminders', headers := jsonb_build_object('Authorization', 'Bearer <CRON_SECRET>'), timeout_milliseconds := 60000) $$);`
 6. Go live:
    - Repeat step 3 in Stripe live mode, and swap the live keys into Vercel.
    - Then **Admin → Launch**, typing `LAUNCH`. New sign-ups start the trial, and every early-access member starts a 14-day trial that day and gets a short email. Anyone with free access is untouched. The landing page's pricing switches with it (`paid_plans_live()`).
