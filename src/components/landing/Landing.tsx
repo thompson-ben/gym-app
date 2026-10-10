@@ -5,6 +5,7 @@ import { IconChart, IconCheck, IconCloudOff, IconDumbbell, IconHistory, IconLaye
 import { buttonClass, cx } from "../styles";
 import { Wordmark } from "../Wordmark";
 import { PLANS, YEARLY_PER_MONTH, YEARLY_SAVING_PCT } from "@/lib/billing/plans";
+import { COMPANY, COMPANY_LINE } from "@/lib/company";
 
 /**
  * Public landing page (signed-out visitors to /). Every screenshot is the real app, captured
@@ -134,7 +135,7 @@ const FAQ: { q: string; a: ReactNode }[] = [
 ];
 
 const COST_FREE = "NotchLift is free during early access, with no card needed. If pricing ever changes, you’ll hear from us first, and nothing is ever charged automatically.";
-const COST_PAID = `Every account starts with a 14-day free trial, no card needed. After that it’s ${PLANS.monthly.price} a month or ${PLANS.yearly.price} a year (${YEARLY_PER_MONTH} a month). Cancel any time. Nothing you’ve logged is ever deleted for not paying, and you can always export it.`;
+const COST_PAID = `Every account starts with a 14-day free trial, no card needed. After that it’s ${PLANS.monthly.price} a month or ${PLANS.yearly.price} a year (${YEARLY_PER_MONTH} a month). Prices include VAT. Cancel any time. Nothing you’ve logged is ever deleted for not paying, and you can always export it.`;
 
 /** paidPlans: new sign-ups get a 14-day trial then a paid plan (otherwise: free early access). */
 export function Landing({ paidPlans = false }: { paidPlans?: boolean }) {
@@ -294,7 +295,7 @@ export function Landing({ paidPlans = false }: { paidPlans?: boolean }) {
             {paidPlans ? (
               <div className="mx-auto mt-8 max-w-3xl text-center">
                 <Cta label="Start your free trial" />
-                <p className="mt-4 text-sm text-faint">14 days free, then choose a plan. Nothing you log is ever deleted, and you can always export it.</p>
+                <p className="mt-4 text-sm text-faint">14 days free, then choose a plan. Prices include VAT. Nothing you log is ever deleted, and you can always export it.</p>
               </div>
             ) : null}
           </div>
@@ -336,7 +337,7 @@ export function Landing({ paidPlans = false }: { paidPlans?: boolean }) {
       </main>
 
       <footer className="border-t border-line pb-safe">
-        <div className="mx-auto flex max-w-6xl flex-col gap-6 px-5 py-10 text-sm text-muted sm:flex-row sm:items-center sm:justify-between">
+        <div className="mx-auto flex max-w-6xl flex-col gap-6 px-5 pt-10 pb-6 text-sm text-muted sm:flex-row sm:items-center sm:justify-between">
           <div>
             <Wordmark size="sm" className="text-fg" />
             <p className="mt-1 text-faint">Workout planner &amp; tracker</p>
@@ -346,8 +347,9 @@ export function Landing({ paidPlans = false }: { paidPlans?: boolean }) {
             <Link href="/privacy" className="hover:text-fg">Privacy</Link>
             <Link href="/terms" className="hover:text-fg">Terms</Link>
           </nav>
-          <p className="text-faint">© {new Date().getFullYear()} NotchLift</p>
+          <p className="text-faint">© {new Date().getFullYear()} {COMPANY.name}</p>
         </div>
+        <p className="mx-auto max-w-6xl px-5 pb-10 text-xs leading-relaxed text-faint">{COMPANY_LINE}</p>
       </footer>
     </div>
   );
