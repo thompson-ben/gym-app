@@ -1,8 +1,9 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { COMPANY_LINE } from "@/lib/company";
 import { Wordmark } from "../Wordmark";
 
-export const LEGAL_UPDATED = "3 October 2026";
+export const LEGAL_UPDATED = "10 October 2026";
 
 /** Where people can reach the operator. Set NEXT_PUBLIC_CONTACT_EMAIL in Vercel. */
 export function contactLine(): ReactNode {
@@ -29,6 +30,7 @@ export function LegalPage({ title, children }: { title: string; children: ReactN
       <div className="legal mt-8 space-y-6 text-[15px] leading-relaxed text-muted [&_h2]:mb-2 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:text-fg [&_li]:ml-5 [&_li]:list-disc [&_strong]:text-fg [&_ul]:space-y-1">
         {children}
       </div>
+      <p className="mt-12 border-t border-line pt-6 text-xs leading-relaxed text-faint">{COMPANY_LINE}</p>
     </main>
   );
 }
