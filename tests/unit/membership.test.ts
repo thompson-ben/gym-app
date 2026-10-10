@@ -16,6 +16,8 @@ describe("membership state", () => {
   it("founders and missing rows are free; lapsed and ended trials cannot start workouts", () => {
     expect(membershipState({ status: "founder", trial_ends_at: null }, now)).toEqual({ kind: "free" });
     expect(membershipState(null, now)).toEqual({ kind: "free" });
+    expect(membershipState({ status: "founder", trial_ends_at: null, free_access: false }, now)).toEqual({ kind: "free", early: true });
+    expect(membershipState({ status: "founder", trial_ends_at: null, free_access: true }, now)).toEqual({ kind: "free" });
     expect(canStartWorkouts(membershipState({ status: "lapsed", trial_ends_at: null }, now))).toBe(false);
     expect(canStartWorkouts(trial("2026-10-01T00:00:00Z"))).toBe(false);
     expect(canStartWorkouts(trial("2026-10-10T00:00:00Z"))).toBe(true);

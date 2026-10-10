@@ -37,3 +37,16 @@ describe("emails", () => {
     expect(m.html).toContain("No trial and no payment");
   });
 });
+
+describe("launch email", () => {
+  it("thanks early users, states the trial end and leads with yearly", async () => {
+    const { launchEmail } = await import("@/lib/emails/launch");
+    const m = launchEmail({ displayName: "Sam", trialEndsAt: "2026-11-01T12:00:00Z", trialDays: 14, siteUrl: "https://notchlift.com" });
+    expect(m.subject).toBe("NotchLift membership is here: your 14 free days start today");
+    expect(m.html).toContain("Hi Sam,");
+    expect(m.html).toContain("Sunday 1 November");
+    expect(m.html).toContain("<strong>£30 a year</strong>");
+    expect(m.html).toContain("https://notchlift.com/upgrade");
+    expect(m.text).toContain("Nothing you’ve logged will ever be deleted");
+  });
+});

@@ -31,8 +31,12 @@ export default async function UpgradePage({ searchParams }: { searchParams: Prom
       <>
         <PageHeader title="Your membership" back={{ href: "/profile", label: "Profile" }} />
         <div className="rounded-3xl border border-line bg-surface p-5">
-          <p className="font-semibold">{state.kind === "free" ? "You have free access." : "You’re a member. Thank you!"}</p>
-          <p className="mt-1 text-sm text-muted">{state.kind === "free" ? "There’s nothing to pay. Enjoy NotchLift." : "Change plan, update your card or cancel from Stripe’s billing page."}</p>
+          <p className="font-semibold">{state.kind === "free" ? (state.early ? "You’re on early access." : "You have free access.") : "You’re a member. Thank you!"}</p>
+          <p className="mt-1 text-sm text-muted">{state.kind === "free"
+              ? state.early
+                ? "NotchLift is free for you for now. When paid membership launches you’ll get a 14-day free trial first."
+                : "There’s nothing to pay. Enjoy NotchLift."
+              : "Change plan, update your card or cancel from Stripe’s billing page."}</p>
           {state.kind === "paid" ? <div className="mt-4"><ManageBillingButton /></div> : <Link href="/train" className={buttonClass("primary", "md", "mt-4")}>Go to Train</Link>}
         </div>
       </>
