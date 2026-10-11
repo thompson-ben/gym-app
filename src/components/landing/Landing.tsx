@@ -5,7 +5,7 @@ import { IconChart, IconCheck, IconCloudOff, IconDumbbell, IconHistory, IconLaye
 import { buttonClass, cx } from "../styles";
 import { Wordmark } from "../Wordmark";
 import { PLANS, YEARLY_PER_MONTH, YEARLY_SAVING_PCT } from "@/lib/billing/plans";
-import { COMPANY, COMPANY_LINE } from "@/lib/company";
+import { COMPANY, COMPANY_LINE, CONTACT_EMAIL } from "@/lib/company";
 
 /**
  * Public landing page (signed-out visitors to /). Every screenshot is the real app, captured
@@ -346,10 +346,11 @@ export function Landing({ paidPlans = false }: { paidPlans?: boolean }) {
             <Link href="/sign-in" className="hover:text-fg">Sign in</Link>
             <Link href="/privacy" className="hover:text-fg">Privacy</Link>
             <Link href="/terms" className="hover:text-fg">Terms</Link>
+            <a href={`mailto:${CONTACT_EMAIL}`} className="hover:text-fg">Contact</a>
           </nav>
           <p className="text-faint">© {new Date().getFullYear()} {COMPANY.name}</p>
         </div>
-        <p className="mx-auto max-w-6xl px-5 pb-10 text-xs leading-relaxed text-faint">{COMPANY_LINE}</p>
+        <p className="mx-auto max-w-6xl px-5 pb-10 text-xs leading-relaxed text-faint">Contact: <a href={`mailto:${CONTACT_EMAIL}`} className="underline underline-offset-2">{CONTACT_EMAIL}</a>. {COMPANY_LINE}</p>
       </footer>
     </div>
   );

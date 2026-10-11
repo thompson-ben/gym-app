@@ -265,7 +265,7 @@ While `auto_founder` is on (the default), **every new sign-up is a founder autom
 
 - **Export:** Profile → Your data → *Export as spreadsheet* (`/api/export?format=csv`: one row per completed set, local date and time, UTF-8 with BOM, formula-safe) or *Export everything* (`?format=json`: profile, membership, custom exercises, splits with workouts and periods, all workouts). Both run as the user under RLS.
 - **Delete account:** Profile → Your data → Delete account (type DELETE). `delete_my_account()` removes the user's workouts, shares, splits, custom exercises, membership, profile and auth user, then the app clears local data. Friends' copies of shared splits are independent and stay.
-- **Privacy and terms:** `/privacy` and `/terms` are public and linked from sign-up and Profile. They are a plain-English starting point; have them reviewed before charging. Set `NEXT_PUBLIC_CONTACT_EMAIL` in Vercel to show a contact address (otherwise they say "the person who invited you").
+- **Privacy and terms:** `/privacy` and `/terms` are public and linked from sign-up and Profile. They are a plain-English starting point; have them reviewed before charging. The contact address is hello@notchlift.com (`src/lib/company.ts`; `NEXT_PUBLIC_CONTACT_EMAIL` can override it). It appears in the footer, terms, privacy and every app email, which also set it as the reply-to address.
 
 ### First run, feedback and installing
 

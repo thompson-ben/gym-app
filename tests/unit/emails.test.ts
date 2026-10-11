@@ -50,3 +50,12 @@ describe("launch email", () => {
     expect(m.text).toContain("Nothing you’ve logged will ever be deleted");
   });
 });
+
+describe("email footer", () => {
+  it("gives the contact address and the company details", () => {
+    const m = trialEndingEmail(base);
+    expect(m.html).toContain("mailto:hello@notchlift.com");
+    expect(m.html).toContain("B A Thompson Ltd");
+    expect(m.html).toContain("company no. 09468823");
+  });
+});

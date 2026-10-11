@@ -1,18 +1,13 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { COMPANY_LINE } from "@/lib/company";
+import { COMPANY_LINE, CONTACT_EMAIL } from "@/lib/company";
 import { Wordmark } from "../Wordmark";
 
 export const LEGAL_UPDATED = "10 October 2026";
 
-/** Where people can reach the operator. Set NEXT_PUBLIC_CONTACT_EMAIL in Vercel. */
+/** The contact address as a link. */
 export function contactLine(): ReactNode {
-  const email = process.env.NEXT_PUBLIC_CONTACT_EMAIL;
-  return email ? (
-    <a href={`mailto:${email}`} className="text-accent-text underline underline-offset-4">{email}</a>
-  ) : (
-    "the person who invited you to NotchLift"
-  );
+  return <a href={`mailto:${CONTACT_EMAIL}`} className="text-accent-text underline underline-offset-4">{CONTACT_EMAIL}</a>;
 }
 
 export function LegalPage({ title, children }: { title: string; children: ReactNode }) {
@@ -30,7 +25,9 @@ export function LegalPage({ title, children }: { title: string; children: ReactN
       <div className="legal mt-8 space-y-6 text-[15px] leading-relaxed text-muted [&_h2]:mb-2 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:text-fg [&_li]:ml-5 [&_li]:list-disc [&_strong]:text-fg [&_ul]:space-y-1">
         {children}
       </div>
-      <p className="mt-12 border-t border-line pt-6 text-xs leading-relaxed text-faint">{COMPANY_LINE}</p>
+      <p className="mt-12 border-t border-line pt-6 text-xs leading-relaxed text-faint">
+        Contact: <a href={`mailto:${CONTACT_EMAIL}`} className="underline underline-offset-2">{CONTACT_EMAIL}</a>. {COMPANY_LINE}
+      </p>
     </main>
   );
 }

@@ -2,6 +2,8 @@
  * Branded email layout (same look as the Supabase auth templates in supabase/templates):
  * table layout and inline styles for email clients, no images. Pure; unit-tested.
  */
+import { COMPANY_LINE, CONTACT_EMAIL } from "../company";
+
 export const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
 const FONT = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
@@ -54,7 +56,9 @@ export function emailLayout(opts: {
         <tr>
           <td align="center" style="padding:24px 16px 0;font-family:${FONT};font-size:12px;line-height:18px;color:#8a9095;">
             ${footer}<br><br>
-            <a href="https://notchlift.com" target="_blank" style="color:#8a9095;text-decoration:underline;">notchlift.com</a> &middot; Workout planner &amp; tracker
+            Questions? Reply to this email or write to <a href="mailto:${esc(CONTACT_EMAIL)}" style="color:#8a9095;text-decoration:underline;">${esc(CONTACT_EMAIL)}</a>.<br><br>
+            <a href="https://notchlift.com" target="_blank" style="color:#8a9095;text-decoration:underline;">notchlift.com</a> &middot; Workout planner &amp; tracker<br>
+            ${esc(COMPANY_LINE)}
           </td>
         </tr>
       </table>

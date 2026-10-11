@@ -22,7 +22,7 @@ export default function TermsPage() {
           have paid for, and you will not be charged again. If we ever change the price, we will tell you by email before it applies to you.
         </p>
         <p>
-          Your right to cancel: you can cancel within 14 days of first subscribing and receive a full refund by contacting us. Deleting your
+          Your right to cancel: you can cancel within 14 days of first subscribing and receive a full refund by emailing {contactLine()}. Deleting your
           account cancels your subscription immediately. Nothing in these terms affects your statutory rights.
         </p>
       </section>
