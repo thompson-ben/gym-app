@@ -1,16 +1,18 @@
 import type { Metadata } from "next";
 import { LegalPage, contactLine } from "@/components/legal/LegalPage";
+import { COMPANY } from "@/lib/company";
 
 export const metadata: Metadata = { title: "Terms" };
 
 export default function TermsPage() {
   return (
     <LegalPage title="Terms of use">
+      <p>NotchLift is provided by {COMPANY.name} (“we”, “us”), registered in {COMPANY.registeredIn}, company no. {COMPANY.number}.</p>
       <p>By creating an account you agree to these terms. They are written to be readable; please contact {contactLine()} if anything is unclear.</p>
       <section>
         <h2>Membership and payment</h2>
         <p>
-          New accounts start with a 14-day free trial; no card is needed. After the trial, a membership costs £3.99 a month or £30 a year.
+          New accounts start with a 14-day free trial; no card is needed. After the trial, a membership costs £3.99 a month or £30 a year, including VAT.
           Without one, everything you have logged stays available to view and export, and starting new workouts is paused. Founding members and
           people given free access use NotchLift free of charge.
         </p>
@@ -20,7 +22,7 @@ export default function TermsPage() {
           have paid for, and you will not be charged again. If we ever change the price, we will tell you by email before it applies to you.
         </p>
         <p>
-          Your right to cancel: you can cancel within 14 days of first subscribing and receive a full refund by contacting us. Deleting your
+          Your right to cancel: you can cancel within 14 days of first subscribing and receive a full refund by emailing {contactLine()}. Deleting your
           account cancels your subscription immediately. Nothing in these terms affects your statutory rights.
         </p>
       </section>

@@ -60,7 +60,7 @@ export function PlanPicker({ initial = "yearly", available }: { initial?: PlanId
         Continue to secure payment
       </Button>
       <p className="mt-3 text-center text-sm text-faint">
-        {available ? "Payments by Stripe. Apple Pay and Google Pay accepted. Cancel any time from Profile." : "Payments aren’t switched on yet. Check back soon."}
+        {available ? "Prices include VAT. Payments by Stripe. Apple Pay and Google Pay accepted. Cancel any time from Profile." : "Payments aren’t switched on yet. Check back soon."}
       </p>
     </div>
   );

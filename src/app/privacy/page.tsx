@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { LegalPage, contactLine } from "@/components/legal/LegalPage";
+import { COMPANY } from "@/lib/company";
 
 export const metadata: Metadata = { title: "Privacy" };
 
@@ -10,6 +11,13 @@ export default function PrivacyPage() {
         NotchLift is a workout planner and tracker. This page explains, in plain English, what we store, why, and what you can do about it. We
         do not show ads, sell data or track you across other sites.
       </p>
+      <section>
+        <h2>Who we are</h2>
+        <p>
+          NotchLift is run by {COMPANY.name}, registered in {COMPANY.registeredIn} (company no. {COMPANY.number}), {COMPANY.office}. We are
+          the data controller for the information described here.
+        </p>
+      </section>
       <section>
         <h2>What we store</h2>
         <ul>
