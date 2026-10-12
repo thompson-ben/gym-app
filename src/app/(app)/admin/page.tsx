@@ -4,10 +4,11 @@ import { notFound } from "next/navigation";
 import { BarStrip, Funnel, StatTile } from "@/components/admin/AdminCharts";
 import { FreeAccess, type FreeAccessList } from "@/components/admin/FreeAccess";
 import { LaunchPanel } from "@/components/admin/LaunchPanel";
+import { TestAccounts } from "@/components/admin/TestAccounts";
 import { paymentsConfigured } from "@/lib/billing/server";
 import { cx } from "@/components/styles";
 import { PageHeader, SectionTitle } from "@/components/ui";
-import { pct, pounds, type AdminOverview } from "@/lib/admin";
+import { duration, pct, pounds, type AdminActivation, type AdminOverview } from "@/lib/admin";
 import { emailConfigured } from "@/lib/emails/send";
 import { requireUser } from "@/lib/supabase/server";
 
@@ -30,14 +31,17 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const { days: daysParam } = await searchParams;
   const days = RANGES.find((d) => String(d) === daysParam) ?? 30;
   const { supabase } = await requireUser();
-  const [{ data, error }, freeList] = await Promise.all([
+  const [{ data, error }, freeList, activationRes] = await Promise.all([
     supabase.rpc("admin_overview", { p_days: days }),
     supabase.rpc("admin_free_access_list"),
+    supabase.rpc("admin_activation", { p_days: days }),
   ]);
   // Not an admin (or migration 13 not applied): the page does not exist for them.
   if (error || !data) notFound();
   const o = data as AdminOverview;
   const t = o.totals;
+  // Missing until migration 16 runs: the section is hidden.
+  const act = activationRes.data as AdminActivation | null;
 
   return (
     <>
@@ -63,6 +67,8 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
         <StatTile label="Active users" value={t.active_users} hint="Finished a workout in range" />
         <StatTile label="Workouts logged" value={t.workouts_logged} hint={`${t.accounts} accounts in total`} />
       </section>
+
+      {act ? <Activation a={act} days={days} /> : null}
 
       <section className="mt-8" aria-labelledby="funnel-title">
         <SectionTitle><span id="funnel-title">Sign-up funnel</span></SectionTitle>
@@ -188,7 +194,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
             <StatTile key={s} label={s[0].toUpperCase() + s.slice(1)} value={o.memberships[s] ?? 0} />
           ))}
         </div>
-        <p className="mt-3 text-sm text-faint">Figures are totals; days are UTC. No training data is shown here. Email addresses appear only in Free access.</p>
+        <p className="mt-3 text-sm text-faint">Figures are totals; days are UTC. No training data is shown here. Email addresses appear only in Free access and Test accounts.</p>
       </section>
     </>
   );
@@ -221,5 +227,82 @@ function MiniList({ title, rows }: { title: string; rows: [string, number][] }) 
         <p className="mt-2 text-sm text-faint">Nothing yet</p>
       )}
     </section>
+  );
+}
+
+/** People who signed up in the range and how far each got. Rates are stage to stage. */
+function Activation({ a, days }: { a: AdminActivation; days: number }) {
+  const t = a.totals;
+  const back = (n: number, of: number, d: number) => (of ? `${n} of ${of} (${pct(n, of)})` : `Needs sign-ups ${d}+ days old`);
+  return (
+    <section className="mt-8 space-y-4" aria-labelledby="activation-title">
+      <SectionTitle><span id="activation-title">Activation</span></SectionTitle>
+      <p className="-mt-2 text-sm text-muted">
+        The {t.signups} people who signed up in the last {days} days. A workout counts when it has a confirmed working set; coming back means a
+        workout on a later day.
+      </p>
+      <Funnel
+        steps={[
+          { label: "Signed up", value: t.signups },
+          { label: "Confirmed email", value: t.confirmed },
+          { label: "Activated a split", value: t.split },
+          { label: "First workout", value: t.first_workout },
+          { label: "Second workout, another day", value: t.second_any },
+          { label: "Paid", value: t.paid },
+        ]}
+      />
+      <div className="grid grid-cols-2 gap-3">
+        <StatTileText label="Back within 7 days" value={pct(t.second7, t.eligible7)} hint={back(t.second7, t.eligible7, 7)} />
+        <StatTileText label="Back within 14 days" value={pct(t.second14, t.eligible14)} hint={back(t.second14, t.eligible14, 14)} />
+        <StatTileText label="Sign-up to first set" value={duration(t.median_minutes_to_first_set)} hint="Median, for those who logged one" />
+        <StatTileText label="Trained" value={pct(t.first_workout, t.signups)} hint={`${t.first_workout} of ${t.signups} logged a workout`} />
+      </div>
+      {a.campaigns.length ? (
+        <div className="overflow-x-auto rounded-3xl border border-line bg-surface">
+          <table className="w-full min-w-[34rem] text-sm">
+            <thead className="text-left text-muted">
+              <tr className="border-b border-line">
+                <th scope="col" className="px-4 py-3 font-medium">Source / campaign</th>
+                <th scope="col" className="px-3 py-3 text-right font-medium">Sign-ups</th>
+                <th scope="col" className="px-3 py-3 text-right font-medium">Split</th>
+                <th scope="col" className="px-3 py-3 text-right font-medium">Trained</th>
+                <th scope="col" className="px-3 py-3 text-right font-medium">Back ≤7d</th>
+                <th scope="col" className="px-3 py-3 text-right font-medium">Back ≤14d</th>
+                <th scope="col" className="px-4 py-3 text-right font-medium">Paid</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-line tabular">
+              {a.campaigns.map((c) => (
+                <tr key={`${c.source}|${c.campaign}`}>
+                  <td className="px-4 py-2.5">
+                    <span className="font-medium">{c.source}</span>
+                    {c.campaign ? <span className="block text-xs text-muted">{c.campaign}</span> : null}
+                  </td>
+                  <td className="px-3 py-2.5 text-right">{c.signups}</td>
+                  <Cell n={c.split} of={c.signups} />
+                  <Cell n={c.first_workout} of={c.split > 0 ? c.split : c.signups} />
+                  <Cell n={c.second7} of={c.eligible7} />
+                  <Cell n={c.second14} of={c.eligible14} />
+                  <Cell n={c.paid} of={c.signups} last />
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p className="border-t border-line px-4 py-2.5 text-xs text-faint">
+            Each cell: count, then the rate from the stage before. “Back” rates only count sign-ups old enough (7 or 14 days).
+          </p>
+        </div>
+      ) : null}
+      <TestAccounts accounts={a.test_accounts} />
+    </section>
+  );
+}
+
+function Cell({ n, of, last }: { n: number; of: number; last?: boolean }) {
+  return (
+    <td className={cx("py-2.5 text-right", last ? "px-4" : "px-3")}>
+      {n}
+      <span className="block text-xs text-muted">{pct(n, of)}</span>
+    </td>
   );
 }

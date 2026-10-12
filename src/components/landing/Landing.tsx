@@ -50,38 +50,34 @@ const STEPS = [
   { title: "Get told when to go up", body: "Hit the top of your rep range on every set and NotchLift gives you your next weight. Miss it, and it tells you how many reps to chase." },
 ];
 
-const FEATURES: { eyebrow: string; title: string; body: string; points: string[]; src: string; alt: string }[] = [
+/** The first three are the core benefits (BENEFITS links to them); the rest support them. */
+const FEATURES: { id?: string; eyebrow: string; title: string; body: string; points: string[]; src: string; alt: string }[] = [
   {
+    id: "never-forget",
     eyebrow: "Logging",
-    title: "Last session, right beside this one.",
+    title: "Never forget a lift.",
     body: "No scrolling back through notes or guessing what you did last week. Every set shows what you lifted last time, so you always know the number to beat.",
     points: ["Weights carried over from last time", "One tap to confirm a set, one tap to undo", "Warm-ups kept separate from working sets"],
     src: "/landing/logger.png",
     alt: "The NotchLift workout logger: barbell bench press with last session's sets beside today's and a target of 70 kg for 6 reps",
   },
   {
+    id: "go-heavier",
     eyebrow: "Progressive overload",
-    title: "Knows when it’s time to add weight.",
+    title: "Know when to go heavier.",
     body: "Switch on targets for an exercise and NotchLift applies double progression for you: more reps until you own the range, then more weight. When you hit it, you’ll know.",
     points: ["Your increment: 2.5 kg plates, 2 kg dumbbells or 5 lb jumps", "Only compares like with like, so targets stay honest", "Suggestions only; nothing is logged until you confirm it"],
     src: "/landing/target-hit.png",
     alt: "A completed bench press with the message Target hit, every set at 70 kg for 6 or better",
   },
   {
+    id: "get-stronger",
     eyebrow: "Progress",
-    title: "Watch every lift climb.",
+    title: "See yourself getting stronger.",
     body: "Charts for estimated 1RM, volume and heaviest set on every exercise, plus your records. History follows the exercise, so changing your split never resets your progress.",
     points: ["Estimated 1RM, volume and heaviest set", "Records recalculated whenever you edit a workout", "Filter by split or training block"],
     src: "/landing/progress.png",
     alt: "A NotchLift progress chart showing the heaviest bench press set rising from 60 kg to 67.5 kg over twelve weeks",
-  },
-  {
-    eyebrow: "Train together",
-    title: "Bring your training partner.",
-    body: "Plan a group workout, send the link, and everyone trains from the same plan on their own phone. Each person logs their own sets and keeps their own history and targets.",
-    points: ["Share a link on WhatsApp; friends join in a tap", "See who’s training and who’s finished", "Your weights and reps stay private to you"],
-    src: "/landing/together.png",
-    alt: "A NotchLift group workout: an invite link, and three people training together with Sam finished and Jordan training",
   },
   {
     eyebrow: "Your plan",
@@ -91,6 +87,20 @@ const FEATURES: { eyebrow: string; title: string; body: string; points: string[]
     src: "/landing/train.png",
     alt: "The NotchLift home screen suggesting Push as the next workout in a Push / Pull / Legs split",
   },
+  {
+    eyebrow: "Train together",
+    title: "Bring your training partner.",
+    body: "Plan a group workout, send the link, and everyone trains from the same plan on their own phone. Each person logs their own sets and keeps their own history and targets.",
+    points: ["Share a link on WhatsApp; friends join in a tap", "See who’s training and who’s finished", "Your weights and reps stay private to you"],
+    src: "/landing/together.png",
+    alt: "A NotchLift group workout: an invite link, and three people training together with Sam finished and Jordan training",
+  },
+];
+
+const BENEFITS = [
+  { href: "#never-forget", icon: IconHistory, title: "Never forget a lift", body: "Last session’s weights and reps are beside every set, ready when you train." },
+  { href: "#go-heavier", icon: IconDumbbell, title: "Know when to go heavier", body: "Clear targets tell you when to add reps and when to add weight." },
+  { href: "#get-stronger", icon: IconChart, title: "See yourself getting stronger", body: "Records and charts for every lift, across every training block." },
 ];
 
 const GRID = [
@@ -106,6 +116,10 @@ const FAQ: { q: string; a: ReactNode }[] = [
   {
     q: "Is there an app to download?",
     a: "NotchLift runs in your phone’s browser, so there’s nothing to install from an app store. Add it to your home screen and it opens full screen with its own icon, just like any other app. It works on iPhone and Android.",
+  },
+  {
+    q: "What happens when my trial ends?",
+    a: "After 14 days, choose a plan to keep logging new workouts. If you don’t, nothing is deleted: your history, progress and records stay viewable, and you can export everything at any time.",
   },
   {
     q: "Does it work without signal?",
@@ -163,12 +177,13 @@ export function Landing({ paidPlans = false }: { paidPlans?: boolean }) {
         {/* Hero */}
         <section className="relative">
           <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 -top-40 h-[42rem] bg-[radial-gradient(50%_50%_at_60%_40%,rgb(195_237_137/0.16),transparent)]" />
-          <div className="relative mx-auto grid max-w-6xl items-center gap-14 px-5 pt-14 pb-20 md:pt-20 lg:grid-cols-[1.1fr_1fr] lg:gap-8 lg:pb-28">
+          <div className="relative mx-auto grid max-w-6xl items-center gap-14 px-5 pt-14 pb-14 md:pt-20 lg:grid-cols-[1.1fr_1fr] lg:gap-8 lg:pb-16">
             <div className="text-center lg:text-left">
               <Eyebrow>Workout planner &amp; tracker</Eyebrow>
               <h1 className="mt-5 text-[2.6rem] leading-[1.04] font-bold tracking-[-0.035em] text-balance sm:text-6xl lg:text-[4.25rem]">
                 Know exactly what to lift next.
               </h1>
+              <p className="mt-4 text-xl font-semibold tracking-tight text-accent-text sm:text-2xl">Stop guessing. Start progressing.</p>
               <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-muted text-pretty lg:mx-0 lg:text-xl">
                 NotchLift plans your split, puts last session beside every set, and tells you when it’s time to add weight. Fast enough for the gym floor, and it works without signal.
               </p>
@@ -176,13 +191,29 @@ export function Landing({ paidPlans = false }: { paidPlans?: boolean }) {
                 <Cta className="w-full sm:w-auto" label="Start training free" />
                 <a href="#how-it-works" className={buttonClass("secondary", "lg", "w-full px-7 sm:w-auto")}>See how it works</a>
               </div>
-              <p className="mt-5 text-sm text-faint">{paidPlans ? "14-day free trial" : "Free during early access"} · No card needed · iPhone &amp; Android</p>
+              <p className="mt-5 text-sm text-faint">{paidPlans ? "14-day free trial" : "Free during early access"} · No card needed</p>
+              <p className="mt-1.5 text-sm text-faint">Works in your phone’s browser, no app store needed. Add it to your home screen.</p>
             </div>
             <div className="relative mx-auto h-[31rem] w-full max-w-[22rem] sm:h-[36rem] sm:max-w-[26rem]">
               <Phone src="/landing/target-hit.png" alt="" className="absolute top-12 right-0 w-[56%] rotate-[4deg]" />
               <Phone src="/landing/logger.png" alt="The NotchLift workout logger showing a bench press target of 70 kg for 6 reps" priority className="absolute top-0 left-0 z-10 w-[60%] -rotate-[3deg]" />
             </div>
           </div>
+        </section>
+
+        {/* Core benefits */}
+        <section aria-label="Why NotchLift" className="mx-auto max-w-6xl px-5 pb-16">
+          <ul className="grid gap-4 md:grid-cols-3">
+            {BENEFITS.map(({ icon: Icon, ...b }) => (
+              <li key={b.href}>
+                <a href={b.href} className="block h-full rounded-3xl border border-line bg-surface p-6 transition hover:border-accent-text/40">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent-soft text-accent-text"><Icon size={22} /></span>
+                  <h2 className="mt-4 text-xl font-semibold tracking-tight">{b.title}</h2>
+                  <p className="mt-2 leading-relaxed text-muted">{b.body}</p>
+                </a>
+              </li>
+            ))}
+          </ul>
         </section>
 
         {/* Facts */}
@@ -217,7 +248,7 @@ export function Landing({ paidPlans = false }: { paidPlans?: boolean }) {
         {/* Feature sections */}
         <div id="features" className="scroll-mt-20">
           {FEATURES.map((f, i) => (
-            <section key={f.title} className={cx("border-t border-line", i % 2 === 1 && "bg-surface/40")}>
+            <section key={f.title} id={f.id} className={cx("scroll-mt-20 border-t border-line", i % 2 === 1 && "bg-surface/40")}>
               <div className="mx-auto grid max-w-6xl items-center gap-12 px-5 py-20 md:grid-cols-2 md:gap-16 md:py-28">
                 <div className={cx(i % 2 === 1 && "md:order-2")}>
                   <Eyebrow>{f.eyebrow}</Eyebrow>
@@ -295,7 +326,7 @@ export function Landing({ paidPlans = false }: { paidPlans?: boolean }) {
             {paidPlans ? (
               <div className="mx-auto mt-8 max-w-3xl text-center">
                 <Cta label="Start your free trial" />
-                <p className="mt-4 text-sm text-faint">14 days free, then choose a plan. Prices include VAT. Nothing you log is ever deleted, and you can always export it.</p>
+                <p className="mt-4 text-sm text-faint">After 14 days, choose a plan to keep logging new workouts. Your history stays viewable and exportable either way. Prices include VAT.</p>
               </div>
             ) : null}
           </div>

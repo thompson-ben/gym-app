@@ -46,3 +46,32 @@ export const pounds = (pence: number) => `£${(pence / 100).toLocaleString("en-G
 export function pct(part: number, whole: number): string {
   return whole > 0 && part <= whole ? `${Math.round((part / whole) * 100)}%` : "–";
 }
+
+type ActivationCounts = {
+  signups: number;
+  split: number;
+  first_workout: number;
+  eligible7: number;
+  second7: number;
+  eligible14: number;
+  second14: number;
+  paid: number;
+};
+
+/** Shape of admin_activation() (migration 16): people who signed up in the range, minus admins and test accounts. */
+export type AdminActivation = {
+  days: number;
+  since: string;
+  excluded_accounts: number;
+  totals: ActivationCounts & { confirmed: number; second_any: number; median_minutes_to_first_set: number | null };
+  campaigns: (ActivationCounts & { source: string; campaign: string })[];
+  test_accounts: { email: string; note: string | null }[];
+};
+
+/** "8 min", "3.5 h" or "2.1 days". */
+export function duration(minutes: number | null): string {
+  if (minutes == null) return "–";
+  if (minutes < 90) return `${Math.round(minutes)} min`;
+  if (minutes < 48 * 60) return `${(minutes / 60).toFixed(1)} h`;
+  return `${(minutes / 1440).toFixed(1)} days`;
+}

@@ -54,3 +54,25 @@ test("browsers with Global Privacy Control are not counted", async ({ browser })
   expect((await context.cookies()).some((c) => c.name === "nl_src")).toBe(false);
   await context.close();
 });
+
+test("activation shows sign-ups by campaign, and test accounts can be left out", async ({ page }) => {
+  const campaign = `e2e-act-${Date.now()}`;
+  const admin = await newUser("act-admin");
+  await db.query("insert into public.admins (user_id) values ($1)", [admin.id]);
+  const member = await newUser("act-member");
+  await db.query("insert into public.user_attribution (user_id, utm_source, utm_campaign) values ($1, 'instagram', $2)", [member.id, campaign]);
+
+  await signIn(page, admin);
+  await page.goto("/admin");
+  const section = page.locator("section").filter({ has: page.getByRole("heading", { name: "Activation" }) });
+  await expect(section.getByText("Second workout, another day")).toBeVisible();
+  await expect(section.getByRole("row").filter({ hasText: campaign })).toContainText("instagram");
+
+  await section.getByLabel("Test account email").fill(member.email.toUpperCase());
+  await section.getByRole("button", { name: "Exclude" }).click();
+  await expect(section.getByRole("row").filter({ hasText: campaign })).toHaveCount(0);
+  await expect(section.getByText(member.email)).toBeVisible();
+
+  await section.getByRole("button", { name: `Include ${member.email} again` }).click();
+  await expect(section.getByRole("row").filter({ hasText: campaign })).toHaveCount(1);
+});
