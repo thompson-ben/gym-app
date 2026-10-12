@@ -26,6 +26,7 @@ describe("analytics (migration 13)", () => {
       ]),
     );
     await as(anon, (q) => q("select track_event('purchase', '{}')"));
+    await as(anon, (q) => q("select track_event('pricing_view', $1)", [JSON.stringify({ path: "/", utm_campaign: tag })]));
     await as(anon, (q) => q("select track_event('visit', $1)", [JSON.stringify({ utm_campaign: tag, device: "toaster", country: "Britain" })]));
     const { rows } = await pool.query(
       "select name, path, utm_source, from_meta_ad, device, country, referrer_host from analytics_events where utm_campaign = $1 order by id",
@@ -33,6 +34,7 @@ describe("analytics (migration 13)", () => {
     );
     expect(rows).toEqual([
       { name: "visit", path: "/", utm_source: "facebook", from_meta_ad: true, device: "mobile", country: "GB", referrer_host: "l.facebook.com" },
+      { name: "pricing_view", path: "/", utm_source: null, from_meta_ad: false, device: null, country: null, referrer_host: null },
       { name: "visit", path: null, utm_source: null, from_meta_ad: false, device: null, country: null, referrer_host: null },
     ]);
     // Nobody can read or write the tables directly.
@@ -68,6 +70,8 @@ describe("analytics (migration 13)", () => {
     const { templateId } = await createTemplate(recruit, split, "W", [{ exerciseId: await catalogueId("dip") }]);
     await logWorkout(recruit, templateId, [[{ weight: 10, reps: 8, done: true }]]);
 
+    expect(await as(user(admin), async (q) => (await q("select admin_pricing_views(30) as n"))[0].n)).toBeGreaterThanOrEqual(1);
+    await expect(as(user(stranger), (q) => q("select admin_pricing_views(30)"))).rejects.toThrow(/not_admin/);
     const o = await overview(admin);
     expect(o.totals.signups).toBeGreaterThanOrEqual(3);
     expect(o.daily).toHaveLength(30);

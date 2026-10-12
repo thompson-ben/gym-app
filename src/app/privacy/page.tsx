@@ -27,7 +27,7 @@ export default function PrivacyPage() {
           <li><strong>Membership:</strong> whether you are a founding member, on a trial or subscribed, your plan, renewal date and payments (amounts and dates). Near the end of a free trial we send one reminder email.</li>
           <li>
             <strong>Visits to our public pages</strong> (not the app itself): the page, the site that linked to it, campaign tags in the link (for
-            example from an ad), your device type and country. No IP address and no ID for you are stored. If you came from a campaign or another
+            example from an ad), your device type and country, and whether the pricing section or sign-up form was opened. No IP address and no ID for you are stored. If you came from a campaign or another
             site, a small cookie remembers where from (not who you are) for up to 30 days. If you then create an account, that source is attached to
             your account so we can see which campaigns bring people who keep training, and the cookie is deleted. Browsers that send Global
             Privacy Control or Do Not Track are not counted.
