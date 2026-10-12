@@ -298,6 +298,11 @@ Migrations are additive and versioned; never reset a deployed database.
 - **Analytics (first party, migration 13):** anonymous visits to public pages (`visit`, once per tab session) and sign-up form views, recorded through `/api/track` → `track_event()`. No visitor id, IP or user agent is stored; device and country come from the request. Campaign tags (`utm_*`), Facebook ad clicks (`fbclid`, not stored) and referring sites set a 30-day `nl_src` cookie with no identifier; after sign-in it becomes the account's first-touch attribution (`record_attribution()`, new accounts only). GPC/DNT browsers and bots are skipped.
 - **Admin dashboard (`/admin`):** funnel, daily visits/sign-ups/workouts, sources and campaigns, retention, feature use and memberships, from `admin_overview()` (totals only). Only accounts in `public.admins` can open it; add yourself in the SQL Editor:
   `insert into public.admins (user_id) select id from auth.users where email = 'you@example.com';`
+- **Activation (migration 16, `admin_activation()`):** the people who signed up in the range, as a cohort.
+  - It shows how far each got: confirmed email → activated a split → first workout → a second workout on a later day (within 7 and 14 days) → paid.
+  - Results are overall and per campaign, with stage-to-stage rates and the median time from sign-up to the first confirmed set.
+  - A workout counts only with a confirmed working set.
+  - Admins are left out, and so are test accounts marked under Activation → Test accounts (`analytics_excluded_users`).
 
 ## Payments (Stripe)
 
