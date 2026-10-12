@@ -76,3 +76,18 @@ test("activation shows sign-ups by campaign, and test accounts can be left out",
   await section.getByRole("button", { name: `Include ${member.email} again` }).click();
   await expect(section.getByRole("row").filter({ hasText: campaign })).toHaveCount(1);
 });
+
+test("scrolling to pricing records one anonymous 'saw pricing' event per session", async ({ page }) => {
+  const since = new Date().toISOString();
+  await page.goto("/");
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  await page.locator("#pricing").scrollIntoViewIfNeeded();
+  const count = async () => (await db.query("select count(*)::int as n from public.analytics_events where name = 'pricing_view' and created_at >= $1", [since])).rows[0].n;
+  await expect.poll(count).toBeGreaterThanOrEqual(1);
+  const after = await count();
+  // Scrolling away and back in the same tab doesn't count again.
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.locator("#pricing").scrollIntoViewIfNeeded();
+  await page.waitForTimeout(1000);
+  expect(await count()).toBe(after);
+});

@@ -6,6 +6,7 @@ import { buttonClass, cx } from "../styles";
 import { Wordmark } from "../Wordmark";
 import { PLANS, YEARLY_PER_MONTH, YEARLY_SAVING_PCT } from "@/lib/billing/plans";
 import { COMPANY, COMPANY_LINE, CONTACT_EMAIL } from "@/lib/company";
+import { PricingSeen } from "./PricingSeen";
 
 /**
  * Public landing page (signed-out visitors to /). Every screenshot is the real app, captured
@@ -293,6 +294,7 @@ export function Landing({ paidPlans = false }: { paidPlans?: boolean }) {
 
         {/* Pricing */}
         <section id="pricing" className="scroll-mt-20 border-t border-line bg-surface/40">
+          <PricingSeen />
           <div className="mx-auto max-w-6xl px-5 py-24">
             <div className="mx-auto max-w-2xl text-center">
               <Eyebrow>Pricing</Eyebrow>

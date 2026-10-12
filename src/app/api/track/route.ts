@@ -4,7 +4,7 @@ import { supabaseAnon } from "@/lib/supabase/anon";
 
 export const dynamic = "force-dynamic";
 
-const NAMES = new Set(["visit", "signup_view"]);
+const NAMES = new Set(["visit", "signup_view", "pricing_view"]);
 const FIELDS = ["path", "referrer_host", "utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "from_meta_ad"] as const;
 
 /**

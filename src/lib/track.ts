@@ -18,7 +18,7 @@ function once(key: string): boolean {
   }
 }
 
-function send(name: "visit" | "signup_view", props: Partial<Touch> & { path?: string }) {
+function send(name: "visit" | "signup_view" | "pricing_view", props: Partial<Touch> & { path?: string }) {
   const body = JSON.stringify({ name, props });
   try {
     if (navigator.sendBeacon?.("/api/track", new Blob([body], { type: "application/json" }))) return;
@@ -52,6 +52,12 @@ export function trackPageView() {
     void _ignored;
     send("visit", { ...rest, path: landing_path ?? url.pathname });
   }
+}
+
+/** The landing page's pricing section came into view (once per tab session). */
+export function trackPricingView() {
+  if (!trackingAllowed() || !once("nl_pricing_view")) return;
+  send("pricing_view", { path: window.location.pathname });
 }
 
 /** Someone opened the create-account form (once per tab session). */

@@ -31,10 +31,11 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const { days: daysParam } = await searchParams;
   const days = RANGES.find((d) => String(d) === daysParam) ?? 30;
   const { supabase } = await requireUser();
-  const [{ data, error }, freeList, activationRes] = await Promise.all([
+  const [{ data, error }, freeList, activationRes, pricingRes] = await Promise.all([
     supabase.rpc("admin_overview", { p_days: days }),
     supabase.rpc("admin_free_access_list"),
     supabase.rpc("admin_activation", { p_days: days }),
+    supabase.rpc("admin_pricing_views", { p_days: days }),
   ]);
   // Not an admin (or migration 13 not applied): the page does not exist for them.
   if (error || !data) notFound();
@@ -42,6 +43,8 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const t = o.totals;
   // Missing until migration 16 runs: the section is hidden.
   const act = activationRes.data as AdminActivation | null;
+  // Missing until migration 17 runs: the step is left out.
+  const pricingViews = typeof pricingRes.data === "number" ? pricingRes.data : null;
 
   return (
     <>
@@ -75,6 +78,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
         <Funnel
           steps={[
             { label: "Visited", value: t.visits },
+            ...(pricingViews == null ? [] : [{ label: "Saw pricing", value: pricingViews }]),
             { label: "Opened sign-up", value: t.signup_views },
             { label: "Created account", value: t.signups },
             { label: "Confirmed email", value: t.confirmed },
