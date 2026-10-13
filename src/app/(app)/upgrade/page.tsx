@@ -4,10 +4,12 @@ import { PlanPicker } from "@/components/billing/PlanPicker";
 import { ManageBillingButton } from "@/components/billing/ManageBillingButton";
 import { IconCheck } from "@/components/icons";
 import { buttonClass } from "@/components/styles";
+import { SurveyCard } from "@/components/SurveyCard";
 import { PageHeader } from "@/components/ui";
 import { MEMBERSHIP_COLUMNS, membershipState, type MembershipRow } from "@/lib/billing/membership";
 import { isPlanId } from "@/lib/billing/plans";
 import { paymentsConfigured } from "@/lib/billing/server";
+import { surveyFor } from "@/lib/surveys";
 import { requireUser } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Choose a plan" };
@@ -44,6 +46,11 @@ export default async function UpgradePage({ searchParams }: { searchParams: Prom
   }
 
   const ended = state.kind !== "trial" || reason === "trial_ended";
+  // A trial that ended unpaid: ask once what stopped them (migration 19).
+  const survey =
+    state.kind === "trial_ended"
+      ? await supabase.rpc("my_survey_prompts").then(({ data, error }) => (error ? null : surveyFor("ended", (data as string[] | null) ?? [])))
+      : null;
   return (
     <>
       <PageHeader
@@ -65,6 +72,7 @@ export default async function UpgradePage({ searchParams }: { searchParams: Prom
           </li>
         ))}
       </ul>
+      {survey ? <SurveyCard question={survey} className="mt-8" /> : null}
       <p className="mt-8 mb-4 text-sm text-faint">
         Subscriptions renew automatically until cancelled. Cancel any time from Profile; you keep access until the end of the period you’ve paid for.
         See the <Link href="/terms" className="underline underline-offset-4">terms</Link>.

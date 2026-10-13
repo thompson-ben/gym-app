@@ -25,7 +25,12 @@ export default function PrivacyPage() {
           <li><strong>Account:</strong> your email address and password (stored only as a secure hash by our authentication provider).</li>
           <li><strong>Profile:</strong> an optional display name and app preferences such as default rest time.</li>
           <li><strong>Training data:</strong> the splits, workouts, exercises, sets, notes and dates you enter.</li>
-          <li><strong>Membership:</strong> whether you are a founding member, on a trial or subscribed, your plan, renewal date and payments (amounts and dates). Near the end of a free trial we send one reminder email.</li>
+          <li><strong>Membership:</strong> whether you are a founding member, on a trial or subscribed, your plan, renewal date and payments (amounts and dates). Near the end of a free trial we send one reminder email, and if a trial ends without a plan, one email asking why.</li>
+          <li>
+            <strong>Your answers to our short questions</strong> (each asked once, and you can skip it): how you heard about NotchLift, how
+            your trial is going, why you didn’t choose a plan, and the reason you give Stripe if you cancel. We use them, together with where
+            you came from, to improve NotchLift and our advertising, and we may email you to follow up on something you wrote.
+          </li>
           <li>
             <strong>Visits to our public pages</strong> (not the app itself): the page, the site that linked to it, campaign tags in the link (for
             example from an ad), your device type and country, and whether the pricing section or sign-up form was opened. No IP address and no ID for you are stored. If you came from a campaign or another

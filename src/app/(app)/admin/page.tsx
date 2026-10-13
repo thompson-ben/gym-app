@@ -7,8 +7,9 @@ import { LaunchPanel } from "@/components/admin/LaunchPanel";
 import { TestAccounts } from "@/components/admin/TestAccounts";
 import { paymentsConfigured } from "@/lib/billing/server";
 import { cx } from "@/components/styles";
+import { Surveys } from "@/components/admin/Surveys";
 import { PageHeader, SectionTitle } from "@/components/ui";
-import { duration, pct, pounds, type AdminActivation, type AdminOverview, type AdminReferrals } from "@/lib/admin";
+import { duration, pct, pounds, type AdminActivation, type AdminOverview, type AdminReferrals, type AdminSurveys } from "@/lib/admin";
 import { emailConfigured } from "@/lib/emails/send";
 import { requireUser } from "@/lib/supabase/server";
 
@@ -31,12 +32,13 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const { days: daysParam } = await searchParams;
   const days = RANGES.find((d) => String(d) === daysParam) ?? 30;
   const { supabase } = await requireUser();
-  const [{ data, error }, freeList, activationRes, pricingRes, referralRes] = await Promise.all([
+  const [{ data, error }, freeList, activationRes, pricingRes, referralRes, surveyRes] = await Promise.all([
     supabase.rpc("admin_overview", { p_days: days }),
     supabase.rpc("admin_free_access_list"),
     supabase.rpc("admin_activation", { p_days: days }),
     supabase.rpc("admin_pricing_views", { p_days: days }),
     supabase.rpc("admin_referrals", { p_days: days }),
+    supabase.rpc("admin_surveys", { p_days: days }),
   ]);
   // Not an admin (or migration 13 not applied): the page does not exist for them.
   if (error || !data) notFound();
@@ -48,6 +50,8 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const pricingViews = typeof pricingRes.data === "number" ? pricingRes.data : null;
   // Missing until migration 18 runs: the section is hidden.
   const referrals = referralRes.data as AdminReferrals | null;
+  // Missing until migration 19 runs: the section is hidden.
+  const surveys = surveyRes.data as AdminSurveys | null;
 
   return (
     <>
@@ -173,6 +177,13 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
         </section>
       ) : null}
 
+      {surveys ? (
+        <section className="mt-8" aria-labelledby="surveys-title">
+          <SectionTitle><span id="surveys-title">Feedback</span></SectionTitle>
+          <Surveys s={surveys} />
+        </section>
+      ) : null}
+
       {o.billing ? (
         <section className="mt-8" aria-labelledby="revenue-title">
           <SectionTitle><span id="revenue-title">Revenue</span></SectionTitle>
@@ -213,7 +224,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
             <StatTile key={s} label={s[0].toUpperCase() + s.slice(1)} value={o.memberships[s] ?? 0} />
           ))}
         </div>
-        <p className="mt-3 text-sm text-faint">Figures are totals; days are UTC. No training data is shown here. Email addresses appear only in Free access and Test accounts.</p>
+        <p className="mt-3 text-sm text-faint">Figures are totals; days are UTC. No training data is shown here. Email addresses appear only in Free access, Test accounts and Feedback comments.</p>
       </section>
     </>
   );
