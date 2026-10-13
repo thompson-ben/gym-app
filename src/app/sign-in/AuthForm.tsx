@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button, ErrorNote, Field, Input } from "@/components/ui";
 import { supabaseBrowser } from "@/lib/supabase/client";
+import { pixelEvent } from "@/lib/pixel";
 import { trackSignupView } from "@/lib/track";
 
 type Mode = "sign-in" | "sign-up";
@@ -69,6 +70,7 @@ export function AuthForm({ initialMode, next, error, initialEmail = "" }: { init
           setMessage(error.message);
           return;
         }
+        pixelEvent("CompleteRegistration");
         if (data.session) {
           router.replace(next);
           router.refresh();

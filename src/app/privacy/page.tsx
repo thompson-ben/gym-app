@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { LegalPage, contactLine } from "@/components/legal/LegalPage";
+import { CookieChoiceButton } from "@/components/ConsentBanner";
 import { COMPANY } from "@/lib/company";
 
 export const metadata: Metadata = { title: "Privacy" };
@@ -8,8 +9,8 @@ export default function PrivacyPage() {
   return (
     <LegalPage title="Privacy">
       <p>
-        NotchLift is a workout planner and tracker. This page explains, in plain English, what we store, why, and what you can do about it. We
-        do not show ads, sell data or track you across other sites.
+        NotchLift is a workout planner and tracker. This page explains, in plain English, what we store, why, and what you can do about it. There
+        are no ads in NotchLift and we never sell data.
       </p>
       <section>
         <h2>Who we are</h2>
@@ -56,9 +57,27 @@ export default function PrivacyPage() {
           <li><strong>Vercel</strong> hosts the app; requests are handled in the EU (Dublin).</li>
           <li><strong>Resend</strong> sends account emails (confirming your address and resetting your password).</li>
           <li><strong>Sentry</strong> receives the technical error reports described above, stored in the EU.</li>
+          <li><strong>Meta</strong> (Facebook and Instagram) receives the ad-measurement events described under Cookies, only if you accept them.</li>
           <li><strong>Stripe</strong> processes payments for memberships. Your card details go to Stripe directly and never reach us; we keep only whether you are a member, your plan and renewal date, and amounts paid.</li>
         </ul>
-        <p>These providers process data on our behalf and do not use it for their own purposes.</p>
+        <p>Except for Meta (see Cookies), these providers process data on our behalf and do not use it for their own purposes.</p>
+      </section>
+      <section id="cookies" className="scroll-mt-6">
+        <h2>Cookies and ad measurement</h2>
+        <p>
+          We advertise on Instagram and Facebook. If you click <strong>Accept</strong> on the cookie banner, our website loads the Meta Pixel,
+          which sets Meta cookies and tells Meta when you visit our public pages (home, sign-in, privacy and terms), create an account or start
+          a paid membership (with the plan price). Meta uses this to show us which ads work and may use it under its own privacy policy. Nothing
+          about your training is ever sent, and the Pixel does not run inside the app’s screens.
+        </p>
+        <p>
+          If you choose <strong>No thanks</strong>, or your browser sends Global Privacy Control or Do Not Track, the Pixel never loads. Your choice
+          is stored in your browser for six months. <CookieChoiceButton />.
+        </p>
+        <p>
+          Other cookies we use are essential: keeping you signed in, your time zone, and the campaign cookie described above (which holds no
+          personal data).
+        </p>
       </section>
       <section>
         <h2>Sharing</h2>
