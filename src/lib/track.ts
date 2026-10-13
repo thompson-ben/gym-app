@@ -44,7 +44,8 @@ export function trackPageView() {
   if (!trackingAllowed()) return;
   const url = new URL(window.location.href);
   const touch = readTouch(url, document.referrer, window.location.host, new Date());
-  if (touch && !getTouchCookie()) {
+  // First touch wins, except that a friend's invite link replaces it (so they get the credit).
+  if (touch && (!getTouchCookie() || touch.ref)) {
     document.cookie = `${TOUCH_COOKIE}=${encodeTouch(touch)}; path=/; max-age=${30 * 86400}; samesite=lax; secure`;
   }
   if (once("nl_visit")) {

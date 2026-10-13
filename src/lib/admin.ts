@@ -75,3 +75,15 @@ export function duration(minutes: number | null): string {
   if (minutes < 48 * 60) return `${(minutes / 60).toFixed(1)} h`;
   return `${(minutes / 1440).toFixed(1)} days`;
 }
+
+/** Shape of admin_referrals() (migration 18). Totals only. */
+export type AdminReferrals = {
+  sharers: number;
+  referred: number;
+  by_link: number;
+  by_group: number;
+  by_split: number;
+  qualified: number;
+  rewards: number;
+  referred_paid: number;
+};

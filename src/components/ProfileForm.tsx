@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { membershipState, type MembershipRow } from "@/lib/billing/membership";
+import type { ReferralStatus } from "@/lib/referral";
 import { PLANS } from "@/lib/billing/plans";
 import { formatDate, formatDuration } from "@/lib/format";
 import { clearUser, hasUnsyncedChanges, listRecords } from "@/lib/session/store";
@@ -11,6 +12,7 @@ import { supabaseBrowser } from "@/lib/supabase/client";
 import { friendlyError } from "@/lib/supabase/errors";
 import { isWeightUnit, type WeightUnit } from "@/lib/units";
 import { ManageBillingButton } from "./billing/ManageBillingButton";
+import { InviteCard } from "./billing/InviteCard";
 import { FeedbackRow } from "./FeedbackButton";
 import { IconChevronRight } from "./icons";
 import { InstallRow } from "./InstallPrompt";
@@ -34,7 +36,21 @@ const MEMBERSHIP_LABEL: Record<NonNullable<Membership>["status"], string> = {
   lapsed: "Membership ended",
 };
 
-export function ProfileForm({ userId, email, profile, membership, isAdmin = false }: { userId: string; email: string | null; profile: Profile; membership: Membership; isAdmin?: boolean }) {
+export function ProfileForm({
+  userId,
+  email,
+  profile,
+  membership,
+  referral = null,
+  isAdmin = false,
+}: {
+  userId: string;
+  email: string | null;
+  profile: Profile;
+  membership: Membership;
+  referral?: ReferralStatus | null;
+  isAdmin?: boolean;
+}) {
   const router = useRouter();
   const [displayName, setDisplayName] = useState(profile.display_name ?? "");
   const [savedName, setSavedName] = useState(profile.display_name ?? "");
@@ -205,7 +221,7 @@ export function ProfileForm({ userId, email, profile, membership, isAdmin = fals
         </div>
       </section>
 
-      {membership ? <MembershipSection membership={membership} /> : null}
+      {membership ? <MembershipSection membership={membership} referral={referral} /> : null}
 
       <section>
         <SectionTitle>Account</SectionTitle>
@@ -352,7 +368,7 @@ function StatusLine({ status, hint, id }: { status?: Status; hint?: string; id?:
   ) : null;
 }
 
-function MembershipSection({ membership }: { membership: NonNullable<Membership> }) {
+function MembershipSection({ membership, referral }: { membership: NonNullable<Membership>; referral: ReferralStatus | null }) {
   const state = membershipState(membership);
   const line =
     state.kind === "free"
@@ -379,6 +395,7 @@ function MembershipSection({ membership }: { membership: NonNullable<Membership>
           <Link href="/upgrade" className="mt-3 inline-flex h-11 items-center rounded-2xl bg-accent px-4 font-semibold text-accent-ink">See plans</Link>
         ) : null}
       </div>
+      {state.kind === "trial" && referral ? <InviteCard status={referral} /> : null}
     </section>
   );
 }

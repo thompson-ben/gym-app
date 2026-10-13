@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { billingSecret } from "@/lib/billing/server";
+import { referralRewardEmail } from "@/lib/emails/referral-reward";
 import { trialEndingEmail } from "@/lib/emails/trial-ending";
 import { emailConfigured, sendEmail } from "@/lib/emails/send";
 import { SITE_URL } from "@/lib/site";
@@ -11,8 +12,9 @@ export const dynamic = "force-dynamic";
 type Due = { user_id: string; email: string; display_name: string | null; trial_ends_at: string; weight_unit: string; workouts: number; working_sets: number; volume_kg: number | string };
 
 /**
- * Daily: emails everyone whose trial ends within 3 days (once each). Called by a scheduled job
- * with "Authorization: Bearer <CRON_SECRET>".
+ * Daily: emails everyone whose trial ends within 3 days (once each), and anyone who earned
+ * referral days since the last run. Called by a scheduled job with
+ * "Authorization: Bearer <CRON_SECRET>".
  */
 export async function POST(request: Request) {
   const cronSecret = process.env.CRON_SECRET;
@@ -45,5 +47,19 @@ export async function POST(request: Request) {
       failed++;
     }
   }
-  return NextResponse.json({ sent, failed });
+
+  // Referral rewards earned since the last run (migration 18; before it this is skipped).
+  let rewards = 0;
+  const { data: rewarded, error: rewardError } = await db.rpc("referral_rewards_to_notify", { p_secret: secret });
+  if (!rewardError) {
+    for (const row of (rewarded ?? []) as { user_id: string; email: string; display_name: string | null; trial_ends_at: string }[]) {
+      if (await sendEmail(row.email, referralRewardEmail({ displayName: row.display_name, trialEndsAt: row.trial_ends_at, siteUrl: SITE_URL }))) {
+        await db.rpc("mark_referral_notified", { p_secret: secret, p_user: row.user_id });
+        rewards++;
+      } else {
+        failed++;
+      }
+    }
+  }
+  return NextResponse.json({ sent, rewards, failed });
 }

@@ -8,7 +8,7 @@ import { TestAccounts } from "@/components/admin/TestAccounts";
 import { paymentsConfigured } from "@/lib/billing/server";
 import { cx } from "@/components/styles";
 import { PageHeader, SectionTitle } from "@/components/ui";
-import { duration, pct, pounds, type AdminActivation, type AdminOverview } from "@/lib/admin";
+import { duration, pct, pounds, type AdminActivation, type AdminOverview, type AdminReferrals } from "@/lib/admin";
 import { emailConfigured } from "@/lib/emails/send";
 import { requireUser } from "@/lib/supabase/server";
 
@@ -31,11 +31,12 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const { days: daysParam } = await searchParams;
   const days = RANGES.find((d) => String(d) === daysParam) ?? 30;
   const { supabase } = await requireUser();
-  const [{ data, error }, freeList, activationRes, pricingRes] = await Promise.all([
+  const [{ data, error }, freeList, activationRes, pricingRes, referralRes] = await Promise.all([
     supabase.rpc("admin_overview", { p_days: days }),
     supabase.rpc("admin_free_access_list"),
     supabase.rpc("admin_activation", { p_days: days }),
     supabase.rpc("admin_pricing_views", { p_days: days }),
+    supabase.rpc("admin_referrals", { p_days: days }),
   ]);
   // Not an admin (or migration 13 not applied): the page does not exist for them.
   if (error || !data) notFound();
@@ -45,6 +46,8 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const act = activationRes.data as AdminActivation | null;
   // Missing until migration 17 runs: the step is left out.
   const pricingViews = typeof pricingRes.data === "number" ? pricingRes.data : null;
+  // Missing until migration 18 runs: the section is hidden.
+  const referrals = referralRes.data as AdminReferrals | null;
 
   return (
     <>
@@ -157,6 +160,18 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
           ))}
         </ul>
       </section>
+
+      {referrals ? (
+        <section className="mt-8" aria-labelledby="referrals-title">
+          <SectionTitle><span id="referrals-title">Referrals</span></SectionTitle>
+          <div className="grid grid-cols-2 gap-3">
+            <StatTile label="Signed up through a friend" value={referrals.referred} hint={`${referrals.by_link} invite link · ${referrals.by_group} group · ${referrals.by_split} split`} />
+            <StatTile label="Of those, started training" value={referrals.qualified} hint={`${pct(referrals.qualified, referrals.referred)} of referred sign-ups`} />
+            <StatTile label="Rewards given" value={referrals.rewards} hint="14 extra trial days, once per member" />
+            <StatTile label="Referred and paying" value={referrals.referred_paid} hint={`${referrals.sharers} members have an invite link`} />
+          </div>
+        </section>
+      ) : null}
 
       {o.billing ? (
         <section className="mt-8" aria-labelledby="revenue-title">
