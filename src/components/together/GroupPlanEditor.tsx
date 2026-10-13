@@ -6,7 +6,7 @@ import { formatTarget } from "@/lib/format";
 import { groupExerciseLabel, type GroupExercise } from "@/lib/group";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { friendlyError } from "@/lib/supabase/errors";
-import type { Exercise } from "@/lib/types";
+import { isTimed, type Exercise } from "@/lib/types";
 import { ExercisePicker } from "../ExercisePicker";
 import { IconArrowDown, IconArrowUp, IconMinus, IconPlus, IconTrash } from "../icons";
 import { Button, ErrorNote, IconButton, Input, Sheet } from "../ui";
@@ -61,7 +61,15 @@ export function GroupPlanEditor({ groupId, initial }: { groupId: string; initial
     const start = entries.length ? Math.max(...entries.map((e) => e.position)) + 1 : 0;
     const { data, error } = await supabase
       .from("group_workout_exercises")
-      .insert(picked.map((x, i) => ({ group_workout_id: groupId, exercise_id: x.id, position: start + i, target_sets: 3, rep_min: 8, rep_max: 12 })))
+      .insert(
+        picked.map((x, i) => ({
+          group_workout_id: groupId,
+          exercise_id: x.id,
+          position: start + i,
+          target_sets: 3,
+          ...(isTimed(x.tracking_mode) ? { rep_min: 10, rep_max: 20 } : { rep_min: 8, rep_max: 12 }),
+        })),
+      )
       .select("id, exercise_id, position, target_sets, rep_min, rep_max, rest_seconds, notes");
     if (error) return setError(friendlyError(error, "Could not add the exercise."));
     const byId = new Map(picked.map((x) => [x.id, x]));
@@ -95,8 +103,8 @@ export function GroupPlanEditor({ groupId, initial }: { groupId: string; initial
                   <span className="min-w-14 text-center text-sm tabular" aria-live="polite">{e.target_sets} {e.target_sets === 1 ? "set" : "sets"}</span>
                   <IconButton label="More sets" disabled={e.target_sets >= 20} onClick={() => patch(e.id, { target_sets: e.target_sets + 1 })}><IconPlus size={16} /></IconButton>
                 </div>
-                <button type="button" onClick={() => setEditing(e)} className="h-11 rounded-2xl bg-surface-2 px-4 text-sm tabular hover:bg-surface-3" aria-label={`${e.name} rep range`}>
-                  {formatTarget(null, e.rep_min, e.rep_max) || "Set reps"}
+                <button type="button" onClick={() => setEditing(e)} className="h-11 rounded-2xl bg-surface-2 px-4 text-sm tabular hover:bg-surface-3" aria-label={`${e.name} ${isTimed(e.tracking_mode) ? "hold time" : "rep range"}`}>
+                  {formatTarget(null, e.rep_min, e.rep_max, e.tracking_mode) || (isTimed(e.tracking_mode) ? "Set time" : "Set reps")}
                 </button>
               </div>
             </li>
@@ -133,13 +141,14 @@ function RepsSheet({ entry, onClose, onSave }: { entry: GroupExercise; onClose: 
   const [min, setMin] = useState(entry.rep_min?.toString() ?? "");
   const [max, setMax] = useState(entry.rep_max?.toString() ?? "");
   const [error, setError] = useState<string | null>(null);
+  const timed = isTimed(entry.tracking_mode);
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
     const rmin = min ? Number(min) : null;
     const rmax = max ? Number(max) : null;
-    const valid = (n: number | null) => n === null || (Number.isInteger(n) && n >= 1 && n <= 100);
-    if (!valid(rmin) || !valid(rmax)) return setError("Reps must be whole numbers from 1 to 100.");
+    const valid = (n: number | null) => n === null || (Number.isInteger(n) && n >= 1 && n <= (timed ? 3600 : 100));
+    if (!valid(rmin) || !valid(rmax)) return setError(timed ? "Seconds must be whole numbers from 1 to 3600." : "Reps must be whole numbers from 1 to 100.");
     if (rmin !== null && rmax !== null && rmin > rmax) return setError("The minimum cannot exceed the maximum.");
     onSave(rmin, rmax);
   }
@@ -148,11 +157,12 @@ function RepsSheet({ entry, onClose, onSave }: { entry: GroupExercise; onClose: 
     <Sheet open onClose={onClose} title={groupExerciseLabel(entry)}>
       <form onSubmit={submit} className="space-y-4 pb-2">
         <fieldset>
-          <legend className="mb-1.5 text-sm font-medium text-muted">Rep range</legend>
+          <legend className="mb-1.5 text-sm font-medium text-muted">{timed ? "Hold time (seconds)" : "Rep range"}</legend>
           <div className="flex items-center gap-3">
-            <Input aria-label="Minimum reps" inputMode="numeric" value={min} onChange={(e) => setMin(e.target.value.replace(/\D/g, ""))} placeholder="8" className="text-center" />
+            <Input aria-label={timed ? "Minimum seconds" : "Minimum reps"} inputMode="numeric" value={min} onChange={(e) => setMin(e.target.value.replace(/\D/g, ""))} placeholder={timed ? "10" : "8"} className="text-center" />
             <span className="text-muted">to</span>
-            <Input aria-label="Maximum reps" inputMode="numeric" value={max} onChange={(e) => setMax(e.target.value.replace(/\D/g, ""))} placeholder="12" className="text-center" />
+            <Input aria-label={timed ? "Maximum seconds" : "Maximum reps"} inputMode="numeric" value={max} onChange={(e) => setMax(e.target.value.replace(/\D/g, ""))} placeholder={timed ? "20" : "12"} className="text-center" />
+            {timed ? <span className="text-muted">s</span> : null}
           </div>
         </fieldset>
         <ErrorNote>{error}</ErrorNote>

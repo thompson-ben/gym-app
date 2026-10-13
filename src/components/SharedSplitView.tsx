@@ -1,4 +1,5 @@
 import { humanize, formatDuration, formatTarget } from "@/lib/format";
+import type { TrackingMode } from "@/lib/types";
 
 export type SharedExercise =
   | { kind: "catalogue"; id: string; name: string; primary_muscle: string; equipment: string; tracking_mode: string }
@@ -30,7 +31,7 @@ export function SharedSplitView({ snapshot }: { snapshot: SharedSnapshot }) {
                       {x.exercise.kind === "custom" && x.exercise.variant ? <span className="text-muted"> · {x.exercise.variant}</span> : null}
                       {x.exercise.kind === "custom" ? <span className="ml-2 rounded-full bg-surface-3 px-1.5 py-0.5 text-[11px] text-muted">Custom</span> : null}
                     </span>
-                    <span className="shrink-0 text-muted tabular">{formatTarget(x.target_sets, x.rep_min, x.rep_max)}</span>
+                    <span className="shrink-0 text-muted tabular">{formatTarget(x.target_sets, x.rep_min, x.rep_max, x.exercise.tracking_mode as TrackingMode)}</span>
                   </div>
                   <p className="text-xs text-faint">
                     {humanize(x.exercise.primary_muscle)} · {humanize(x.exercise.equipment)}

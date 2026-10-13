@@ -58,7 +58,11 @@ export default async function ExercisePage({
       ? "Best set = the completed working set with the highest estimated 1RM, from sets of 12 reps or fewer."
       : exercise.tracking_mode === "bodyweight_reps"
         ? "Best set = the completed working set with the most reps."
-        : "Best set = the completed working set with the most added weight, then the most reps.";
+        : exercise.tracking_mode === "duration"
+          ? "Best set = the completed working set with the longest hold."
+          : exercise.tracking_mode === "added_weight_duration"
+            ? "Best set = the completed working set with the most added weight, then the longest hold."
+            : "Best set = the completed working set with the most added weight, then the most reps.";
   const query = (extra: Record<string, string | null>) => {
     const q = new URLSearchParams();
     if (uuid(split)) q.set("split", split!);
@@ -195,8 +199,10 @@ export default async function ExercisePage({
                     <li>Estimated 1RM uses the Epley formula, weight × (1 + reps ÷ 30), on sets of 1–12 reps. Higher-rep sets are left out because the formula overestimates them. It is an estimate, not a tested max.</li>
                     <li>Session volume is weight × reps added up over the session’s working sets.</li>
                   </>
-                ) : exercise.tracking_mode === "added_weight_reps" ? (
+                ) : exercise.tracking_mode === "added_weight_reps" || exercise.tracking_mode === "added_weight_duration" ? (
                   <li>Loads are the weight added to your bodyweight. Bodyweight is not recorded, so no 1RM is estimated.</li>
+                ) : exercise.tracking_mode === "duration" ? (
+                  <li>Holds are compared by seconds held; no load or 1RM is estimated.</li>
                 ) : (
                   <li>Reps-only exercises are compared by reps; no load or 1RM is estimated.</li>
                 )}

@@ -1,4 +1,4 @@
-import type { TrackingMode } from "./types";
+import { isAddedWeight, isTimed, isUnloaded, type TrackingMode } from "./types";
 import { formatWeightValue, type WeightUnit } from "./units";
 
 const LABELS: Record<string, string> = {
@@ -18,26 +18,35 @@ export function formatKg(kg: number | null | undefined): string {
   return String(Math.round(kg * 100) / 100);
 }
 
-/** Weight (stored in kg) and reps as shown in the Previous column, e.g. "72.5 × 9", "+10 × 10", "12 reps", in the user's unit. */
+/** "reps", or "s" for timed exercises (whose reps fields hold seconds). */
+export const repUnit = (mode: TrackingMode | undefined) => (mode && isTimed(mode) ? "s" : "reps");
+
+/** Column heading for the reps / seconds input. */
+export const repColumn = (mode: TrackingMode | undefined) => (mode && isTimed(mode) ? "Secs" : "Reps");
+
+/** Weight (stored in kg) and reps (or seconds) as shown in the Previous column, e.g. "72.5 × 9", "+10 × 10", "12 reps", "15 s", "+10 × 30 s", in the user's unit. */
 export function formatSet(mode: TrackingMode, weight: number | null, reps: number | null, unit: WeightUnit = "kg"): string {
   const r = reps ?? "–";
-  if (mode === "bodyweight_reps") return `${r} reps`;
-  if (mode === "added_weight_reps") {
-    return !weight ? `BW × ${r}` : `+${formatWeightValue(weight, unit)} × ${r}`;
+  const amount = isTimed(mode) ? `${r} s` : `${r}`;
+  if (isUnloaded(mode)) return isTimed(mode) ? amount : `${r} reps`;
+  if (isAddedWeight(mode)) {
+    return !weight ? `BW × ${amount}` : `+${formatWeightValue(weight, unit)} × ${amount}`;
   }
-  return `${formatWeightValue(weight, unit)} × ${r}`;
+  return `${formatWeightValue(weight, unit)} × ${amount}`;
 }
 
 export function weightLabel(mode: TrackingMode, unit: WeightUnit = "kg"): string {
-  return mode === "added_weight_reps" ? `+${unit}` : unit;
+  return isAddedWeight(mode) ? `+${unit}` : unit;
 }
 
-export function formatTarget(sets: number | null, repMin: number | null, repMax: number | null): string {
-  const reps =
+/** "3 × 8–12", "3 × 10–15 s" for timed exercises, "3 sets", "8–12 reps". */
+export function formatTarget(sets: number | null, repMin: number | null, repMax: number | null, mode?: TrackingMode): string {
+  const range =
     repMin && repMax ? (repMin === repMax ? `${repMin}` : `${repMin}–${repMax}`) : repMin ? `${repMin}+` : repMax ? `≤${repMax}` : null;
-  if (sets && reps) return `${sets} × ${reps}`;
+  const timed = mode && isTimed(mode);
+  if (sets && range) return `${sets} × ${range}${timed ? " s" : ""}`;
   if (sets) return `${sets} ${sets === 1 ? "set" : "sets"}`;
-  return reps ? `${reps} reps` : "";
+  return range ? `${range} ${timed ? "s" : "reps"}` : "";
 }
 
 export function formatDuration(totalSeconds: number): string {
@@ -99,10 +108,10 @@ export function fromLocalInput(value: string, timeZone: string): string {
 }
 
 /** "2 working sets · 8–12 reps" as used on exercise cards ("Target" is reserved for suggestions). */
-export function formatTargetLong(sets: number | null, repMin: number | null, repMax: number | null): string {
+export function formatTargetLong(sets: number | null, repMin: number | null, repMax: number | null, mode?: TrackingMode): string {
   const parts: string[] = [];
   if (sets) parts.push(`${sets} working ${sets === 1 ? "set" : "sets"}`);
-  const reps = formatTarget(null, repMin, repMax);
+  const reps = formatTarget(null, repMin, repMax, mode);
   if (reps) parts.push(reps);
   return parts.join(" · ");
 }

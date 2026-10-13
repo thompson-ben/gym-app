@@ -1,4 +1,4 @@
-import type { SetType, TrackingMode } from "./types";
+import { isTimed, isUnloaded, type SetType, type TrackingMode } from "./types";
 import { formatWeightValue, type WeightUnit } from "./units";
 
 /** One completed workout as loaded for export (names are the session's own snapshot). */
@@ -20,7 +20,10 @@ export type ExportSession = {
   }[];
 };
 
-/** Column names. The weight column is named after the unit it is in (weight_kg / weight_lb). */
+/**
+ * Column names. The weight column is named after the unit it is in (weight_kg / weight_lb).
+ * Timed exercises (holds) leave reps empty and fill seconds, the last column.
+ */
 export const csvHeader = (unit: WeightUnit) => [
   "date",
   "time",
@@ -34,6 +37,7 @@ export const csvHeader = (unit: WeightUnit) => [
   "weight_meaning",
   "logged_afterwards",
   "session_id",
+  "seconds",
 ];
 
 /**
@@ -51,6 +55,8 @@ const MEANING: Record<TrackingMode, string> = {
   weight_reps: "load",
   added_weight_reps: "added to bodyweight",
   bodyweight_reps: "",
+  duration: "",
+  added_weight_duration: "added to bodyweight",
 };
 
 /** Local date and time (yyyy-mm-dd, hh:mm) of a timestamp in a time zone. */
@@ -83,11 +89,12 @@ export function sessionsToCsv(sessions: ExportSession[], timeZone: string, unit:
             e.name,
             n,
             set.set_type === "warmup" ? "warm-up" : "working",
-            e.tracking_mode === "bodyweight_reps" ? null : Number(formatWeightValue(set.weight_kg ?? 0, unit)),
-            set.reps,
+            isUnloaded(e.tracking_mode) ? null : Number(formatWeightValue(set.weight_kg ?? 0, unit)),
+            isTimed(e.tracking_mode) ? null : set.reps,
             MEANING[e.tracking_mode],
             s.backdated ? "yes" : "no",
             s.id,
+            isTimed(e.tracking_mode) ? set.reps : null,
           ]
             .map(csvField)
             .join(","),

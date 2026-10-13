@@ -98,7 +98,7 @@ export function GroupWorkoutView({ doc, timeZone, otherOpenSessionId }: { doc: G
             {doc.exercises.map((e) => (
               <li key={e.id} className="flex items-center justify-between gap-3 px-4 py-3">
                 <span className="min-w-0 font-medium">{groupExerciseLabel(e)}</span>
-                <span className="shrink-0 text-sm text-muted tabular">{formatTarget(e.target_sets, e.rep_min, e.rep_max)}</span>
+                <span className="shrink-0 text-sm text-muted tabular">{formatTarget(e.target_sets, e.rep_min, e.rep_max, e.tracking_mode)}</span>
               </li>
             ))}
           </ol>

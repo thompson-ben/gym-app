@@ -4,15 +4,15 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { removeSet, toPayload, updateSet } from "@/lib/session/doc";
-import { formatDate, formatMinutes, formatSet, formatTarget, weightLabel } from "@/lib/format";
+import { formatDate, formatMinutes, formatSet, formatTarget, repUnit, weightLabel } from "@/lib/format";
 import { formatTargetSets } from "@/lib/progression";
 import type { PersonalRecord } from "@/lib/records";
 import type { TargetMap } from "@/lib/targets";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { friendlyError } from "@/lib/supabase/errors";
-import type { SessionDoc } from "@/lib/types";
+import { isTimed, isUnloaded, type SessionDoc } from "@/lib/types";
 import { formatWeightValue, fromUnit, type WeightUnit } from "@/lib/units";
-import { isValidNumber, parseReps, parseWeight } from "@/lib/validation";
+import { MAX_REPS, MAX_SECONDS, isValidNumber, parseReps, parseWeight } from "@/lib/validation";
 import { IconCheck, IconPlus, IconTrash } from "./icons";
 import { cx } from "./styles";
 import { Button, ErrorNote, IconButton, PageHeader } from "./ui";
@@ -78,7 +78,7 @@ export function SessionView({
   async function save() {
     for (const ex of doc.exercises) {
       for (const s of ex.sets) {
-        if (!isValidNumber(s.reps) || s.reps < 1) return setError(`Enter reps for every set of ${ex.exercise_name}.`);
+        if (!isValidNumber(s.reps) || s.reps < 1) return setError(`Enter ${isTimed(ex.tracking_mode) ? "seconds" : "reps"} for every set of ${ex.exercise_name}.`);
         if (ex.tracking_mode === "weight_reps" && !isValidNumber(s.weight_kg)) return setError(`Enter a weight for every set of ${ex.exercise_name}.`);
       }
     }
@@ -188,7 +188,8 @@ export function SessionView({
             <summary className="cursor-pointer py-1">How records are defined</summary>
             <p className="mt-1">
               Working sets only, compared with every earlier workout. Heaviest load: more weight than ever before. Rep record: more reps at a weight you have
-              lifted before. Estimated 1RM: Epley estimate from sets of 12 reps or fewer; an estimate, not a tested max. Ties are not records.
+              lifted before. Longest hold: more seconds than ever before (for timed exercises). Estimated 1RM: Epley estimate from sets of 12 reps or fewer; an
+              estimate, not a tested max. Ties are not records.
             </p>
           </details>
         </section>
@@ -214,7 +215,7 @@ export function SessionView({
                 <h2 className="font-semibold">
                   <Link href={`/progress/${ex.exercise_id}`} className="hover:underline underline-offset-4">{ex.exercise_name}</Link>
                 </h2>
-                <span className="shrink-0 text-sm text-muted">{formatTarget(ex.target_sets, ex.rep_min, ex.rep_max)}</span>
+                <span className="shrink-0 text-sm text-muted">{formatTarget(ex.target_sets, ex.rep_min, ex.rep_max, ex.tracking_mode)}</span>
               </div>
               {!editing && insights.byExercise[ex.exercise_id]?.change && ex.sets.some((x) => x.set_type === "working") ? (
                 <p className="mt-0.5 text-sm text-muted">vs last time: {insights.byExercise[ex.exercise_id]!.change}</p>
@@ -229,7 +230,7 @@ export function SessionView({
                     return (
                       <div key={s.id} className="flex items-center gap-2">
                         <span className="w-8 text-center text-sm text-muted">{label}</span>
-                        {ex.tracking_mode !== "bodyweight_reps" ? (
+                        {!isUnloaded(ex.tracking_mode) ? (
                           <EditNumber
                             label={`${ex.exercise_name} set ${label} ${weightLabel(ex.tracking_mode, unit)}`}
                             value={s.weight_kg}
@@ -243,10 +244,10 @@ export function SessionView({
                           />
                         ) : null}
                         <EditNumber
-                          label={`${ex.exercise_name} set ${label} reps`}
+                          label={`${ex.exercise_name} set ${label} ${isTimed(ex.tracking_mode) ? "seconds" : "reps"}`}
                           value={s.reps}
-                          parse={parseReps}
-                          suffix="reps"
+                          parse={(t) => parseReps(t, isTimed(ex.tracking_mode) ? MAX_SECONDS : MAX_REPS)}
+                          suffix={repUnit(ex.tracking_mode)}
                           onChange={(v) => setDoc((d) => updateSet(d, ex.id, s.id, { reps: v }))}
                         />
                         <IconButton label={`Remove set ${label}`} onClick={() => setDoc((d) => removeSet(d, ex.id, s.id))}><IconTrash size={18} /></IconButton>
@@ -323,7 +324,7 @@ function EditNumber({
     <label className="relative flex-1">
       <span className="sr-only">{label}</span>
       <input
-        inputMode={suffix === "reps" ? "numeric" : "decimal"}
+        inputMode={suffix === "reps" || suffix === "s" ? "numeric" : "decimal"}
         value={text}
         aria-invalid={invalid || undefined}
         onChange={(e) => {

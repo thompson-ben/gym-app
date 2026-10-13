@@ -3,8 +3,8 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { formatSet } from "@/lib/format";
 import { formatWeightValue, fromUnit, type WeightUnit } from "@/lib/units";
-import type { PreviousSet, SessionSet, TrackingMode } from "@/lib/types";
-import { isValidNumber, parseReps, parseWeight } from "@/lib/validation";
+import { isAddedWeight, isTimed, isUnloaded, type PreviousSet, type SessionSet, type TrackingMode } from "@/lib/types";
+import { MAX_REPS, MAX_SECONDS, isValidNumber, parseReps, parseWeight } from "@/lib/validation";
 import { IconCheck } from "../icons";
 import { cx } from "../styles";
 
@@ -60,7 +60,9 @@ export const SetRow = forwardRef<SetRowHandle, Props>(function SetRow(
   }));
   const done = Boolean(set.completed_at);
   const weight = useNumberField(set.weight_kg, (t) => parseWeight(t, unit), (n) => formatWeightValue(n, unit));
-  const reps = useNumberField(set.reps, parseReps, (n) => (n === null ? "" : String(n)));
+  const timed = isTimed(mode);
+  const parseAmount = (t: string) => parseReps(t, timed ? MAX_SECONDS : MAX_REPS);
+  const reps = useNumberField(set.reps, parseAmount, (n) => (n === null ? "" : String(n)));
   const [flash, setFlash] = useState(false);
   // A second tap within this window is treated as the same tap (no confirm-then-undo).
   const lastToggle = useRef(Number.NEGATIVE_INFINITY);
@@ -70,7 +72,7 @@ export const SetRow = forwardRef<SetRowHandle, Props>(function SetRow(
     return () => clearTimeout(t);
   }, [flash]);
 
-  const showWeight = mode !== "bodyweight_reps";
+  const showWeight = !isUnloaded(mode);
   const setName = `${exerciseName}, ${ordinal}`;
 
   return (
@@ -105,9 +107,9 @@ export const SetRow = forwardRef<SetRowHandle, Props>(function SetRow(
           inputMode="decimal"
           enterKeyHint="next"
           autoComplete="off"
-          aria-label={`${setName} ${mode === "added_weight_reps" ? `added weight in ${unit}` : `weight in ${unit}`}`}
+          aria-label={`${setName} ${isAddedWeight(mode) ? `added weight in ${unit}` : `weight in ${unit}`}`}
           aria-invalid={weight.invalid || undefined}
-          placeholder={mode === "added_weight_reps" ? "0" : unit}
+          placeholder={isAddedWeight(mode) ? "0" : unit}
           value={weight.text}
           onFocus={(e) => { weight.setFocused(true); e.currentTarget.select(); }}
           onBlur={() => {
@@ -133,9 +135,9 @@ export const SetRow = forwardRef<SetRowHandle, Props>(function SetRow(
         inputMode="numeric"
         enterKeyHint="done"
         autoComplete="off"
-        aria-label={`${setName} reps`}
+        aria-label={`${setName} ${timed ? "seconds" : "reps"}`}
         aria-invalid={reps.invalid || undefined}
-        placeholder={previous ? String(previous.reps) : "reps"}
+        placeholder={previous ? String(previous.reps) : timed ? "secs" : "reps"}
         value={reps.text}
         onFocus={(e) => { reps.setFocused(true); e.currentTarget.select(); }}
         onBlur={() => {
@@ -144,7 +146,7 @@ export const SetRow = forwardRef<SetRowHandle, Props>(function SetRow(
         }}
         onChange={(e) => {
           reps.setText(e.target.value);
-          const v = parseReps(e.target.value);
+          const v = parseAmount(e.target.value);
           if (v === null || isValidNumber(v)) onChange({ reps: v });
         }}
         onKeyDown={(e) => {

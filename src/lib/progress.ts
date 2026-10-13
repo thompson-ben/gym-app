@@ -1,4 +1,4 @@
-import type { PreviousSet, TrackingMode } from "./types";
+import { isAddedWeight, isTimed, isUnloaded, type PreviousSet, type TrackingMode } from "./types";
 import { formatWeightValue, toUnit, type WeightUnit } from "./units";
 
 export type HistorySession = {
@@ -30,7 +30,7 @@ export function heaviestSetPerSession(history: HistorySession[], mode: TrackingM
   for (const s of history) {
     const working = s.sets.filter((x) => x.set_type === "working");
     if (!working.length) continue;
-    const metric = (x: PreviousSet) => (mode === "bodyweight_reps" ? x.reps : (x.weight_kg ?? 0));
+    const metric = (x: PreviousSet) => (isUnloaded(mode) ? x.reps : (x.weight_kg ?? 0));
     const best = working.reduce((a, b) => (metric(b) > metric(a) || (metric(b) === metric(a) && b.reps > a.reps) ? b : a));
     points.push({ sessionId: s.session_id, date: s.completed_at, value: metric(best), reps: best.reps, workout: s.template_name });
   }
@@ -84,8 +84,11 @@ export function metricsFor(mode: TrackingMode, unit: WeightUnit = "kg"): MetricI
       },
     ];
   }
+  const timed = isTimed(mode);
   const heaviest: MetricInfo =
-    mode === "bodyweight_reps"
+    mode === "duration"
+      ? { id: "heaviest", label: "Longest hold", title: "Longest hold per session", unit: "s", description: "The longest hold in a single working set, in seconds." }
+      : mode === "bodyweight_reps"
       ? { id: "heaviest", label: "Best set", title: "Most reps in a working set", unit: "reps", description: "The most reps completed in a single working set." }
       : {
           id: "heaviest",
@@ -96,7 +99,9 @@ export function metricsFor(mode: TrackingMode, unit: WeightUnit = "kg"): MetricI
         };
   return [
     heaviest,
-    { id: "reps", label: "Total reps", title: "Total reps per session", unit: "reps", description: "Reps added up over all working sets in the session." },
+    timed
+      ? { id: "reps", label: "Total time", title: "Total time per session", unit: "s", description: "Seconds held, added up over all working sets in the session." }
+      : { id: "reps", label: "Total reps", title: "Total reps per session", unit: "reps", description: "Reps added up over all working sets in the session." },
   ];
 }
 
@@ -109,8 +114,11 @@ export type SeriesPoint = {
   workout: string;
 };
 
-const setText = (mode: TrackingMode, s: PreviousSet, unit: WeightUnit) =>
-  mode === "bodyweight_reps" ? `${s.reps} reps` : `${mode === "added_weight_reps" ? "+" : ""}${formatWeightValue(s.weight_kg ?? 0, unit)} ${unit} × ${s.reps}`;
+const setText = (mode: TrackingMode, s: PreviousSet, unit: WeightUnit) => {
+  const amount = isTimed(mode) ? `${s.reps} s` : `${s.reps}`;
+  if (isUnloaded(mode)) return isTimed(mode) ? amount : `${s.reps} reps`;
+  return `${isAddedWeight(mode) ? "+" : ""}${formatWeightValue(s.weight_kg ?? 0, unit)} ${unit} × ${amount}`;
+};
 
 /** One point per session for the chosen metric, oldest first, in the user's unit. Warm-ups never count. */
 export function progressSeries(history: HistorySession[], mode: TrackingMode, metric: Metric, unit: WeightUnit = "kg"): SeriesPoint[] {
@@ -132,8 +140,8 @@ export function progressSeries(history: HistorySession[], mode: TrackingMode, me
       points.push({ ...base, value: total, detail: `${working.length} working ${working.length === 1 ? "set" : "sets"}` });
     } else {
       const [p] = heaviestSetPerSession([s], mode);
-      const top = working.find((x) => (mode === "bodyweight_reps" ? x.reps : (x.weight_kg ?? 0)) === p.value && x.reps === p.reps)!;
-      points.push({ ...base, value: mode === "bodyweight_reps" ? p.value : Math.round(toUnit(p.value, unit) * 100) / 100, detail: setText(mode, top, unit) });
+      const top = working.find((x) => (isUnloaded(mode) ? x.reps : (x.weight_kg ?? 0)) === p.value && x.reps === p.reps)!;
+      points.push({ ...base, value: isUnloaded(mode) ? p.value : Math.round(toUnit(p.value, unit) * 100) / 100, detail: setText(mode, top, unit) });
     }
   }
   return points.sort((a, b) => a.date.localeCompare(b.date));
@@ -148,15 +156,15 @@ const eligibleForE1RM = (x: PreviousSet) => x.reps >= 1 && x.reps <= E1RM_REP_LI
  * Strength score of a set, used to pick a "best set":
  * - weight × reps: estimated 1RM for sets of 1–12 reps; sets above 12 reps only win when no
  *   set in range exists, and then by load (score below every eligible set).
- * - reps only: most reps.
- * - added weight: most added load, then most reps.
+ * - reps only / time only: most reps or longest hold.
+ * - added weight: most added load, then most reps (or seconds).
  */
 export function setScore(mode: TrackingMode, x: PreviousSet): number {
   if (mode === "weight_reps") {
     if (eligibleForE1RM(x)) return 1e6 + estimate1RM(x.weight_kg ?? 0, x.reps);
     return (x.weight_kg ?? 0) * 1000 + x.reps;
   }
-  if (mode === "bodyweight_reps") return x.reps;
+  if (isUnloaded(mode)) return x.reps;
   return (x.weight_kg ?? 0) * 1000 + x.reps;
 }
 

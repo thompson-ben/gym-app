@@ -4,15 +4,16 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { validateCompletion, type CompleteError } from "@/lib/session/doc";
 import { matchPrevious } from "@/lib/session/previous";
-import { formatDate, formatSet, formatShortDate, formatTargetLong, weightLabel } from "@/lib/format";
+import { formatDate, formatSet, formatShortDate, formatTargetLong, repColumn, repUnit, weightLabel } from "@/lib/format";
 import { formatWeight, type WeightUnit } from "@/lib/units";
 import { formatTargetSets, targetMet, topOfRangeLastTime, topOfRangeNow } from "@/lib/progression";
 import type { TargetInfo } from "@/lib/targets";
 import { supabaseBrowser } from "@/lib/supabase/client";
-import type { PreviousPerformance, SessionExercise, SessionSet, SetType } from "@/lib/types";
+import { isAddedWeight, isTimed, isUnloaded, type PreviousPerformance, type SessionExercise, type SessionSet, type SetType } from "@/lib/types";
 import { IconArrowUpRight, IconChevronDown, IconHistory, IconMinus, IconMore, IconPlus, IconSwap } from "../icons";
 import { cx } from "../styles";
 import { Button, IconButton, Spinner } from "../ui";
+import { HoldTimer } from "./HoldTimer";
 import { GRID_REPS_ONLY, GRID_WITH_WEIGHT, SetRow, type SetRowHandle } from "./SetRow";
 
 type HistoryEntry = { session_id: string; completed_at: string; template_name: string; split_name: string | null; sets: PreviousPerformance["sets"] };
@@ -70,7 +71,8 @@ export function ExerciseCard({
   const rows = useRef(new Map<string, SetRowHandle>());
   const matched = matchPrevious(entry.sets, previous?.sets);
   const mode = entry.tracking_mode;
-  const prescription = formatTargetLong(entry.target_sets, entry.rep_min, entry.rep_max);
+  const prescription = formatTargetLong(entry.target_sets, entry.rep_min, entry.rep_max, mode);
+  const timed = isTimed(mode);
   const done = entry.sets.filter((s) => s.completed_at).length;
   // An extra set beyond the plan can be removed in one tap while it is not confirmed (nothing
   // logged is lost). Any set can still be removed from its own menu (tap the set number).
@@ -78,6 +80,7 @@ export function ExerciseCard({
   const extra = entry.sets.filter((s) => s.set_type === "working").length > (entry.target_sets ?? 0);
   const removable = extra && entry.sets.length > 1 && lastSet && !lastSet.completed_at ? lastSet : null;
   const currentId = entry.sets.find((s) => !s.completed_at)?.id ?? null;
+  const currentLabel = currentLabelFor(entry.sets, currentId);
   const shownTarget = target && target.exerciseId === entry.exercise_id && !targetHidden ? target : null;
   const unconfirmedWorking = entry.sets.filter((s) => s.set_type === "working" && !s.completed_at);
   const plan = { targetSets: entry.target_sets, repMin: entry.rep_min, repMax: entry.rep_max };
@@ -119,7 +122,7 @@ export function ExerciseCard({
     }
     const result = validateCompletion(entry, set);
     if ("error" in result) {
-      setHint(COMPLETE_HINT[result.error]);
+      setHint(result.error === "reps_required" && timed ? "Enter the seconds you held to confirm this set." : COMPLETE_HINT[result.error]);
       const row = rows.current.get(set.id);
       if (result.error === "weight_required") row?.focusWeight();
       else row?.focusReps();
@@ -178,8 +181,11 @@ export function ExerciseCard({
       {readyReps ? (
         <div className="mx-1 mt-3 rounded-xl border border-accent-text/40 bg-accent-soft px-3 py-2.5 text-sm">
           <p>
-            <span className="font-medium text-fg">Ready to go heavier.</span>{" "}
-            <span className="text-muted">Last time every working set reached {readyReps} reps, the top of your range.</span>
+            <span className="font-medium text-fg">{isUnloaded(mode) ? "Ready to progress." : "Ready to go heavier."}</span>{" "}
+            <span className="text-muted">
+              Last time every working set reached {readyReps} {repUnit(mode)}, the top of your range.
+              {isUnloaded(mode) ? " Try holding longer or a harder progression." : ""}
+            </span>
           </p>
           {onSetupTargets ? (
             <button type="button" onClick={onSetupTargets} className="mt-1 h-9 font-medium text-accent-text underline-offset-4 hover:underline">
@@ -221,11 +227,11 @@ export function ExerciseCard({
       {entry.notes ? <p className="mx-1 mt-2 text-sm text-muted italic">Note: {entry.notes}</p> : null}
 
       <div className="mt-5">
-        <div className={cx(mode === "bodyweight_reps" ? GRID_REPS_ONLY : GRID_WITH_WEIGHT, "pb-2 text-[14px] font-medium text-muted")} aria-hidden="true">
+        <div className={cx(isUnloaded(mode) ? GRID_REPS_ONLY : GRID_WITH_WEIGHT, "pb-2 text-[14px] font-medium text-muted")} aria-hidden="true">
           <span className="text-center">Set</span>
           <span className="text-center">Previous</span>
-          {mode !== "bodyweight_reps" ? <span className="text-center">{weightLabel(mode, unit)}</span> : null}
-          <span className="text-center">Reps</span>
+          {!isUnloaded(mode) ? <span className="text-center">{weightLabel(mode, unit)}</span> : null}
+          <span className="text-center">{repColumn(mode)}</span>
           <span className="text-center">Done</span>
         </div>
         <div className="space-y-2">
@@ -265,13 +271,24 @@ export function ExerciseCard({
                 <span className="text-muted">
                   {hit === "target" && goal
                     ? `Every set at ${formatTargetSets(goal, unit)} or better.`
-                    : `Every working set reached ${entry.rep_max} reps. Time to go heavier next session.`}
+                    : `Every working set reached ${entry.rep_max} ${repUnit(mode)}. ${
+                        isUnloaded(mode) ? "Time to hold longer or try a harder progression." : timed ? "Time to add weight next session." : "Time to go heavier next session."
+                      }`}
                 </span>
               </span>
             </p>
           ) : null}
         </div>
-        {mode === "added_weight_reps" ? <p className="mt-2 px-1 text-xs text-faint">+{unit} is load added to your bodyweight. Leave 0 for bodyweight only.</p> : null}
+        {timed && !entry.skipped ? (
+          <HoldTimer
+            exerciseName={entry.exercise_name}
+            setLabel={currentLabel}
+            target={{ min: entry.rep_min, max: entry.rep_max }}
+            onStop={(seconds) => currentId && onSetChange(currentId, { reps: seconds })}
+          />
+        ) : null}
+        {isAddedWeight(mode) ? <p className="mt-2 px-1 text-xs text-faint">+{unit} is load added to your bodyweight. Leave 0 for bodyweight only.</p> : null}
+        {timed ? <p className="mt-2 px-1 text-xs text-faint">Secs is how long you held each set. Use the timer or type it in, then tick to confirm.</p> : null}
       </div>
 
       <div className="mt-2 flex flex-wrap items-center justify-between gap-x-2">
@@ -328,6 +345,14 @@ export function ExerciseCard({
       ) : null}
     </section>
   );
+}
+
+/** "set 2" or "warm-up set 1" for the next set to do, numbered as in the list. */
+function currentLabelFor(sets: SessionSet[], id: string | null): string | null {
+  const set = sets.find((s) => s.id === id);
+  if (!set) return null;
+  const n = sets.filter((s) => s.set_type === set.set_type && s.position <= set.position).length;
+  return set.set_type === "warmup" ? `warm-up set ${n}` : `set ${n}`;
 }
 
 /** A short, decorative burst when an exercise target is hit. Skipped with reduced motion. */
