@@ -305,6 +305,12 @@ Migrations are additive and versioned; never reset a deployed database.
   - **Self-referrals are blocked:** the same account, the same address with a `+tag`, Gmail dots, or accounts older than 14 days.
   - **Email:** the daily trial-reminder job also emails the reward.
   - **Dashboard:** Admin → Referrals.
+- **One-question surveys (migration 19):** each asked at most once per person and always skippable (a skip is stored, so it isn't asked again). Answers are in `survey_answers`, separate from "Send feedback" messages.
+  - **How did you hear about us?** on Train, for accounts under 30 days old.
+  - **How's it going?** after finishing a workout, from day 4 of a trial.
+  - **What stopped you?** once a trial ends without a plan: on Train and the plan page, plus one email from the daily job (`/upgrade?reason=trial_ended#why`).
+  - **Cancellation reason:** turn on Stripe → Settings → Customer portal → Cancellations → "Collect cancellation reason"; the webhook stores it.
+  - **Dashboard:** Admin → Feedback (totals, by campaign and ad, latest comments with the email to follow up).
 - **Meta Pixel (ads):** set `NEXT_PUBLIC_META_PIXEL_ID` in Vercel (Production) and redeploy.
   - Public pages then show a consent banner. The Pixel loads only after Accept, and never when the browser sends GPC or DNT.
   - It sends PageView (public pages), CompleteRegistration (sign-up) and Subscribe (paid membership, with the plan price).

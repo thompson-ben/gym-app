@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { billingSecret } from "@/lib/billing/server";
 import { referralRewardEmail } from "@/lib/emails/referral-reward";
+import { trialEndedEmail } from "@/lib/emails/trial-ended";
 import { trialEndingEmail } from "@/lib/emails/trial-ending";
 import { emailConfigured, sendEmail } from "@/lib/emails/send";
 import { SITE_URL } from "@/lib/site";
@@ -12,8 +13,8 @@ export const dynamic = "force-dynamic";
 type Due = { user_id: string; email: string; display_name: string | null; trial_ends_at: string; weight_unit: string; workouts: number; working_sets: number; volume_kg: number | string };
 
 /**
- * Daily: emails everyone whose trial ends within 3 days (once each), and anyone who earned
- * referral days since the last run. Called by a scheduled job with
+ * Daily: emails everyone whose trial ends within 3 days (once each), anyone who earned
+ * referral days since the last run, and asks once why a trial ended without a plan. Called by a scheduled job with
  * "Authorization: Bearer <CRON_SECRET>".
  */
 export async function POST(request: Request) {
@@ -61,5 +62,19 @@ export async function POST(request: Request) {
       }
     }
   }
-  return NextResponse.json({ sent, rewards, failed });
+
+  // Trials that ended unpaid in the last 3 days: one email asking why (migration 19; before it this is skipped).
+  let exits = 0;
+  const { data: ended, error: endedError } = await db.rpc("trial_exit_emails_due", { p_secret: secret });
+  if (!endedError) {
+    for (const row of (ended ?? []) as { user_id: string; email: string; display_name: string | null; workouts: number }[]) {
+      if (await sendEmail(row.email, trialEndedEmail({ displayName: row.display_name, workouts: row.workouts, siteUrl: SITE_URL }))) {
+        await db.rpc("mark_trial_exit_emailed", { p_secret: secret, p_user: row.user_id });
+        exits++;
+      } else {
+        failed++;
+      }
+    }
+  }
+  return NextResponse.json({ sent, rewards, exits, failed });
 }

@@ -32,6 +32,13 @@ export function subscriptionUpdate(sub: Stripe.Subscription): SubscriptionUpdate
   };
 }
 
+/** The reason a member gave when cancelling in Stripe's billing page, if they gave one. */
+export function cancellationReason(sub: Stripe.Subscription): { reason: string; comment: string | null } | null {
+  const d = sub.cancellation_details;
+  if (!d?.feedback) return null;
+  return { reason: d.feedback, comment: d.comment?.trim().slice(0, 500) || null };
+}
+
 export function invoicePayment(inv: Stripe.Invoice) {
   const paidAt = inv.status_transitions?.paid_at ?? inv.created;
   return {

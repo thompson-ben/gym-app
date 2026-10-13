@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { SessionView, type SessionInsights } from "@/components/SessionView";
+import { SurveyCard } from "@/components/SurveyCard";
 import { meaningfulDurationMinutes } from "@/lib/format";
 import type { HistorySession } from "@/lib/progress";
 import { compareWithPrevious, recordsFor } from "@/lib/records";
 import { requireUser, viewerTimeZone, viewerUnit } from "@/lib/supabase/server";
+import { surveyFor } from "@/lib/surveys";
 import { loadTargets } from "@/lib/targets";
 import type { GroupDoc } from "@/lib/group";
 import type { SessionDoc } from "@/lib/types";
@@ -24,8 +26,25 @@ export default async function SessionPage({ params, searchParams }: { params: Pr
   if (doc.status === "in_progress") redirect(`/workout/${sessionId}`);
   if (doc.status === "discarded") notFound();
 
-  const [timeZone, unit, together] = await Promise.all([viewerTimeZone(), viewerUnit(), togetherFor(supabase, doc.id)]);
-  return <SessionView doc={doc} timeZone={timeZone} unit={unit} together={together} justFinished={finished === "1"} insights={await insightsFor(supabase, doc, unit)} />;
+  const justFinished = finished === "1";
+  const [timeZone, unit, together, survey] = await Promise.all([
+    viewerTimeZone(),
+    viewerUnit(),
+    togetherFor(supabase, doc.id),
+    // Mid-trial "how's it going?", only straight after finishing (migration 19).
+    justFinished ? supabase.rpc("my_survey_prompts").then(({ data, error }) => (error ? null : surveyFor("finished", (data as string[] | null) ?? []))) : null,
+  ]);
+  return (
+    <SessionView
+      doc={doc}
+      timeZone={timeZone}
+      unit={unit}
+      together={together}
+      justFinished={justFinished}
+      insights={await insightsFor(supabase, doc, unit)}
+      survey={survey ? <SurveyCard question={survey} className="mb-4" /> : null}
+    />
+  );
 }
 
 /** The group a workout was done with, if any, and who else was in it. */

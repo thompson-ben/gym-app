@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
-import { invoicePayment, subscriptionUpdate } from "@/lib/billing/stripe-events";
+import { cancellationReason, invoicePayment, subscriptionUpdate } from "@/lib/billing/stripe-events";
 import { billingSecret, stripeClient } from "@/lib/billing/server";
 import { supabaseAnon } from "@/lib/supabase/anon";
 
@@ -42,6 +42,11 @@ export async function POST(request: Request) {
     });
     // The account was deleted: nothing left to update.
     if (error && !error.message.includes("billing_user_not_found")) throw error;
+    // Why they cancelled, when they told Stripe (migration 19). Never fails the event.
+    const why = cancellationReason(sub);
+    if (why && u.user) {
+      await db.rpc("record_cancellation_reason", { p_secret: secret, p_user: u.user, p_reason: why.reason, p_comment: why.comment });
+    }
   }
 
   try {

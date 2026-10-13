@@ -87,3 +87,11 @@ export type AdminReferrals = {
   rewards: number;
   referred_paid: number;
 };
+
+/** Shape of admin_surveys() (migration 19). Comments carry the email so the owner can follow up. */
+export type AdminSurveys = {
+  days: number;
+  answers: { question: string; answer: string; count: number }[];
+  by_campaign: { question: string; source: string; campaign: string; content: string; answer: string; count: number }[];
+  comments: { question: string; answer: string; detail: string; at: string; email: string; source: string; campaign: string }[];
+};

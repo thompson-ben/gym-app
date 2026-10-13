@@ -6,6 +6,7 @@ import { InstallCard } from "@/components/InstallPrompt";
 import { PageTip } from "@/components/PageTip";
 import { QuickWorkoutButton } from "@/components/QuickWorkoutButton";
 import { StarterSplits } from "@/components/StarterSplits";
+import { SurveyCard } from "@/components/SurveyCard";
 import { LogPastWorkoutButton, StartWorkoutButton } from "@/components/StartWorkoutButton";
 import { MembershipBanner } from "@/components/billing/MembershipBanner";
 import { GroupWorkoutsSection, type UpcomingGroup } from "@/components/together/GroupWorkoutsSection";
@@ -13,6 +14,7 @@ import { MEMBERSHIP_COLUMNS, membershipState, type MembershipRow } from "@/lib/b
 import { Wordmark } from "@/components/Wordmark";
 import { formatDate, formatElapsed, formatShortDate } from "@/lib/format";
 import { suggestNextWorkout, type NextWorkout } from "@/lib/next-workout";
+import { surveyFor } from "@/lib/surveys";
 import { requireUser, viewerTimeZone } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Train" };
@@ -53,9 +55,13 @@ export default async function TrainPage() {
   ]);
   const membershipNow = membershipState((membership.data as MembershipRow) ?? null);
   // Trial members who haven't earned their referral days yet see an invite nudge (migration 18).
-  const invite =
+  // One question at most: why a trial ended unpaid, or where a new account heard about us
+  // (migration 19; before it the list is empty).
+  const [invite, survey] = await Promise.all([
     membershipNow.kind === "trial" &&
-    (await supabase.rpc("my_referral_status").then(({ data, error }) => !error && !(data as { rewarded_at?: string | null } | null)?.rewarded_at));
+      supabase.rpc("my_referral_status").then(({ data, error }) => !error && !(data as { rewarded_at?: string | null } | null)?.rewarded_at),
+    supabase.rpc("my_survey_prompts").then(({ data, error }) => (error ? null : surveyFor("train", (data as string[] | null) ?? []))),
+  ]);
   if (periodError) throw periodError;
   if (openError) throw openError;
   if (recent.error) throw recent.error;
@@ -115,6 +121,7 @@ export default async function TrainPage() {
         {split && !open && startable.length ? <LogPastWorkoutButton workouts={startable} size="sm" label="Log past workout" /> : null}
       </div>
       <MembershipBanner state={membershipNow} invite={invite} />
+      {survey && !open ? <SurveyCard question={survey} className="mt-3" /> : null}
       {!open ? <InstallCard /> : null}
 
       {open ? (

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { removeSet, toPayload, updateSet } from "@/lib/session/doc";
 import { formatDate, formatMinutes, formatSet, formatTarget, weightLabel } from "@/lib/format";
 import { formatTargetSets } from "@/lib/progression";
@@ -32,6 +32,7 @@ export function SessionView({
   insights,
   unit,
   together,
+  survey,
 }: {
   doc: SessionDoc;
   timeZone: string;
@@ -40,6 +41,8 @@ export function SessionView({
   unit: WeightUnit;
   /** For a group workout: the group and the other people in it. */
   together?: { groupId: string; names: string[] } | null;
+  /** A one-question survey shown under "Workout saved". */
+  survey?: ReactNode;
 }) {
   const router = useRouter();
   const [doc, setDoc] = useState(initial);
@@ -148,6 +151,7 @@ export function SessionView({
       ) : (
         <p className="-mt-3 mb-4 text-sm text-muted">{stats}</p>
       )}
+      {justFinished ? survey : null}
       {justFinished && insights.firstWorkout ? (
         <p className="mb-4 rounded-2xl border border-line bg-surface px-4 py-3 text-sm text-muted">
           Your first workout is logged. Next time you do these exercises, today’s sets appear in the Previous column so you know what to aim for.
