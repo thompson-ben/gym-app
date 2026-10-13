@@ -1,4 +1,4 @@
-export type TrackingMode = "weight_reps" | "bodyweight_reps" | "added_weight_reps";
+export type TrackingMode = "weight_reps" | "bodyweight_reps" | "added_weight_reps" | "duration" | "added_weight_duration";
 export type SetType = "working" | "warmup";
 
 export type Exercise = {
@@ -87,4 +87,16 @@ export const TRACKING_MODES: { value: TrackingMode; label: string; hint: string 
   { value: "weight_reps", label: "Weight × reps", hint: "Load lifted and reps" },
   { value: "added_weight_reps", label: "Added weight × reps", hint: "Bodyweight plus extra load, e.g. weighted dips. 0 = bodyweight only" },
   { value: "bodyweight_reps", label: "Reps only", hint: "Bodyweight movements without added load" },
+  { value: "duration", label: "Time", hint: "Holds in seconds, e.g. front lever, L-sit, plank" },
+  { value: "added_weight_duration", label: "Added weight × time", hint: "Holds with extra load, e.g. weighted dead hang. 0 = bodyweight only" },
 ];
+
+/**
+ * Timed exercises (migration 20) store the seconds held in the reps fields: a set's `reps`
+ * is its seconds, and a rep range is a range of seconds.
+ */
+export const isTimed = (mode: TrackingMode) => mode === "duration" || mode === "added_weight_duration";
+/** Load is extra weight on top of bodyweight ("+10 kg"; 0 = bodyweight). */
+export const isAddedWeight = (mode: TrackingMode) => mode === "added_weight_reps" || mode === "added_weight_duration";
+/** No load is recorded at all. */
+export const isUnloaded = (mode: TrackingMode) => mode === "bodyweight_reps" || mode === "duration";

@@ -10,6 +10,15 @@ import { IconPlus, IconSearch } from "./icons";
 import { cx } from "./styles";
 import { Button, ErrorNote, Field, Input, Sheet, Spinner, inputClass } from "./ui";
 
+/** Shown after an exercise's details in the list. */
+const MODE_NOTE: Record<TrackingMode, string> = {
+  weight_reps: "",
+  added_weight_reps: " · added weight",
+  bodyweight_reps: " · reps only",
+  duration: " · time",
+  added_weight_duration: " · added weight × time",
+};
+
 let cache: Exercise[] | null = null;
 
 export async function loadExercises(force = false): Promise<Exercise[]> {
@@ -200,7 +209,7 @@ function ExerciseList({
                 <span className="block truncate font-medium">{exerciseLabel(e)}</span>
                 <span className="block truncate text-sm text-muted">
                   {humanize(e.primary_muscle)} · {humanize(e.equipment)}
-                  {e.tracking_mode === "added_weight_reps" ? " · added weight" : e.tracking_mode === "bodyweight_reps" ? " · reps only" : ""}
+                  {MODE_NOTE[e.tracking_mode]}
                 </span>
               </span>
               <span className="flex shrink-0 items-center gap-2">

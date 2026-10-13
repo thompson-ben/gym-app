@@ -305,6 +305,12 @@ Migrations are additive and versioned; never reset a deployed database.
   - **Self-referrals are blocked:** the same account, the same address with a `+tag`, Gmail dots, or accounts older than 14 days.
   - **Email:** the daily trial-reminder job also emails the reward.
   - **Dashboard:** Admin → Referrals.
+- **Timed exercises (migration 20):** two more tracking modes, `duration` (holds such as a front lever or L-sit) and `added_weight_duration` (e.g. a weighted dead hang).
+  - Seconds are stored in the existing reps fields: a set's `reps` is the seconds held, and a rep range is a range of seconds (up to 3600). Reps exercises keep their old limits (enforced by triggers).
+  - An exercise can't switch between reps and seconds once it has logged sets.
+  - The logger shows a Secs column and a hold timer (3-second count-in, buzzes at the target); Stop fills the next set, which still needs confirming.
+  - Records: longest hold; charts: longest hold and total time; the CSV export has a `seconds` column.
+  - Ten catalogue holds were added (front lever, back lever, planche, L-sit, handstand hold, plank, side plank, hollow body hold, dead hang, wall sit).
 - **One-question surveys (migration 19):** each asked at most once per person and always skippable (a skip is stored, so it isn't asked again). Answers are in `survey_answers`, separate from "Send feedback" messages.
   - **How did you hear about us?** on Train, for accounts under 30 days old.
   - **How's it going?** after finishing a workout, from day 4 of a trial.

@@ -7,7 +7,7 @@ import { cx } from "../styles";
 import { Button } from "../ui";
 
 /** Re-renders every 250 ms and whenever the page becomes visible again. Time comes from timestamps. */
-function useNow(active: boolean) {
+export function useNow(active: boolean) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     if (!active) return;

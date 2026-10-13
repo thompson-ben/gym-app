@@ -6,7 +6,7 @@ import { exerciseLabel } from "@/lib/exercises";
 import { formatDuration, formatTarget, humanize } from "@/lib/format";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { friendlyError } from "@/lib/supabase/errors";
-import type { Exercise } from "@/lib/types";
+import { isTimed, type Exercise } from "@/lib/types";
 import { formatWeight, INCREMENT_RANGE, formatWeightValue, parseIncrement, type WeightUnit } from "@/lib/units";
 import { ExercisePicker } from "../ExercisePicker";
 import { IconArrowDown, IconArrowUp, IconEdit, IconMinus, IconPlus, IconSwap, IconTrash } from "../icons";
@@ -80,14 +80,24 @@ export function TemplateBuilder({
     if (picker?.replace) {
       const id = picker.replace;
       const before = entries;
-      setEntries((list) => list.map((e) => (e.id === id ? { ...e, exercise } : e)));
-      await run(supabase.from("template_exercises").update({ exercise_id: exercise.id }).eq("id", id), () => setEntries(before));
+      // A range of seconds above 100 doesn't fit a reps exercise: go back to the default range.
+      const old = entries.find((e) => e.id === id);
+      const reset = !isTimed(exercise.tracking_mode) && Math.max(old?.rep_min ?? 0, old?.rep_max ?? 0) > 100 ? { rep_min: 8, rep_max: 12 } : {};
+      setEntries((list) => list.map((e) => (e.id === id ? { ...e, ...reset, exercise } : e)));
+      await run(supabase.from("template_exercises").update({ exercise_id: exercise.id, ...reset }).eq("id", id), () => setEntries(before));
       return;
     }
     const data = await run<Entry>(
       supabase
         .from("template_exercises")
-        .insert({ template_id: template.id, exercise_id: exercise.id, position: entries.length, target_sets: 2, rep_min: 8, rep_max: 12 })
+        .insert({
+          template_id: template.id,
+          exercise_id: exercise.id,
+          position: entries.length,
+          target_sets: 2,
+          // Holds start at 10–20 seconds, other exercises at 8–12 reps.
+          ...(isTimed(exercise.tracking_mode) ? { rep_min: 10, rep_max: 20 } : { rep_min: 8, rep_max: 12 }),
+        })
         .select("id, position, target_sets, rep_min, rep_max, rest_seconds, notes, progression_enabled, progression_increment_kg")
         .single(),
     );
@@ -166,7 +176,7 @@ export function TemplateBuilder({
                   <IconButton label="More sets" disabled={entry.target_sets >= 20} onClick={() => update(entry.id, { target_sets: entry.target_sets + 1 })}><IconPlus size={16} /></IconButton>
                 </div>
                 <button type="button" onClick={() => setEditing(entry)} className="h-11 rounded-2xl bg-surface-2 px-4 text-sm tabular hover:bg-surface-3">
-                  {formatTarget(null, entry.rep_min, entry.rep_max) || "Set reps"}
+                  {formatTarget(null, entry.rep_min, entry.rep_max, entry.exercise.tracking_mode) || (isTimed(entry.exercise.tracking_mode) ? "Set time" : "Set reps")}
                 </button>
                 <button type="button" onClick={() => setEditing(entry)} className="h-11 rounded-2xl bg-surface-2 px-4 text-sm text-muted hover:bg-surface-3">
                   Rest {formatDuration(entry.rest_seconds ?? defaultRest)}{entry.rest_seconds ? "" : " (default)"}
@@ -244,13 +254,15 @@ function TargetsSheet({
   const [increment, setIncrement] = useState(entry.progression_increment_kg === null ? "" : formatWeightValue(Number(entry.progression_increment_kg), unit));
   const [error, setError] = useState<string | null>(null);
   const canProgress = entry.exercise.tracking_mode === "weight_reps";
+  const timed = isTimed(entry.exercise.tracking_mode);
+  const limit = timed ? 3600 : 100;
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
     const rmin = min ? Number(min) : null;
     const rmax = max ? Number(max) : null;
-    const valid = (n: number | null) => n === null || (Number.isInteger(n) && n >= 1 && n <= 100);
-    if (!valid(rmin) || !valid(rmax)) return setError("Reps must be whole numbers from 1 to 100.");
+    const valid = (n: number | null) => n === null || (Number.isInteger(n) && n >= 1 && n <= limit);
+    if (!valid(rmin) || !valid(rmax)) return setError(timed ? "Seconds must be whole numbers from 1 to 3600." : "Reps must be whole numbers from 1 to 100.");
     if (rmin !== null && rmax !== null && rmin > rmax) return setError("The minimum cannot exceed the maximum.");
     const parsed = parseIncrement(increment, unit);
     const inc = "kg" in parsed ? parsed.kg : null;
@@ -273,12 +285,14 @@ function TargetsSheet({
     <Sheet open onClose={onClose} title={exerciseLabel(entry.exercise)}>
       <form onSubmit={submit} className="space-y-4 pb-2">
         <fieldset>
-          <legend className="mb-1.5 text-sm font-medium text-muted">Rep range</legend>
+          <legend className="mb-1.5 text-sm font-medium text-muted">{timed ? "Hold time (seconds)" : "Rep range"}</legend>
           <div className="flex items-center gap-3">
-            <Input aria-label="Minimum reps" inputMode="numeric" value={min} onChange={(e) => setMin(e.target.value.replace(/\D/g, ""))} placeholder="8" className="text-center" />
+            <Input aria-label={timed ? "Minimum seconds" : "Minimum reps"} inputMode="numeric" value={min} onChange={(e) => setMin(e.target.value.replace(/\D/g, ""))} placeholder={timed ? "10" : "8"} className="text-center" />
             <span className="text-muted">to</span>
-            <Input aria-label="Maximum reps" inputMode="numeric" value={max} onChange={(e) => setMax(e.target.value.replace(/\D/g, ""))} placeholder="12" className="text-center" />
+            <Input aria-label={timed ? "Maximum seconds" : "Maximum reps"} inputMode="numeric" value={max} onChange={(e) => setMax(e.target.value.replace(/\D/g, ""))} placeholder={timed ? "20" : "12"} className="text-center" />
+            {timed ? <span className="text-muted">s</span> : null}
           </div>
+          {timed ? <p className="mt-1.5 text-xs text-faint">For one fixed time, enter it twice, e.g. 15 to 15.</p> : null}
         </fieldset>
         <Field label="Rest between sets">
           {(id) => (
@@ -316,7 +330,7 @@ function TargetsSheet({
               ) : null}
             </>
           ) : (
-            <p className="text-sm text-muted">Available for weight × reps exercises. Bodyweight and added-weight exercises are not progressed automatically.</p>
+            <p className="text-sm text-muted">Available for weight × reps exercises. Bodyweight, added-weight and timed exercises are not progressed automatically.</p>
           )}
         </fieldset>
         <ErrorNote>{error}</ErrorNote>

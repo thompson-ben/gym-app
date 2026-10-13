@@ -1,4 +1,4 @@
-import type { PreviousSet, SetType, TrackingMode } from "../types";
+import { isUnloaded, type PreviousSet, type SetType, type TrackingMode } from "../types";
 
 type TypedRow = { set_type: SetType };
 
@@ -26,7 +26,7 @@ export function suggestWeight(
   previous: PreviousSet[] | undefined,
   setType: SetType,
 ): number | null {
-  if (mode === "bodyweight_reps") return null;
+  if (isUnloaded(mode)) return null;
   if (matched) return matched.weight_kg;
   const sameType = (previous ?? []).filter((s) => s.set_type === setType);
   return sameType.length ? sameType[sameType.length - 1].weight_kg : null;

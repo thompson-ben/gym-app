@@ -1,6 +1,6 @@
 import { formatWeight, type WeightUnit } from "./units";
 import { E1RM_REP_LIMIT, estimate1RM } from "./progress";
-import type { PreviousSet, TrackingMode } from "./types";
+import { isAddedWeight, isTimed, isUnloaded, type PreviousSet, type TrackingMode } from "./types";
 
 /**
  * Personal records and like-for-like comparisons. Everything is derived from the user's
@@ -18,6 +18,8 @@ import type { PreviousSet, TrackingMode } from "./types";
  * - Estimated 1RM record (weight × reps only): the highest Epley estimate from sets of
  *   1–12 reps beats every earlier eligible set. High-rep sets are excluded because the
  *   formula overestimates them. Always labelled as an estimate.
+ * - Timed exercises (reps hold seconds): the same records in seconds, i.e. longest hold, and
+ *   longest hold at a load done before.
  * - Ties are never records: the new value must be strictly greater.
  */
 
@@ -30,7 +32,9 @@ export type PersonalRecord = { kind: RecordKind; label: string; detail: string }
 
 const r1 = (n: number) => Math.round(n * 10) / 10;
 const working = (sets: PreviousSet[]) => sets.filter((s) => s.set_type === "working" && s.reps > 0);
-const load = (mode: TrackingMode, kg: number | null, unit: WeightUnit) => `${mode === "added_weight_reps" ? "+" : ""}${formatWeight(kg ?? 0, unit)}`;
+const load = (mode: TrackingMode, kg: number | null, unit: WeightUnit) => `${isAddedWeight(mode) ? "+" : ""}${formatWeight(kg ?? 0, unit)}`;
+/** "12 reps" or "45 s". */
+const amount = (mode: TrackingMode, n: number) => (isTimed(mode) ? `${n} s` : `${n} reps`);
 
 export const isE1RMEligible = (s: PreviousSet) => s.set_type === "working" && s.reps >= 1 && s.reps <= E1RM_MAX_REPS && (s.weight_kg ?? 0) > 0;
 
@@ -44,10 +48,12 @@ export function recordsFor(mode: TrackingMode, current: DatedSets, history: Date
   if (!earlier.length) return [{ kind: "first", label: "First recorded performance", detail: "Your baseline for this exercise is set." }];
 
   const out: PersonalRecord[] = [];
-  if (mode === "bodyweight_reps") {
+  if (isUnloaded(mode)) {
     const best = Math.max(...now.map((s) => s.reps));
     const before = Math.max(...earlier.map((s) => s.reps));
-    if (best > before) out.push({ kind: "most_reps", label: "Most reps in a set", detail: `${best} reps (previous best ${before})` });
+    if (best > before) {
+      out.push({ kind: "most_reps", label: isTimed(mode) ? "Longest hold" : "Most reps in a set", detail: `${amount(mode, best)} (previous best ${amount(mode, before)})` });
+    }
     return out;
   }
 
@@ -70,7 +76,11 @@ export function recordsFor(mode: TrackingMode, current: DatedSets, history: Date
     .sort((a, b) => b.w - a.w);
   if (repRecords.length) {
     const { w, reps, prev } = repRecords[0];
-    out.push({ kind: "reps_at_load", label: `Rep record at ${load(mode, w, unit)}`, detail: `${reps} reps (previous best ${prev})` });
+    out.push({
+      kind: "reps_at_load",
+      label: `${isTimed(mode) ? "Longest hold" : "Rep record"} at ${load(mode, w, unit)}`,
+      detail: `${amount(mode, reps)} (previous best ${amount(mode, prev)})`,
+    });
   }
 
   if (mode === "weight_reps") {
@@ -100,7 +110,7 @@ export function compareWithPrevious(mode: TrackingMode, current: PreviousSet[], 
   const a = before.slice(0, n);
   const b = now.slice(0, n);
 
-  if (mode === "bodyweight_reps") {
+  if (isUnloaded(mode)) {
     const diff = b.reduce((t, s) => t + s.reps, 0) - a.reduce((t, s) => t + s.reps, 0);
     return repDiffText(diff, null, mode, unit);
   }
@@ -120,7 +130,11 @@ export function compareWithPrevious(mode: TrackingMode, current: PreviousSet[], 
 
 function repDiffText(diff: number, weight: number | null, mode: TrackingMode, unit: WeightUnit): string {
   const at = weight === null ? "" : ` at ${load(mode, weight, unit)}`;
-  if (diff === 0) return `Same reps${at} as last time`;
   const n = Math.abs(diff);
+  if (isTimed(mode)) {
+    if (diff === 0) return `Same time${at} as last time`;
+    return `${n} s ${diff > 0 ? "longer" : "shorter"} in total${at}`;
+  }
+  if (diff === 0) return `Same reps${at} as last time`;
   return `${n} ${diff > 0 ? "more" : "fewer"} ${n === 1 ? "rep" : "reps"}${at}`;
 }

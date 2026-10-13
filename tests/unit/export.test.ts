@@ -29,12 +29,12 @@ const session = (over: Partial<ExportSession> = {}): ExportSession => ({
 describe("CSV export", () => {
   it("writes one row per completed set in local time, never unconfirmed sets", () => {
     const rows = sessionsToCsv([session()], "Europe/London").replace("﻿", "").trim().split("\r\n");
-    expect(rows[0]).toBe("date,time,workout,split,exercise,set_number,set_type,weight_kg,reps,weight_meaning,logged_afterwards,session_id");
+    expect(rows[0]).toBe("date,time,workout,split,exercise,set_number,set_type,weight_kg,reps,weight_meaning,logged_afterwards,session_id,seconds");
     expect(rows.slice(1)).toEqual([
-      "2026-09-21,17:05,Chest & back,My 3-day split,Incline press · Gym A,1,warm-up,40,10,load,no,s1",
-      "2026-09-21,17:05,Chest & back,My 3-day split,Incline press · Gym A,1,working,72.5,9,load,no,s1",
-      "2026-09-21,17:05,Chest & back,My 3-day split,Incline press · Gym A,2,working,72.5,6,load,no,s1",
-      "2026-09-21,17:05,Chest & back,My 3-day split,Dip,1,working,0,12,added to bodyweight,no,s1",
+      "2026-09-21,17:05,Chest & back,My 3-day split,Incline press · Gym A,1,warm-up,40,10,load,no,s1,",
+      "2026-09-21,17:05,Chest & back,My 3-day split,Incline press · Gym A,1,working,72.5,9,load,no,s1,",
+      "2026-09-21,17:05,Chest & back,My 3-day split,Incline press · Gym A,2,working,72.5,6,load,no,s1,",
+      "2026-09-21,17:05,Chest & back,My 3-day split,Dip,1,working,0,12,added to bodyweight,no,s1,",
     ]);
   });
 
@@ -56,6 +56,7 @@ describe("CSV export", () => {
   it("orders workouts oldest first and starts with a byte-order mark for Excel", () => {
     const csv = sessionsToCsv([session({ id: "b", performed_at: "2026-09-28T10:00:00Z" }), session({ id: "a" })], "UTC");
     expect(csv.startsWith("﻿date,")).toBe(true);
-    expect(csv.indexOf(",a\r\n")).toBeLessThan(csv.indexOf(",b\r\n"));
+    expect(csv.indexOf(",a,\r\n")).toBeLessThan(csv.indexOf(",b,\r\n"));
+    expect(csv.indexOf(",a,\r\n")).toBeGreaterThan(0);
   });
 });

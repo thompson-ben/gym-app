@@ -16,12 +16,15 @@ export function parseWeight(input: string, unit: WeightUnit = "kg"): number | nu
 }
 
 /** Parses a reps field: whole numbers only. */
-export function parseReps(input: string): number | null {
+/** Longest hold, in seconds, for timed exercises (stored in the reps field). */
+export const MAX_SECONDS = 3600;
+
+export function parseReps(input: string, max: number = MAX_REPS): number | null {
   const trimmed = input.trim();
   if (trimmed === "") return null;
   if (!/^\d{1,4}$/.test(trimmed)) return Number.NaN;
   const value = Number(trimmed);
-  return value <= MAX_REPS ? value : Number.NaN;
+  return value <= max ? value : Number.NaN;
 }
 
 export function isValidNumber(value: number | null): value is number {

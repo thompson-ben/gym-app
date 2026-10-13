@@ -1,4 +1,4 @@
-import type { Exercise, PreviousMap, SessionDoc, SessionExercise, SessionSet, SetType } from "../types";
+import { isAddedWeight, isUnloaded, type Exercise, type PreviousMap, type SessionDoc, type SessionExercise, type SessionSet, type SetType } from "../types";
 import { isValidNumber } from "../validation";
 import { matchPrevious, suggestWeight } from "./previous";
 
@@ -17,7 +17,7 @@ function plannedSet(ex: SessionExercise, sets: SessionSet[], setType: SetType, p
   // Without a matching set from last time, continue from the set above it in this session.
   const above = sets.at(-1)?.weight_kg;
   const weight =
-    ex.tracking_mode === "bodyweight_reps"
+    isUnloaded(ex.tracking_mode)
       ? null
       : matched
         ? matched.weight_kg
@@ -91,8 +91,8 @@ export type CompleteError = "reps_required" | "weight_required" | "invalid";
 /** Checks whether a set can be confirmed, and the weight that would be recorded. */
 export function validateCompletion(ex: SessionExercise, set: SessionSet): { weight: number | null } | { error: CompleteError } {
   if (!isValidNumber(set.reps) || set.reps < 1) return { error: "reps_required" };
-  if (ex.tracking_mode === "bodyweight_reps") return { weight: null };
-  if (ex.tracking_mode === "added_weight_reps") {
+  if (isUnloaded(ex.tracking_mode)) return { weight: null };
+  if (isAddedWeight(ex.tracking_mode)) {
     const weight = set.weight_kg ?? 0;
     return isValidNumber(weight) ? { weight } : { error: "invalid" };
   }
