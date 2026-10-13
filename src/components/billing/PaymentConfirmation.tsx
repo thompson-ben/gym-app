@@ -2,10 +2,23 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { PLANS, isPlanId } from "@/lib/billing/plans";
+import { pixelEvent } from "@/lib/pixel";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { IconCheck } from "../icons";
 import { buttonClass } from "../styles";
 import { Spinner } from "../ui";
+
+/** True the first time a key is seen in this browser (so a reload or a second tab doesn't report a purchase twice). */
+function once(key: string): boolean {
+  try {
+    if (window.localStorage.getItem(key)) return false;
+    window.localStorage.setItem(key, "1");
+    return true;
+  } catch {
+    return true;
+  }
+}
 
 /** After Stripe Checkout: waits (briefly) for Stripe's confirmation to reach the account. */
 export function PaymentConfirmation() {
@@ -14,9 +27,14 @@ export function PaymentConfirmation() {
     let tries = 0;
     let stop = false;
     async function check() {
-      const { data } = await supabaseBrowser().from("memberships").select("status").maybeSingle();
+      const { data } = await supabaseBrowser().from("memberships").select("status, plan").maybeSingle();
       if (stop) return;
-      if (data?.status === "paid" || data?.status === "founder") return setState("done");
+      if (data?.status === "paid" || data?.status === "founder") {
+        if (data.status === "paid" && isPlanId(data.plan) && once(`nl_subscribe_${new URLSearchParams(window.location.search).get("session_id") ?? ""}`)) {
+          pixelEvent("Subscribe", { value: PLANS[data.plan].pence / 100, currency: "GBP" });
+        }
+        return setState("done");
+      }
       if (++tries >= 15) return setState("slow");
       setTimeout(check, 2000);
     }

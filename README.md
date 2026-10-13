@@ -305,6 +305,10 @@ Migrations are additive and versioned; never reset a deployed database.
   - **Self-referrals are blocked:** the same account, the same address with a `+tag`, Gmail dots, or accounts older than 14 days.
   - **Email:** the daily trial-reminder job also emails the reward.
   - **Dashboard:** Admin → Referrals.
+- **Meta Pixel (ads):** set `NEXT_PUBLIC_META_PIXEL_ID` in Vercel (Production) and redeploy.
+  - Public pages then show a consent banner. The Pixel loads only after Accept, and never when the browser sends GPC or DNT.
+  - It sends PageView (public pages), CompleteRegistration (sign-up) and Subscribe (paid membership, with the plan price).
+  - Unset: no banner and no Pixel. Code: `src/lib/pixel.ts`, `src/lib/consent.ts`, `src/components/ConsentBanner.tsx`.
 - **Saw pricing (migration 17):** one anonymous `pricing_view` event per tab session when the landing page's pricing section scrolls into view. It's shown as a step in the sign-up funnel (`admin_pricing_views()`).
 - **Activation (migration 16, `admin_activation()`):** the people who signed up in the range, as a cohort.
   - It shows how far each got: confirmed email → activated a split → first workout → a second workout on a later day (within 7 and 14 days) → paid.
