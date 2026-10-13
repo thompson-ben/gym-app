@@ -1,27 +1,35 @@
 import Link from "next/link";
 import type { MembershipState } from "@/lib/billing/membership";
 import { YEARLY_PER_MONTH } from "@/lib/billing/plans";
+import { REFERRAL_DAYS } from "@/lib/referral";
 import { buttonClass, cx } from "../styles";
 import { ManageBillingButton } from "./ManageBillingButton";
 
-/** Train screen: trial countdown, trial ended, or a failed payment. Nothing otherwise. */
-export function MembershipBanner({ state }: { state: MembershipState }) {
+/** Train screen: trial countdown (with the invite offer), trial ended, or a failed payment. Nothing otherwise. */
+export function MembershipBanner({ state, invite = false }: { state: MembershipState; invite?: boolean }) {
   if (state.kind === "trial") {
     const urgent = state.daysLeft <= 3;
     return (
-      <Link
-        href="/upgrade"
-        className={cx(
-          "mt-2 flex items-center justify-between gap-3 rounded-2xl px-4 py-3 text-sm",
-          urgent ? "border border-accent-text/50 bg-accent-soft" : "bg-surface-2",
-        )}
-      >
-        <span>
-          <span className="font-semibold">{state.daysLeft === 1 ? "Last day" : `${state.daysLeft} days left`}</span>
-          <span className="text-muted"> of your free trial{urgent ? ` · keep training from ${YEARLY_PER_MONTH}/month` : ""}</span>
-        </span>
-        <span className="shrink-0 font-medium text-accent-text">See plans</span>
-      </Link>
+      <>
+        <Link
+          href="/upgrade"
+          className={cx(
+            "mt-2 flex items-center justify-between gap-3 rounded-2xl px-4 py-3 text-sm",
+            urgent ? "border border-accent-text/50 bg-accent-soft" : "bg-surface-2",
+          )}
+        >
+          <span>
+            <span className="font-semibold">{state.daysLeft === 1 ? "Last day" : `${state.daysLeft} days left`}</span>
+            <span className="text-muted"> of your free trial{urgent ? ` · keep training from ${YEARLY_PER_MONTH}/month` : ""}</span>
+          </span>
+          <span className="shrink-0 font-medium text-accent-text">See plans</span>
+        </Link>
+        {invite ? (
+          <Link href="/profile#invite" className="mt-1.5 block px-1 text-sm text-muted">
+            Invite a training partner and get <span className="font-medium text-accent-text">{REFERRAL_DAYS} more days free</span>
+          </Link>
+        ) : null}
+      </>
     );
   }
   if (state.kind === "trial_ended" || state.kind === "lapsed") {

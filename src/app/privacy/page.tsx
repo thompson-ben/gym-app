@@ -67,6 +67,11 @@ export default function PrivacyPage() {
           never your weights, reps or history. You can revoke a link at any time. In a group workout, the people in the group see the plan, the
           name you choose to show them and whether you have started or finished; never your weights, reps or history.
         </p>
+        <p>
+          Invites: if you join through someone’s invite link, group workout or shared split, we record that they invited you, so they can get
+          the invite reward. They see only how many people they invited have signed up and started training, never who, and never anything
+          you log.
+        </p>
       </section>
       <section>
         <h2>Your choices and rights</h2>

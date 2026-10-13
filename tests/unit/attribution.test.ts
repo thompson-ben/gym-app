@@ -59,3 +59,13 @@ describe("admin percentages", () => {
     expect(pct(83, 27)).toBe("–");
   });
 });
+
+describe("invite links", () => {
+  it("keeps a valid invite code and labels the source as referral", () => {
+    expect(read("https://notchlift.com/?ref=ab12cd34")).toBeNull(); // contains 1: not a valid code
+    const t = read("https://notchlift.com/?ref=abcd2345");
+    expect(t).toMatchObject({ ref: "ABCD2345", utm_source: "referral", landing_path: "/" });
+    expect(read("https://notchlift.com/?ref=ABCD2345&utm_source=instagram")).toMatchObject({ ref: "ABCD2345", utm_source: "instagram" });
+    expect(read("https://notchlift.com/?ref=<script>")).toBeNull();
+  });
+});

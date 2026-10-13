@@ -3,6 +3,7 @@ import { ProfileForm } from "@/components/ProfileForm";
 import { PageHeader } from "@/components/ui";
 import { Wordmark } from "@/components/Wordmark";
 import { MEMBERSHIP_COLUMNS, type MembershipRow } from "@/lib/billing/membership";
+import type { ReferralStatus } from "@/lib/referral";
 import { requireUser } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Profile" };
@@ -22,6 +23,13 @@ export default async function ProfilePage() {
     // Missing before migration 13: then nobody is an admin.
     supabase.rpc("is_admin"),
   ]);
+  // Trial members can invite a friend for more days (migration 18; missing before it: hidden).
+  let referral: ReferralStatus | null = null;
+  if ((membership as MembershipRow)?.status === "trial") {
+    await supabase.rpc("my_referral_code");
+    const { data: status } = await supabase.rpc("my_referral_status");
+    referral = (status as ReferralStatus | null) ?? null;
+  }
   // Never block the page on profile settings; they only affect defaults.
   const unavailable = !data;
   return (
@@ -32,7 +40,7 @@ export default async function ProfilePage() {
           Your profile settings could not be loaded, so defaults are shown. Your splits and workouts are not affected.
         </p>
       ) : null}
-      <ProfileForm userId={userId} email={email} profile={data ?? defaults} membership={(membership as MembershipRow) ?? null} isAdmin={isAdmin === true} />
+      <ProfileForm userId={userId} email={email} profile={data ?? defaults} membership={(membership as MembershipRow) ?? null} referral={referral} isAdmin={isAdmin === true} />
       <div className="mt-12 text-center">
         <Wordmark size="sm" className="text-muted" />
         <p className="text-xs text-faint">Workout Planner &amp; Tracker</p>

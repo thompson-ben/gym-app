@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { COMPANY_LINE, CONTACT_EMAIL } from "@/lib/company";
 import { Wordmark } from "../Wordmark";
 
-export const LEGAL_UPDATED = "10 October 2026";
+export const LEGAL_UPDATED = "13 October 2026";
 
 /** The contact address as a link. */
 export function contactLine(): ReactNode {

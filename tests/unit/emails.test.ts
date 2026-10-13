@@ -59,3 +59,14 @@ describe("email footer", () => {
     expect(m.html).toContain("company no. 09468823");
   });
 });
+
+describe("referral reward email", () => {
+  it("says the trial got 14 more days and until when", async () => {
+    const { referralRewardEmail } = await import("@/lib/emails/referral-reward");
+    const m = referralRewardEmail({ displayName: "Sam <b>", trialEndsAt: "2026-11-01T12:00:00Z", siteUrl: "https://notchlift.com" });
+    expect(m.subject).toBe("You’ve got 14 more days of NotchLift");
+    expect(m.html).toContain("Sunday 1 November");
+    expect(m.html).toContain("Sam &lt;b&gt;");
+    expect(m.text).toContain("https://notchlift.com/train");
+  });
+});

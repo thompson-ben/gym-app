@@ -51,6 +51,11 @@ export default async function TrainPage() {
       .limit(5),
     supabase.from("memberships").select(MEMBERSHIP_COLUMNS).maybeSingle(),
   ]);
+  const membershipNow = membershipState((membership.data as MembershipRow) ?? null);
+  // Trial members who haven't earned their referral days yet see an invite nudge (migration 18).
+  const invite =
+    membershipNow.kind === "trial" &&
+    (await supabase.rpc("my_referral_status").then(({ data, error }) => !error && !(data as { rewarded_at?: string | null } | null)?.rewarded_at));
   if (periodError) throw periodError;
   if (openError) throw openError;
   if (recent.error) throw recent.error;
@@ -109,7 +114,7 @@ export default async function TrainPage() {
         <Wordmark />
         {split && !open && startable.length ? <LogPastWorkoutButton workouts={startable} size="sm" label="Log past workout" /> : null}
       </div>
-      <MembershipBanner state={membershipState((membership.data as MembershipRow) ?? null)} />
+      <MembershipBanner state={membershipNow} invite={invite} />
       {!open ? <InstallCard /> : null}
 
       {open ? (

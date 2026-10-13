@@ -22,6 +22,11 @@ export default function TermsPage() {
           have paid for, and you will not be charged again. If we ever change the price, we will tell you by email before it applies to you.
         </p>
         <p>
+          Invite a friend: while you are on your free trial, if someone signs up through your invite link, a group workout or a split you
+          shared, and logs their first workout, your trial is extended by 14 days. This happens once per account, isn’t available for
+          accounts you create yourself, and we may change or end the offer at any time.
+        </p>
+        <p>
           Your right to cancel: you can cancel within 14 days of first subscribing and receive a full refund by emailing {contactLine()}. Deleting your
           account cancels your subscription immediately. Nothing in these terms affects your statutory rights.
         </p>

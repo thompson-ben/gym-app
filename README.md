@@ -298,6 +298,13 @@ Migrations are additive and versioned; never reset a deployed database.
 - **Analytics (first party, migration 13):** anonymous visits to public pages (`visit`, once per tab session) and sign-up form views, recorded through `/api/track` → `track_event()`. No visitor id, IP or user agent is stored; device and country come from the request. Campaign tags (`utm_*`), Facebook ad clicks (`fbclid`, not stored) and referring sites set a 30-day `nl_src` cookie with no identifier; after sign-in it becomes the account's first-touch attribution (`record_attribution()`, new accounts only). GPC/DNT browsers and bots are skipped.
 - **Admin dashboard (`/admin`):** funnel, daily visits/sign-ups/workouts, sources and campaigns, retention, feature use and memberships, from `admin_overview()` (totals only). Only accounts in `public.admins` can open it; add yourself in the SQL Editor:
   `insert into public.admins (user_id) select id from auth.users where email = 'you@example.com';`
+- **Referrals (migration 18):** each trial member gets an invite link (`/?ref=CODE`, on Profile, with a nudge under the Train banner).
+  - **Who referred whom:** recorded from that link (first-touch attribution), a group workout join (the host) or a copied shared split (the sharer).
+  - **When it counts:** when the friend, with a confirmed email, finishes a workout with a confirmed working set.
+  - **Reward:** the referrer's trial gets 14 more days, once per account, provided the friend signed up during the referrer's trial. An expired trial restarts for 14 days.
+  - **Self-referrals are blocked:** the same account, the same address with a `+tag`, Gmail dots, or accounts older than 14 days.
+  - **Email:** the daily trial-reminder job also emails the reward.
+  - **Dashboard:** Admin → Referrals.
 - **Saw pricing (migration 17):** one anonymous `pricing_view` event per tab session when the landing page's pricing section scrolls into view. It's shown as a step in the sign-up funnel (`admin_pricing_views()`).
 - **Activation (migration 16, `admin_activation()`):** the people who signed up in the range, as a cohort.
   - It shows how far each got: confirmed email → activated a split → first workout → a second workout on a later day (within 7 and 14 days) → paid.

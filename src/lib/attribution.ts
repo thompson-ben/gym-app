@@ -17,7 +17,12 @@ export type Touch = {
   utm_term?: string;
   from_meta_ad: boolean;
   first_seen_at: string;
+  /** A member's invite code (?ref=), so the friend's sign-up is credited to them. */
+  ref?: string;
 };
+
+/** Invite codes: 8 characters, no 0/O/1/I. */
+export const REF_CODE = /^[A-HJ-NP-Z2-9]{8}$/;
 
 export const TOUCH_COOKIE = "nl_src";
 const UTM = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"] as const;
@@ -39,6 +44,11 @@ export function readTouch(url: URL, referrer: string, ownHost: string, now: Date
     if (host && host !== ownHost.toLowerCase()) touch.referrer_host = host.slice(0, 120);
   } catch {
     /* malformed referrer */
+  }
+  const ref = url.searchParams.get("ref")?.trim().toUpperCase();
+  if (ref && REF_CODE.test(ref)) {
+    touch.ref = ref;
+    if (!touch.utm_source) touch.utm_source = "referral";
   }
   // Links people share from the app, when they carry no campaign tags of their own.
   if (!touch.utm_source && !touch.referrer_host) {
