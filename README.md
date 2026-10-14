@@ -305,6 +305,11 @@ Migrations are additive and versioned; never reset a deployed database.
   - **Self-referrals are blocked:** the same account, the same address with a `+tag`, Gmail dots, or accounts older than 14 days.
   - **Email:** the daily trial-reminder job also emails the reward.
   - **Dashboard:** Admin → Referrals.
+- **Admin money views (migration 21):**
+  - **Yesterday** panel at the top (UK day): visits, sign-ups, first workouts, revenue, plus trials ending in 3 days, cancellations, failed payments and new comments.
+  - **Cost per result:** type in spend from Ads Manager (a day or a date range, per campaign or per ad = utm_content). The table shows spend against sign-ups, first workouts and payers, with the cost of each. Spend over several days is spread evenly across them.
+  - **Refund window:** first payments in the last 14 days (the right-to-cancel period), with a total to keep aside. Refunds made in Stripe are marked by hand here.
+  - **Referrals:** "Trials extended" also shows the all-time count and how many of those members went on to pay.
 - **Timed exercises (migration 20):** two more tracking modes, `duration` (holds such as a front lever or L-sit) and `added_weight_duration` (e.g. a weighted dead hang).
   - Seconds are stored in the existing reps fields: a set's `reps` is the seconds held, and a rep range is a range of seconds (up to 3600). Reps exercises keep their old limits (enforced by triggers).
   - An exercise can't switch between reps and seconds once it has logged sets.
