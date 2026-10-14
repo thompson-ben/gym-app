@@ -38,8 +38,13 @@ test("a visit from a tagged ad link is counted and credited to the account that 
   await expect(row).toContainText("facebook");
   await expect(row.getByRole("cell").nth(1)).toHaveText("1");
   await expect(row.getByRole("cell").nth(2)).toHaveText("1");
-  await page.getByRole("link", { name: "Last 7 days" }).click();
+  await page.getByRole("link", { name: "7 days" }).click();
   await expect(page).toHaveURL(/days=7/);
+  // Today: the campaign's visit and sign-up happened just now.
+  await page.getByRole("link", { name: "Today" }).click();
+  await expect(page).toHaveURL(/days=1/);
+  await expect(page.getByText(/people who signed up today/)).toBeVisible();
+  await expect(page.getByRole("row").filter({ hasText: campaign }).getByRole("cell").nth(2)).toHaveText("1");
 });
 
 test("browsers with Global Privacy Control are not counted", async ({ browser }) => {

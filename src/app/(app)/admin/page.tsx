@@ -15,7 +15,9 @@ import { requireUser } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Admin", robots: { index: false, follow: false } };
 
-const RANGES = [7, 30, 90] as const;
+const RANGES = [1, 7, 30, 90] as const;
+/** "today" or "the last 7 days". Days start at midnight UTC. */
+const rangeText = (days: number) => (days === 1 ? "today" : `the last ${days} days`);
 
 const FEATURE_LABELS: [keyof AdminOverview["features"], string, string][] = [
   ["active_split", "Have an active split", "now"],
@@ -64,7 +66,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
             aria-current={d === days ? "page" : undefined}
             className={cx("h-10 rounded-full px-4 text-sm leading-10", d === days ? "bg-accent font-semibold text-accent-ink" : "bg-surface-2 text-muted hover:text-fg")}
           >
-            Last {d} days
+            {d === 1 ? "Today" : `${d} days`}
           </Link>
         ))}
       </nav>
@@ -190,7 +192,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
           <div className="grid grid-cols-2 gap-3">
             <StatTile label="Paying members" value={o.billing.paying} hint={`${o.billing.monthly} monthly · ${o.billing.yearly} yearly`} />
             <StatTileText label="Monthly recurring" value={pounds(o.billing.mrr_pence)} hint="Yearly plans counted as ÷12" />
-            <StatTileText label="Collected" value={pounds(o.billing.revenue_pence)} hint={`In the last ${days} days`} />
+            <StatTileText label="Collected" value={pounds(o.billing.revenue_pence)} hint={days === 1 ? "Today" : `In the last ${days} days`} />
             <StatTile label="Trials → paid" value={o.billing.trials_converted} hint={`of ${o.billing.trials_started} trials started (${pct(o.billing.trials_converted, o.billing.trials_started)})`} />
             <StatTile label="Trials running" value={o.billing.trials_active} hint={`${o.billing.trials_ended_unpaid} ended without paying`} />
             <StatTile label="Cancelling" value={o.billing.canceling} hint={o.billing.billing_issue ? `${o.billing.billing_issue} with a failed payment` : "At the end of their period"} />
@@ -268,7 +270,7 @@ function Activation({ a, days }: { a: AdminActivation; days: number }) {
     <section className="mt-8 space-y-4" aria-labelledby="activation-title">
       <SectionTitle><span id="activation-title">Activation</span></SectionTitle>
       <p className="-mt-2 text-sm text-muted">
-        The {t.signups} people who signed up in the last {days} days. A workout counts when it has a confirmed working set; coming back means a
+        The {t.signups} people who signed up {rangeText(days)}. A workout counts when it has a confirmed working set; coming back means a
         workout on a later day.
       </p>
       <Funnel
