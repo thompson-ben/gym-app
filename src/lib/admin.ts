@@ -86,6 +86,9 @@ export type AdminReferrals = {
   qualified: number;
   rewards: number;
   referred_paid: number;
+  /** Added by migration 21. */
+  rewards_all_time?: number;
+  rewarded_paid?: number;
 };
 
 /** Shape of admin_surveys() (migration 19). Comments carry the email so the owner can follow up. */
@@ -94,4 +97,41 @@ export type AdminSurveys = {
   answers: { question: string; answer: string; count: number }[];
   by_campaign: { question: string; source: string; campaign: string; content: string; answer: string; count: number }[];
   comments: { question: string; answer: string; detail: string; at: string; email: string; source: string; campaign: string }[];
+};
+
+/** admin_ad_spend() (migration 21): spend in range against what it brought, per campaign and ad. */
+export type AdResult = { spend_pence: number | null; visits: number; signups: number; activated: number; paid: number };
+export type AdminAdSpend = {
+  days: number;
+  from: string;
+  to: string;
+  campaigns: (AdResult & { campaign: string; ads: (AdResult & { content: string })[] })[];
+  entries: { id: number; start_day: string; end_day: string; campaign: string; content: string; amount_pence: number }[];
+  known: { campaign: string; content: string }[];
+};
+
+/** £ cost per result, or "–" when there's no spend or no result yet. */
+export function costPer(spendPence: number | null, count: number): string {
+  return spendPence && count > 0 ? pounds(Math.round(spendPence / count)) : "–";
+}
+
+/** admin_refund_window() (migration 21). */
+export type AdminRefundWindow = {
+  total_pence: number;
+  count: number;
+  payments: { id: number; email: string | null; amount_pence: number; plan: string | null; paid_at: string; window_ends: string; refunded_at: string | null }[];
+};
+
+/** admin_glance() (migration 21): yesterday (UK day) and what's coming up. */
+export type AdminGlance = {
+  yesterday: string;
+  visits: number;
+  signups: number;
+  first_workouts: number;
+  payments: number;
+  revenue_pence: number;
+  trials_ending_3d: number;
+  cancelling: number;
+  billing_issues: number;
+  new_comments: number;
 };

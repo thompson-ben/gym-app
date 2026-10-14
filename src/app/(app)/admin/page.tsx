@@ -7,15 +7,20 @@ import { LaunchPanel } from "@/components/admin/LaunchPanel";
 import { TestAccounts } from "@/components/admin/TestAccounts";
 import { paymentsConfigured } from "@/lib/billing/server";
 import { cx } from "@/components/styles";
+import { AdSpend } from "@/components/admin/AdSpend";
+import { Glance } from "@/components/admin/Glance";
+import { RefundWindow } from "@/components/admin/RefundWindow";
 import { Surveys } from "@/components/admin/Surveys";
 import { PageHeader, SectionTitle } from "@/components/ui";
-import { duration, pct, pounds, type AdminActivation, type AdminOverview, type AdminReferrals, type AdminSurveys } from "@/lib/admin";
+import { duration, pct, pounds, type AdminActivation, type AdminOverview, type AdminAdSpend, type AdminGlance, type AdminReferrals, type AdminRefundWindow, type AdminSurveys } from "@/lib/admin";
 import { emailConfigured } from "@/lib/emails/send";
 import { requireUser } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Admin", robots: { index: false, follow: false } };
 
-const RANGES = [7, 30, 90] as const;
+const RANGES = [1, 7, 30, 90] as const;
+/** "today" or "the last 7 days". Days start at midnight UTC. */
+const rangeText = (days: number) => (days === 1 ? "today" : `the last ${days} days`);
 
 const FEATURE_LABELS: [keyof AdminOverview["features"], string, string][] = [
   ["active_split", "Have an active split", "now"],
@@ -32,13 +37,16 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const { days: daysParam } = await searchParams;
   const days = RANGES.find((d) => String(d) === daysParam) ?? 30;
   const { supabase } = await requireUser();
-  const [{ data, error }, freeList, activationRes, pricingRes, referralRes, surveyRes] = await Promise.all([
+  const [{ data, error }, freeList, activationRes, pricingRes, referralRes, surveyRes, spendRes, refundRes, glanceRes] = await Promise.all([
     supabase.rpc("admin_overview", { p_days: days }),
     supabase.rpc("admin_free_access_list"),
     supabase.rpc("admin_activation", { p_days: days }),
     supabase.rpc("admin_pricing_views", { p_days: days }),
     supabase.rpc("admin_referrals", { p_days: days }),
     supabase.rpc("admin_surveys", { p_days: days }),
+    supabase.rpc("admin_ad_spend", { p_days: days }),
+    supabase.rpc("admin_refund_window"),
+    supabase.rpc("admin_glance"),
   ]);
   // Not an admin (or migration 13 not applied): the page does not exist for them.
   if (error || !data) notFound();
@@ -52,6 +60,10 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const referrals = referralRes.data as AdminReferrals | null;
   // Missing until migration 19 runs: the section is hidden.
   const surveys = surveyRes.data as AdminSurveys | null;
+  // Missing until migration 21 runs: these sections are hidden.
+  const spend = spendRes.data as AdminAdSpend | null;
+  const refunds = refundRes.data as AdminRefundWindow | null;
+  const glance = glanceRes.data as AdminGlance | null;
 
   return (
     <>
@@ -64,10 +76,12 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
             aria-current={d === days ? "page" : undefined}
             className={cx("h-10 rounded-full px-4 text-sm leading-10", d === days ? "bg-accent font-semibold text-accent-ink" : "bg-surface-2 text-muted hover:text-fg")}
           >
-            Last {d} days
+            {d === 1 ? "Today" : `${d} days`}
           </Link>
         ))}
       </nav>
+
+      {glance ? <Glance g={glance} /> : null}
 
       <section aria-label="Headline numbers" className="grid grid-cols-2 gap-3">
         <StatTile label="Visits" value={t.visits} hint="Anonymous, once per browser session" />
@@ -79,6 +93,13 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
       </section>
 
       {act ? <Activation a={act} days={days} /> : null}
+
+      {spend ? (
+        <section className="mt-8" aria-labelledby="spend-title">
+          <SectionTitle><span id="spend-title">Cost per result</span></SectionTitle>
+          <AdSpend a={spend} />
+        </section>
+      ) : null}
 
       <section className="mt-8" aria-labelledby="funnel-title">
         <SectionTitle><span id="funnel-title">Sign-up funnel</span></SectionTitle>
@@ -171,7 +192,15 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
           <div className="grid grid-cols-2 gap-3">
             <StatTile label="Signed up through a friend" value={referrals.referred} hint={`${referrals.by_link} invite link · ${referrals.by_group} group · ${referrals.by_split} split`} />
             <StatTile label="Of those, started training" value={referrals.qualified} hint={`${pct(referrals.qualified, referrals.referred)} of referred sign-ups`} />
-            <StatTile label="Rewards given" value={referrals.rewards} hint="14 extra trial days, once per member" />
+            <StatTile
+              label="Trials extended"
+              value={referrals.rewards}
+              hint={
+                referrals.rewards_all_time !== undefined
+                  ? `+14 days for a friend who trained · ${referrals.rewards_all_time} all time, ${referrals.rewarded_paid ?? 0} went on to pay`
+                  : "14 extra trial days, once per member"
+              }
+            />
             <StatTile label="Referred and paying" value={referrals.referred_paid} hint={`${referrals.sharers} members have an invite link`} />
           </div>
         </section>
@@ -190,11 +219,18 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
           <div className="grid grid-cols-2 gap-3">
             <StatTile label="Paying members" value={o.billing.paying} hint={`${o.billing.monthly} monthly · ${o.billing.yearly} yearly`} />
             <StatTileText label="Monthly recurring" value={pounds(o.billing.mrr_pence)} hint="Yearly plans counted as ÷12" />
-            <StatTileText label="Collected" value={pounds(o.billing.revenue_pence)} hint={`In the last ${days} days`} />
+            <StatTileText label="Collected" value={pounds(o.billing.revenue_pence)} hint={days === 1 ? "Today" : `In the last ${days} days`} />
             <StatTile label="Trials → paid" value={o.billing.trials_converted} hint={`of ${o.billing.trials_started} trials started (${pct(o.billing.trials_converted, o.billing.trials_started)})`} />
             <StatTile label="Trials running" value={o.billing.trials_active} hint={`${o.billing.trials_ended_unpaid} ended without paying`} />
             <StatTile label="Cancelling" value={o.billing.canceling} hint={o.billing.billing_issue ? `${o.billing.billing_issue} with a failed payment` : "At the end of their period"} />
           </div>
+        </section>
+      ) : null}
+
+      {refunds ? (
+        <section className="mt-8" aria-labelledby="refund-title">
+          <SectionTitle><span id="refund-title">Refund window</span></SectionTitle>
+          <RefundWindow w={refunds} />
         </section>
       ) : null}
 
@@ -224,7 +260,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
             <StatTile key={s} label={s[0].toUpperCase() + s.slice(1)} value={o.memberships[s] ?? 0} />
           ))}
         </div>
-        <p className="mt-3 text-sm text-faint">Figures are totals; days are UTC. No training data is shown here. Email addresses appear only in Free access, Test accounts and Feedback comments.</p>
+        <p className="mt-3 text-sm text-faint">Figures are totals; days are UTC. No training data is shown here. Email addresses appear only in Free access, Test accounts, Refund window and Feedback comments.</p>
       </section>
     </>
   );
@@ -268,7 +304,7 @@ function Activation({ a, days }: { a: AdminActivation; days: number }) {
     <section className="mt-8 space-y-4" aria-labelledby="activation-title">
       <SectionTitle><span id="activation-title">Activation</span></SectionTitle>
       <p className="-mt-2 text-sm text-muted">
-        The {t.signups} people who signed up in the last {days} days. A workout counts when it has a confirmed working set; coming back means a
+        The {t.signups} people who signed up {rangeText(days)}. A workout counts when it has a confirmed working set; coming back means a
         workout on a later day.
       </p>
       <Funnel
