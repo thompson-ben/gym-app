@@ -106,6 +106,31 @@ Use a **dedicated** Supabase project for NotchLift: the migrations create tables
 - The reset email links to `/auth/reset`, which verifies the one-time token and opens `/reset-password` to choose a new password. Used, forged or expired links (including Supabase's own `otp_expired` redirect) return to `/forgot-password` with "That reset link is invalid or has expired". Opening `/reset-password` without a recovery session asks for a new link.
 - Required redirect URLs: `/auth/confirm` and `/auth/reset` on every origin the app is served from (see Deployment step 1.4).
 
+### Sign in with Apple / Google
+
+The sign-in screen shows **Continue with Apple** and **Continue with Google** above the email form, once each provider is listed in the Vercel environment variable `AUTH_PROVIDERS` (`apple`, `google` or `apple,google`). Leave it unset until the provider is switched on in Supabase, or the button would lead to an error.
+
+- Both return to `/auth/confirm` (the same redirect URL as email confirmation), which continues to where the person started. Cancelling on Apple's or Google's screen comes back to sign-in with a message.
+- New accounts get the same trial or free access as email sign-ups, keep their ad / referral attribution, and start with the name the provider shares. Signing in with Apple or Google using the same verified email as an existing account opens that account.
+- **Google refuses to sign in inside the Facebook / Instagram app's browser** (`disallowed_useragent`). There, the Google button is replaced by a note on opening the page in Safari or Chrome; Apple and email still work.
+
+**Apple** (needs an Apple Developer account):
+1. Certificates, Identifiers & Profiles → **Identifiers** → + → **App ID** (e.g. `com.notchlift.app`), with **Sign in with Apple** ticked.
+2. **Identifiers** → + → **Services ID** (e.g. `com.notchlift.web`; this is the *client ID*). Tick **Sign in with Apple** → Configure: primary App ID from step 1; Domains `<project-ref>.supabase.co`; Return URL `https://<project-ref>.supabase.co/auth/v1/callback`.
+3. **Keys** → + → tick **Sign in with Apple** (configure with the App ID) → download the `.p8` file (only once; keep it safe, never commit or share it). Note the Key ID and your Team ID (top right).
+4. Make the client secret from the Team ID, Key ID, Services ID and `.p8` with the generator in Supabase's "Login with Apple" guide. **It expires after 6 months**: set a reminder to make a new one and paste it in.
+5. Supabase → Authentication → Sign In / Providers → **Apple**: enable; Client IDs = the Services ID; Secret Key = the generated secret.
+6. Private relay ("Hide My Email"): Apple Developer → Services → **Sign in with Apple for Email Communication** → add `notchlift.com` and the address emails are sent from, so trial and reminder emails reach people who hid their address.
+
+**Google**:
+1. Google Cloud Console → new project → **Google Auth Platform**: Branding (app name NotchLift, support email, home page, privacy and terms links, authorised domains `notchlift.com` and `<project-ref>.supabase.co`), Audience **External**, then **Publish**. Only the basic scopes (email, profile) are used.
+2. **Clients** → Create client → **Web application**: authorised JavaScript origin `https://www.notchlift.com`; authorised redirect URI `https://<project-ref>.supabase.co/auth/v1/callback`.
+3. Supabase → Authentication → Sign In / Providers → **Google**: enable; paste the client ID and client secret.
+
+Then add `AUTH_PROVIDERS` in Vercel (Production) and redeploy.
+
+The sign-up form also records anonymous steps for the dashboard (migration 23): tapped Create account, tapped Apple / Google, and why a sign-up didn't go through (a reason code, never what was typed), plus whether the page was inside the Facebook / Instagram app. Admin → Sign-up funnel → **On the sign-up form** shows them with new accounts by method.
+
 ---
 
 ## How it works
@@ -305,6 +330,7 @@ Migrations are additive and versioned; never reset a deployed database.
   - **Self-referrals are blocked:** the same account, the same address with a `+tag`, Gmail dots, or accounts older than 14 days.
   - **Email:** the daily trial-reminder job also emails the reward.
   - **Dashboard:** Admin → Referrals.
+- **Sign-up steps and Apple / Google sign-in (migration 23):** anonymous sign-up form steps for the dashboard (tapped Create account / Apple / Google, why a sign-up failed, inside the Facebook / Instagram app or not), accounts by sign-in method, and names from Apple / Google on new profiles. See *Sign in with Apple / Google* for switching the providers on.
 - **First-workout email (migration 22):** the 9am job emails, once, anyone who signed up 18–72 hours earlier, confirmed their email and hasn't logged a workout. It names their waiting workout ("Your Push workout is ready") or suggests a ready-made split. Admin → Activation shows how many were sent and how many trained within 3 days.
 - **Admin money views (migration 21):**
   - **Yesterday** panel at the top (UK day): visits, sign-ups, first workouts, revenue, plus trials ending in 3 days, cancellations, failed payments and new comments.

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { Wordmark } from "@/components/Wordmark";
+import { inAppBrowser, parseProviders } from "@/lib/auth-providers";
 import { getOptionalUser } from "@/lib/supabase/server";
 import { safeNext } from "@/lib/safe-next";
 import { AuthForm } from "./AuthForm";
@@ -12,6 +14,8 @@ export default async function SignInPage({ searchParams }: { searchParams: Promi
   const next = safeNext(params.next);
   const { userId } = await getOptionalUser();
   if (userId) redirect(next);
+  const providers = parseProviders(process.env.AUTH_PROVIDERS);
+  const inApp = inAppBrowser((await headers()).get("user-agent") ?? "");
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col px-6 pt-safe pb-safe">
@@ -24,7 +28,11 @@ export default async function SignInPage({ searchParams }: { searchParams: Promi
           Your account and all its data have been deleted.
         </p>
       ) : null}
-      <AuthForm initialMode={params.mode === "sign-up" ? "sign-up" : "sign-in"} next={next} error={params.error ?? null} initialEmail={params.email && params.email.length <= 254 && params.email.includes("@") ? params.email : ""} />
+      <AuthForm
+        initialMode={params.mode === "sign-up" ? "sign-up" : "sign-in"} next={next} error={params.error ?? null} initialEmail={params.email && params.email.length <= 254 && params.email.includes("@") ? params.email : ""}
+        providers={providers}
+        inApp={inApp}
+      />
     </main>
   );
 }

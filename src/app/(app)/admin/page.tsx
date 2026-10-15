@@ -11,9 +11,10 @@ import { AdSpend } from "@/components/admin/AdSpend";
 import { Glance } from "@/components/admin/Glance";
 import { PrintButton } from "@/components/admin/PrintButton";
 import { RefundWindow } from "@/components/admin/RefundWindow";
+import { SignupSteps } from "@/components/admin/SignupSteps";
 import { Surveys } from "@/components/admin/Surveys";
 import { PageHeader, SectionTitle } from "@/components/ui";
-import { duration, pct, pounds, type AdminActivation, type AdminOverview, type AdminAdSpend, type AdminGlance, type AdminReferrals, type AdminRefundWindow, type AdminSurveys } from "@/lib/admin";
+import { duration, pct, pounds, type AdminActivation, type AdminOverview, type AdminAdSpend, type AdminGlance, type AdminReferrals, type AdminRefundWindow, type AdminSignupSteps, type AdminSurveys } from "@/lib/admin";
 import { emailConfigured } from "@/lib/emails/send";
 import { requireUser } from "@/lib/supabase/server";
 
@@ -38,7 +39,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const { days: daysParam } = await searchParams;
   const days = RANGES.find((d) => String(d) === daysParam) ?? 30;
   const { supabase } = await requireUser();
-  const [{ data, error }, freeList, activationRes, pricingRes, referralRes, surveyRes, spendRes, refundRes, glanceRes, nudgeRes] = await Promise.all([
+  const [{ data, error }, freeList, activationRes, pricingRes, referralRes, surveyRes, spendRes, refundRes, glanceRes, nudgeRes, stepsRes] = await Promise.all([
     supabase.rpc("admin_overview", { p_days: days }),
     supabase.rpc("admin_free_access_list"),
     supabase.rpc("admin_activation", { p_days: days }),
@@ -49,6 +50,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
     supabase.rpc("admin_refund_window"),
     supabase.rpc("admin_glance"),
     supabase.rpc("admin_nudges", { p_days: days }),
+    supabase.rpc("admin_signup_steps", { p_days: days }),
   ]);
   // Not an admin (or migration 13 not applied): the page does not exist for them.
   if (error || !data) notFound();
@@ -68,6 +70,8 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const glance = glanceRes.data as AdminGlance | null;
   // Missing until migration 22 runs: the line is hidden.
   const nudges = nudgeRes.data as { nudged: number; trained_3d: number; settled: number } | null;
+  // Missing until migration 23 runs: the step and the form breakdown are hidden.
+  const steps = stepsRes.data as AdminSignupSteps | null;
 
   return (
     <>
@@ -115,11 +119,13 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
             { label: "Visited", value: t.visits },
             ...(pricingViews == null ? [] : [{ label: "Saw pricing", value: pricingViews }]),
             { label: "Opened sign-up", value: t.signup_views },
+            ...(steps ? [{ label: "Tapped create / Apple / Google", value: steps.submits + steps.oauth_apple + steps.oauth_google }] : []),
             { label: "Created account", value: t.signups },
             { label: "Confirmed email", value: t.confirmed },
             { label: "Logged first workout", value: t.first_workout },
           ]}
         />
+        {steps ? <SignupSteps s={steps} /> : null}
       </section>
 
       <section className="mt-8 space-y-4" aria-labelledby="daily-title">
@@ -316,7 +322,7 @@ function Activation({ a, days, nudges }: { a: AdminActivation; days: number; nud
     <section className="mt-8 space-y-4" aria-labelledby="activation-title">
       <SectionTitle><span id="activation-title">Activation</span></SectionTitle>
       <p className="-mt-2 text-sm text-muted">
-        The {t.signups} people who signed up {rangeText(days)}. A workout counts when it has a confirmed working set; coming back means a
+        The {t.signups} {t.signups === 1 ? "person" : "people"} who signed up {rangeText(days)}. A workout counts when it has a confirmed working set; coming back means a
         workout on a later day.
       </p>
       <Funnel
@@ -332,7 +338,7 @@ function Activation({ a, days, nudges }: { a: AdminActivation; days: number; nud
       <div className="grid grid-cols-2 gap-3">
         <StatTileText label="Back within 7 days" value={pct(t.second7, t.eligible7)} hint={back(t.second7, t.eligible7, 7)} />
         <StatTileText label="Back within 14 days" value={pct(t.second14, t.eligible14)} hint={back(t.second14, t.eligible14, 14)} />
-        <StatTileText label="Sign-up to first set" value={duration(t.median_minutes_to_first_set)} hint="Median, for those who logged one" />
+        <StatTileText label="Sign-up to first set" value={t.first_workout ? duration(t.median_minutes_to_first_set) : "–"} hint="Median, for those who logged one" />
         <StatTileText label="Trained" value={pct(t.first_workout, t.signups)} hint={`${t.first_workout} of ${t.signups} logged a workout`} />
       </div>
       {nudges ? (

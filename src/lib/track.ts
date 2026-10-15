@@ -18,7 +18,9 @@ function once(key: string): boolean {
   }
 }
 
-function send(name: "visit" | "signup_view" | "pricing_view", props: Partial<Touch> & { path?: string }) {
+type EventName = "visit" | "signup_view" | "pricing_view" | "signup_submit" | "signup_error" | "oauth_start";
+
+function send(name: EventName, props: Partial<Touch> & { path?: string; detail?: string }) {
   const body = JSON.stringify({ name, props });
   try {
     if (navigator.sendBeacon?.("/api/track", new Blob([body], { type: "application/json" }))) return;
@@ -65,4 +67,13 @@ export function trackPricingView() {
 export function trackSignupView() {
   if (!trackingAllowed() || !once("nl_signup_view")) return;
   send("signup_view", { path: "/sign-in" });
+}
+
+/**
+ * A step in creating an account: tapped Create account, tapped Continue with Apple / Google, or
+ * why it didn't go through (a reason code, never what was typed). Each once per tab session.
+ */
+export function trackSignupStep(name: "signup_submit" | "signup_error" | "oauth_start", detail?: string) {
+  if (!trackingAllowed() || !once(`nl_${name}_${detail ?? ""}`)) return;
+  send(name, { path: "/sign-in", detail });
 }

@@ -57,7 +57,7 @@ export default defineConfig({
     command: `npx next start -p ${PORT}`,
     url: `http://localhost:${PORT}/sign-in`,
     reuseExistingServer: true,
-    env: { ...(process.env as Record<string, string>), ...E2E_BILLING },
+    env: { ...(process.env as Record<string, string>), ...E2E_BILLING, AUTH_PROVIDERS: "apple,google" },
     timeout: 120_000,
   },
 });
