@@ -71,7 +71,7 @@ export function Surveys({ s }: { s: AdminSurveys }) {
                   {c.campaign ? ` · ${c.source} / ${c.campaign}` : ""}
                 </p>
                 <p className="mt-1 whitespace-pre-line">{c.detail}</p>
-                <a href={`mailto:${c.email}`} className="mt-1 inline-block text-accent-text underline-offset-4 hover:underline">{c.email}</a>
+                <a href={`mailto:${c.email}`} className="mt-1 inline-block text-accent-text underline-offset-4 hover:underline print:hidden">{c.email}</a>
               </li>
             ))}
           </ul>

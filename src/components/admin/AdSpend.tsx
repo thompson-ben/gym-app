@@ -32,8 +32,10 @@ export function AdSpend({ a }: { a: AdminAdSpend }) {
         Each cell shows the count and, underneath, the cost of each one. Sign-ups are accounts created in this range from that campaign or ad;
         Trained = logged a first workout; Paid = has paid. Days are UK days. Spend over several days is spread evenly across them.
       </p>
-      <AdSpendForm known={a.known} />
-      <AdSpendEntries entries={a.entries} />
+      <div className="space-y-4 print:hidden">
+        <AdSpendForm known={a.known} />
+        <AdSpendEntries entries={a.entries} />
+      </div>
     </div>
   );
 }

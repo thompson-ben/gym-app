@@ -108,6 +108,57 @@ select {
   padding-bottom: calc(6rem + env(safe-area-inset-bottom));
 }
 
+/* Printing (Admin's "Save as PDF"): light colours on white, no app chrome, cards kept whole. */
+@media print {
+  :root {
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --surface-2: #eceeeb;
+    --surface-3: #e0e3df;
+    --field: #ffffff;
+    --border: #d9ddd8;
+    --text: #16191b;
+    --muted: #5b6268;
+    --faint: #737a80;
+    --accent: #8cc63f;
+    --accent-ink: #172009;
+    --accent-text: #45700f;
+    --accent-soft: rgb(120 180 40 / 0.14);
+    --danger: #c7362a;
+    --danger-soft: rgb(199 54 42 / 0.1);
+    --warn: #8a5f00;
+    color-scheme: light;
+  }
+  html {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  @page {
+    margin: 12mm;
+  }
+  nav[aria-label="Main"] {
+    display: none !important;
+  }
+  .page-bottom {
+    padding-bottom: 0;
+  }
+  /* Keep small cards and rows whole; long lists and tables may run onto the next page. */
+  li,
+  tr,
+  .rounded-3xl:not(:has(table, ul, ol)) {
+    break-inside: avoid;
+  }
+  /* A section title stays with what follows it. */
+  h2,
+  div:has(> h2),
+  div:has(> h2) + p {
+    break-after: avoid;
+  }
+  .overflow-x-auto {
+    overflow: visible;
+  }
+}
+
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: none;
