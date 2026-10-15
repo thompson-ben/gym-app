@@ -25,7 +25,7 @@ export default function PrivacyPage() {
           <li><strong>Account:</strong> your email address and password (stored only as a secure hash by our authentication provider).</li>
           <li><strong>Profile:</strong> an optional display name and app preferences such as default rest time.</li>
           <li><strong>Training data:</strong> the splits, workouts, exercises, sets, notes and dates you enter.</li>
-          <li><strong>Membership:</strong> whether you are a founding member, on a trial or subscribed, your plan, renewal date and payments (amounts and dates). Near the end of a free trial we send one reminder email, and if a trial ends without a plan, one email asking why.</li>
+          <li><strong>Membership:</strong> whether you are a founding member, on a trial or subscribed, your plan, renewal date and payments (amounts and dates). If you haven’t logged a workout by the morning after signing up, we send one email to help you get started. Near the end of a free trial we send one reminder email, and if a trial ends without a plan, one email asking why.</li>
           <li>
             <strong>Your answers to our short questions</strong> (each asked once, and you can skip it): how you heard about NotchLift, how
             your trial is going, why you didn’t choose a plan, and the reason you give Stripe if you cancel. We use them, together with where

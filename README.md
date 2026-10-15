@@ -305,6 +305,7 @@ Migrations are additive and versioned; never reset a deployed database.
   - **Self-referrals are blocked:** the same account, the same address with a `+tag`, Gmail dots, or accounts older than 14 days.
   - **Email:** the daily trial-reminder job also emails the reward.
   - **Dashboard:** Admin → Referrals.
+- **First-workout email (migration 22):** the 9am job emails, once, anyone who signed up 18–72 hours earlier, confirmed their email and hasn't logged a workout. It names their waiting workout ("Your Push workout is ready") or suggests a ready-made split. Admin → Activation shows how many were sent and how many trained within 3 days.
 - **Admin money views (migration 21):**
   - **Yesterday** panel at the top (UK day): visits, sign-ups, first workouts, revenue, plus trials ending in 3 days, cancellations, failed payments and new comments.
   - **Cost per result:** type in spend from Ads Manager (a day or a date range, per campaign or per ad = utm_content). The table shows spend against sign-ups, first workouts and payers, with the cost of each. Spend over several days is spread evenly across them.

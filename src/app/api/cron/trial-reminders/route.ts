@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { billingSecret } from "@/lib/billing/server";
+import { firstWorkoutEmail } from "@/lib/emails/first-workout";
 import { referralRewardEmail } from "@/lib/emails/referral-reward";
 import { trialEndedEmail } from "@/lib/emails/trial-ended";
 import { trialEndingEmail } from "@/lib/emails/trial-ending";
@@ -14,7 +15,8 @@ type Due = { user_id: string; email: string; display_name: string | null; trial_
 
 /**
  * Daily: emails everyone whose trial ends within 3 days (once each), anyone who earned
- * referral days since the last run, and asks once why a trial ended without a plan. Called by a scheduled job with
+ * referral days since the last run, asks once why a trial ended without a plan, and nudges
+ * new accounts that haven't logged a first workout by the next morning. Called by a scheduled job with
  * "Authorization: Bearer <CRON_SECRET>".
  */
 export async function POST(request: Request) {
@@ -76,5 +78,20 @@ export async function POST(request: Request) {
       }
     }
   }
-  return NextResponse.json({ sent, rewards, exits, failed });
+
+  // Signed up 18–72 hours ago and not trained yet: one "first workout" email (migration 22; before it this is skipped).
+  let nudges = 0;
+  const { data: idle, error: idleError } = await db.rpc("first_workout_nudges_due", { p_secret: secret });
+  if (!idleError) {
+    for (const row of (idle ?? []) as { user_id: string; email: string; display_name: string | null; trial_ends_at: string | null; split_name: string | null; workout_name: string | null }[]) {
+      const msg = firstWorkoutEmail({ displayName: row.display_name, splitName: row.split_name, workoutName: row.workout_name, trialEndsAt: row.trial_ends_at, siteUrl: SITE_URL });
+      if (await sendEmail(row.email, msg)) {
+        await db.rpc("mark_first_workout_nudged", { p_secret: secret, p_user: row.user_id });
+        nudges++;
+      } else {
+        failed++;
+      }
+    }
+  }
+  return NextResponse.json({ sent, rewards, exits, nudges, failed });
 }
