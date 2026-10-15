@@ -8,3 +8,13 @@ export function supabaseEnv() {
   }
   return { url, key };
 }
+
+/**
+ * The sign-in cookie's name. Supabase names it after the first part of the API address
+ * ("sb-<project-ref>-auth-token"), so moving production to api.notchlift.com would rename it
+ * to "sb-api-auth-token" and sign everyone out. Production keeps its original name instead.
+ * Everywhere else (local, previews on the default address) uses Supabase's default.
+ */
+export function authCookieOptions(url: string): { name: string } | undefined {
+  return new URL(url).hostname === "api.notchlift.com" ? { name: "sb-ffrufyxoqjzijzqsbntm-auth-token" } : undefined;
+}

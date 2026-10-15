@@ -4,13 +4,14 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
-import { supabaseEnv } from "./env";
+import { authCookieOptions, supabaseEnv } from "./env";
 import { isWeightUnit, type WeightUnit } from "../units";
 
 export async function supabaseServer() {
   const cookieStore = await cookies();
   const { url, key } = supabaseEnv();
   return createServerClient(url, key, {
+    cookieOptions: authCookieOptions(url),
     cookies: {
       getAll: () => cookieStore.getAll(),
       setAll: (toSet) => {
