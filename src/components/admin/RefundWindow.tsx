@@ -34,10 +34,10 @@ export function RefundWindow({ w }: { w: AdminRefundWindow }) {
               <span className={cx("min-w-0", p.refunded_at && "text-faint line-through")}>
                 <span className="font-medium tabular">{pounds(p.amount_pence)}</span>{" "}
                 <span className="text-muted">
-                  {p.plan ?? ""} · {p.email ?? "deleted account"} · paid {date(p.paid_at)} · until {date(p.window_ends)}
+                  {p.plan ?? ""} <span className="print:hidden">· {p.email ?? "deleted account"}</span> · paid {date(p.paid_at)} · until {date(p.window_ends)}
                 </span>
               </span>
-              <button type="button" onClick={() => void mark(p.id, !p.refunded_at)} className="shrink-0 text-xs text-muted underline underline-offset-4">
+              <button type="button" onClick={() => void mark(p.id, !p.refunded_at)} className="shrink-0 text-xs text-muted underline underline-offset-4 print:hidden">
                 {p.refunded_at ? "Undo" : "Mark refunded"}
               </button>
             </li>

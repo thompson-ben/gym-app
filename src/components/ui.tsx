@@ -222,7 +222,7 @@ export function PageHeader({
   return (
     <header className="pt-safe">
       <div className="flex min-h-14 items-center justify-between gap-2 pt-2">
-        <Link href={back.href} className="-ml-2 inline-flex h-11 items-center gap-1 rounded-2xl pr-3 pl-1 text-sm text-muted hover:text-fg">
+        <Link href={back.href} className="-ml-2 inline-flex h-11 items-center gap-1 rounded-2xl pr-3 pl-1 text-sm text-muted hover:text-fg print:invisible">
           <IconChevronLeft size={18} />
           {back.label}
         </Link>

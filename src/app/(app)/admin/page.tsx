@@ -9,6 +9,7 @@ import { paymentsConfigured } from "@/lib/billing/server";
 import { cx } from "@/components/styles";
 import { AdSpend } from "@/components/admin/AdSpend";
 import { Glance } from "@/components/admin/Glance";
+import { PrintButton } from "@/components/admin/PrintButton";
 import { RefundWindow } from "@/components/admin/RefundWindow";
 import { Surveys } from "@/components/admin/Surveys";
 import { PageHeader, SectionTitle } from "@/components/ui";
@@ -70,8 +71,11 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
 
   return (
     <>
-      <PageHeader title="Admin" back={{ href: "/profile", label: "Profile" }} />
-      <nav aria-label="Date range" className="-mt-2 mb-6 flex gap-2">
+      <PageHeader title="Admin" back={{ href: "/profile", label: "Profile" }} action={<PrintButton />} />
+      <p className="-mt-3 mb-6 hidden text-sm text-muted print:block">
+        NotchLift · {days === 1 ? "Today" : `Last ${days} days`} · generated {generatedAt()}
+      </p>
+      <nav aria-label="Date range" className="-mt-2 mb-6 flex gap-2 print:hidden">
         {RANGES.map((d) => (
           <Link
             key={d}
@@ -158,7 +162,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
         ) : (
           <p className="rounded-3xl border border-dashed border-line px-5 py-6 text-center text-muted">No visits recorded in this range yet.</p>
         )}
-        <details className="mt-3 rounded-2xl bg-surface-2 px-4 py-3 text-sm text-muted">
+        <details className="mt-3 rounded-2xl print:hidden bg-surface-2 px-4 py-3 text-sm text-muted">
           <summary className="cursor-pointer font-medium text-fg">How to tag ad and social links</summary>
           <p className="mt-2">Add campaign tags to every link you post, so sign-ups are credited to it:</p>
           <p className="mt-2 rounded-xl bg-surface px-3 py-2 font-mono text-xs break-all text-fg">
@@ -238,14 +242,14 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
       ) : null}
 
       {freeList.data ? (
-        <section className="mt-8" aria-labelledby="free-title">
+        <section className="mt-8 print:hidden" aria-labelledby="free-title">
           <SectionTitle><span id="free-title">Free access for friends</span></SectionTitle>
           <FreeAccess list={freeList.data as FreeAccessList} emailReady={emailConfigured()} />
         </section>
       ) : null}
 
       {freeList.data && "live" in (freeList.data as FreeAccessList) ? (
-        <section className="mt-8" aria-labelledby="launch-title">
+        <section className="mt-8 print:hidden" aria-labelledby="launch-title">
           <SectionTitle><span id="launch-title">Launch</span></SectionTitle>
           <LaunchPanel
             live={Boolean((freeList.data as FreeAccessList).live)}
@@ -263,10 +267,15 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
             <StatTile key={s} label={s[0].toUpperCase() + s.slice(1)} value={o.memberships[s] ?? 0} />
           ))}
         </div>
-        <p className="mt-3 text-sm text-faint">Figures are totals; days are UTC. No training data is shown here. Email addresses appear only in Free access, Test accounts, Refund window and Feedback comments.</p>
+        <p className="mt-3 text-sm text-faint">Figures are totals; days are UTC. No training data is shown here. Email addresses appear only in Free access, Test accounts, Refund window and Feedback comments, and are left out of the PDF.</p>
       </section>
     </>
   );
+}
+
+/** e.g. "15 Oct 2026, 09:12" in UK time. */
+function generatedAt() {
+  return new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date());
 }
 
 function StatTileText({ label, value, hint }: { label: string; value: string; hint?: string }) {
@@ -372,7 +381,9 @@ function Activation({ a, days, nudges }: { a: AdminActivation; days: number; nud
           </p>
         </div>
       ) : null}
-      <TestAccounts accounts={a.test_accounts} />
+      <div className="print:hidden">
+        <TestAccounts accounts={a.test_accounts} />
+      </div>
     </section>
   );
 }
