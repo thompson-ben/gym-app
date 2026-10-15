@@ -22,7 +22,11 @@ export default function PrivacyPage() {
       <section>
         <h2>What we store</h2>
         <ul>
-          <li><strong>Account:</strong> your email address and password (stored only as a secure hash by our authentication provider).</li>
+          <li>
+            <strong>Account:</strong> your email address and password (stored only as a secure hash by our authentication provider). If you
+            continue with Apple or Google instead, we receive your email address (with Apple, it can be a private relay address that forwards
+            to you) and, if shared, your name, which starts as your display name. We never see your Apple or Google password.
+          </li>
           <li><strong>Profile:</strong> an optional display name and app preferences such as default rest time.</li>
           <li><strong>Training data:</strong> the splits, workouts, exercises, sets, notes and dates you enter.</li>
           <li><strong>Membership:</strong> whether you are a founding member, on a trial or subscribed, your plan, renewal date and payments (amounts and dates). If you haven’t logged a workout by the morning after signing up, we send one email to help you get started. Near the end of a free trial we send one reminder email, and if a trial ends without a plan, one email asking why.</li>
@@ -33,7 +37,7 @@ export default function PrivacyPage() {
           </li>
           <li>
             <strong>Visits to our public pages</strong> (not the app itself): the page, the site that linked to it, campaign tags in the link (for
-            example from an ad), your device type and country, and whether the pricing section or sign-up form was opened. No IP address and no ID for you are stored. If you came from a campaign or another
+            example from an ad), your device type and country, whether the pricing section or sign-up form was opened, whether someone tapped to create an account (and, if it didn’t go through, a short reason such as “password too short”, never what was typed), and whether the page was open inside the Facebook or Instagram app. No IP address and no ID for you are stored. If you came from a campaign or another
             site, a small cookie remembers where from (not who you are) for up to 30 days. If you then create an account, that source is attached to
             your account so we can see which campaigns bring people who keep training, and the cookie is deleted. Browsers that send Global
             Privacy Control or Do Not Track are not counted.
@@ -60,6 +64,7 @@ export default function PrivacyPage() {
         <ul>
           <li><strong>Supabase</strong> hosts the database and sign-in, in the EU (Ireland).</li>
           <li><strong>Vercel</strong> hosts the app; requests are handled in the EU (Dublin).</li>
+          <li><strong>Apple</strong> and <strong>Google</strong> confirm who you are if you choose to sign in with them; they learn that you use NotchLift.</li>
           <li><strong>Resend</strong> sends account emails (confirming your address and resetting your password).</li>
           <li><strong>Sentry</strong> receives the technical error reports described above, stored in the EU.</li>
           <li><strong>Meta</strong> (Facebook and Instagram) receives the ad-measurement events described under Cookies, only if you accept them.</li>

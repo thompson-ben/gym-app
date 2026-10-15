@@ -135,3 +135,26 @@ export type AdminGlance = {
   billing_issues: number;
   new_comments: number;
 };
+
+/** admin_signup_steps (migration 23). */
+export type AdminSignupSteps = {
+  views: number;
+  views_in_app: number;
+  submits: number;
+  oauth_apple: number;
+  oauth_google: number;
+  errors: { reason: string; count: number }[];
+  methods: { email: number; apple: number; google: number };
+};
+
+export const SIGNUP_ERROR_LABELS: Record<string, string> = {
+  invalid_email: "Email not accepted",
+  short_password: "Password too short",
+  weak_password: "Password too weak",
+  already_registered: "Already had an account",
+  rate_limited: "Too many attempts",
+  network: "No connection",
+  oauth_cancelled: "Cancelled Apple / Google",
+  oauth_failed: "Apple / Google failed",
+  other: "Other error",
+};

@@ -145,14 +145,25 @@ select {
   /* Keep small cards and rows whole; long lists and tables may run onto the next page. */
   li,
   tr,
-  .rounded-3xl:not(:has(table, ul, ol)) {
+  .rounded-3xl:not(:has(table, ul, ol)):not(ul, ol) {
     break-inside: avoid;
   }
-  /* A section title stays with what follows it. */
-  h2,
-  div:has(> h2),
-  div:has(> h2) + p {
-    break-after: avoid;
+  /*
+   * A section title stays with what follows it, and a table starts with at least one row under
+   * its header. Safari ignores "break-after: avoid", so each gets an invisible unbreakable block
+   * that reaches 12rem down: when less than that is left on the page, it starts a new page.
+   */
+  div:has(> h2) {
+    display: block;
+    break-inside: avoid;
+  }
+  div:has(> h2)::after,
+  .overflow-x-auto:has(> table)::before {
+    content: "";
+    display: block;
+    height: 12rem;
+    margin-bottom: -12rem;
+    break-inside: avoid;
   }
   .overflow-x-auto {
     overflow: visible;
