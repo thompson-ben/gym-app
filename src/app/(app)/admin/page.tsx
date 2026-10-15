@@ -37,7 +37,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const { days: daysParam } = await searchParams;
   const days = RANGES.find((d) => String(d) === daysParam) ?? 30;
   const { supabase } = await requireUser();
-  const [{ data, error }, freeList, activationRes, pricingRes, referralRes, surveyRes, spendRes, refundRes, glanceRes] = await Promise.all([
+  const [{ data, error }, freeList, activationRes, pricingRes, referralRes, surveyRes, spendRes, refundRes, glanceRes, nudgeRes] = await Promise.all([
     supabase.rpc("admin_overview", { p_days: days }),
     supabase.rpc("admin_free_access_list"),
     supabase.rpc("admin_activation", { p_days: days }),
@@ -47,6 +47,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
     supabase.rpc("admin_ad_spend", { p_days: days }),
     supabase.rpc("admin_refund_window"),
     supabase.rpc("admin_glance"),
+    supabase.rpc("admin_nudges", { p_days: days }),
   ]);
   // Not an admin (or migration 13 not applied): the page does not exist for them.
   if (error || !data) notFound();
@@ -64,6 +65,8 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const spend = spendRes.data as AdminAdSpend | null;
   const refunds = refundRes.data as AdminRefundWindow | null;
   const glance = glanceRes.data as AdminGlance | null;
+  // Missing until migration 22 runs: the line is hidden.
+  const nudges = nudgeRes.data as { nudged: number; trained_3d: number; settled: number } | null;
 
   return (
     <>
@@ -92,7 +95,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
         <StatTile label="Workouts logged" value={t.workouts_logged} hint={`${t.accounts} accounts in total`} />
       </section>
 
-      {act ? <Activation a={act} days={days} /> : null}
+      {act ? <Activation a={act} days={days} nudges={nudges} /> : null}
 
       {spend ? (
         <section className="mt-8" aria-labelledby="spend-title">
@@ -297,7 +300,7 @@ function MiniList({ title, rows }: { title: string; rows: [string, number][] }) 
 }
 
 /** People who signed up in the range and how far each got. Rates are stage to stage. */
-function Activation({ a, days }: { a: AdminActivation; days: number }) {
+function Activation({ a, days, nudges }: { a: AdminActivation; days: number; nudges: { nudged: number; trained_3d: number; settled: number } | null }) {
   const t = a.totals;
   const back = (n: number, of: number, d: number) => (of ? `${n} of ${of} (${pct(n, of)})` : `Needs sign-ups ${d}+ days old`);
   return (
@@ -323,6 +326,16 @@ function Activation({ a, days }: { a: AdminActivation; days: number }) {
         <StatTileText label="Sign-up to first set" value={duration(t.median_minutes_to_first_set)} hint="Median, for those who logged one" />
         <StatTileText label="Trained" value={pct(t.first_workout, t.signups)} hint={`${t.first_workout} of ${t.signups} logged a workout`} />
       </div>
+      {nudges ? (
+        <p className="text-sm text-muted">
+          <span className="font-medium text-fg">First-workout email:</span>{" "}
+          {nudges.nudged
+            ? `${nudges.nudged} sent ${rangeText(days)}; ${nudges.trained_3d} trained within 3 days of it (${pct(nudges.trained_3d, nudges.nudged)})${
+                nudges.nudged > nudges.settled ? `, ${nudges.nudged - nudges.settled} still inside their 3 days` : ""
+              }.`
+            : `none sent ${rangeText(days)}. It goes out at 9am to people who signed up 18–72 hours earlier and haven't trained.`}
+        </p>
+      ) : null}
       {a.campaigns.length ? (
         <div className="overflow-x-auto rounded-3xl border border-line bg-surface">
           <table className="w-full min-w-[34rem] text-sm">
