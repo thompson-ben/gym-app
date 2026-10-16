@@ -10,7 +10,12 @@ async function probe(base: string, key: string) {
   const started = Date.now();
   try {
     const res = await fetch(`${base.replace(/\/$/, "")}/auth/v1/health`, { headers: { apikey: key }, signal: AbortSignal.timeout(8000), cache: "no-store" });
-    return `${res.status} in ${Date.now() - started} ms: ${(await res.text()).slice(0, 120)}`;
+    const body = await res.text();
+    // Cloudflare error pages: pull out the title and "Error 1xxx" code.
+    const title = body.match(/<title>([^<]*)<\/title>/i)?.[1]?.trim();
+    const code = body.match(/Error\s*(?:code)?\s*:?\s*(\d{3,4})/i)?.[1];
+    const extra = title ? ` | title: ${title}${code ? ` | Cloudflare error ${code}` : ""} | cf-ray: ${res.headers.get("cf-ray") ?? "-"} | server: ${res.headers.get("server") ?? "-"}` : "";
+    return `${res.status} in ${Date.now() - started} ms: ${title ? "" : body.slice(0, 120)}${extra}`;
   } catch (e) {
     return `FAILED after ${Date.now() - started} ms: ${e instanceof Error ? `${e.name}: ${e.message}${e.cause ? ` (${String((e.cause as Error).message ?? e.cause)})` : ""}` : String(e)}`;
   }
