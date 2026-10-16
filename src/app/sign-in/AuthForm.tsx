@@ -102,7 +102,18 @@ export function AuthForm({
           const notConfirmed = error.message === "Email not confirmed";
           setUnconfirmed(notConfirmed);
           setResend("idle");
-          setMessage(notConfirmed ? "Please confirm your email first. Check your inbox for the link." : "Incorrect email or password.");
+          // Only a rejected password counts as "incorrect"; anything else (a bad key, an outage, a
+          // rate limit) says so, with its code, rather than sending people to reset a good password.
+          const wrongPassword = error.code === "invalid_credentials" || error.message === "Invalid login credentials";
+          setMessage(
+            notConfirmed
+              ? "Please confirm your email first. Check your inbox for the link."
+              : wrongPassword
+                ? "Incorrect email or password."
+                : error.status === 429
+                  ? signupErrorMessage("rate_limited")
+                  : `Couldn’t sign in just now (${error.code ?? error.status ?? "error"}). Please try again in a moment.`,
+          );
           return;
         }
         router.replace(next);
