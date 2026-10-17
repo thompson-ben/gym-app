@@ -12,8 +12,10 @@ export const metadata: Metadata = { title: "Sign in" };
 export default async function SignInPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const params = await searchParams;
   const next = safeNext(params.next);
-  const { userId } = await getOptionalUser();
+  const { userId, supabase } = await getOptionalUser();
   if (userId) redirect(next);
+  // Trial after launch, free during early access: the reassurance line on the form says which.
+  const { data: paidPlans } = await supabase.rpc("paid_plans_live");
   const providers = parseProviders(process.env.AUTH_PROVIDERS);
   const inApp = inAppBrowser((await headers()).get("user-agent") ?? "");
 
@@ -32,6 +34,7 @@ export default async function SignInPage({ searchParams }: { searchParams: Promi
         initialMode={params.mode === "sign-up" ? "sign-up" : "sign-in"} next={next} error={params.error ?? null} initialEmail={params.email && params.email.length <= 254 && params.email.includes("@") ? params.email : ""}
         providers={providers}
         inApp={inApp}
+        paidPlans={paidPlans === true}
       />
     </main>
   );

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { IconCheck } from "@/components/icons";
 import { Button, ErrorNote, Field, Input } from "@/components/ui";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { IN_APP_NAME, PROVIDER_LABEL, signupErrorMessage, signupErrorReason, type InApp, type OAuthProvider, type SignupErrorReason } from "@/lib/auth-providers";
@@ -25,6 +26,7 @@ export function AuthForm({
   initialEmail = "",
   providers = [],
   inApp = null,
+  paidPlans = false,
 }: {
   initialMode: Mode;
   next: string;
@@ -34,6 +36,8 @@ export function AuthForm({
   providers?: OAuthProvider[];
   /** Open inside the Facebook / Instagram app's browser, where Google sign-in is refused. */
   inApp?: InApp | null;
+  /** Paid plans are live, so new accounts start a 14-day trial (otherwise early access is free). */
+  paidPlans?: boolean;
 }) {
   const router = useRouter();
   const [mode, setMode] = useState<Mode>(initialMode);
@@ -164,6 +168,7 @@ export function AuthForm({
   return (
     <form onSubmit={submit} className="space-y-5" noValidate={false}>
       <h1 className="text-2xl font-semibold">{mode === "sign-in" ? "Sign in" : "Create your account"}</h1>
+      {mode === "sign-up" ? <Reassurance paidPlans={paidPlans} /> : null}
       {/* With Apple / Google above the form, the terms come first so they're seen before either. */}
       {mode === "sign-up" && providers.length ? <TermsLine /> : null}
       {providers.length ? <ProviderButtons providers={providers} inApp={inApp} onChoose={continueWith} /> : null}
@@ -224,6 +229,21 @@ export function AuthForm({
         </button>
       </p>
     </form>
+  );
+}
+
+/** What people get, at the moment they decide whether to finish signing up. */
+function Reassurance({ paidPlans }: { paidPlans: boolean }) {
+  const points = paidPlans ? ["14 days free", "No card needed", "Takes 30 seconds"] : ["Free during early access", "No card needed", "Takes 30 seconds"];
+  return (
+    <ul aria-label="What you get" className="-mt-2 flex flex-wrap gap-x-4 gap-y-1.5 text-sm text-muted">
+      {points.map((p) => (
+        <li key={p} className="flex items-center gap-1.5">
+          <IconCheck size={16} className="text-accent-text" />
+          {p}
+        </li>
+      ))}
+    </ul>
   );
 }
 
