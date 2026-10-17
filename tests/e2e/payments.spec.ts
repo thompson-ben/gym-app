@@ -92,6 +92,7 @@ test("admins give friends free access; the reminder job needs its secret", async
 
   await signIn(page, admin);
   await page.goto("/admin");
+  await page.locator("summary", { hasText: "Manage" }).click();
   await page.getByLabel("Email address").fill(friend.email);
   await page.getByLabel("Note (optional)").fill("Gym buddy");
   await page.getByRole("button", { name: "Give free access" }).click();

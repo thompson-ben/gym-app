@@ -158,3 +158,102 @@ export const SIGNUP_ERROR_LABELS: Record<string, string> = {
   oauth_failed: "Apple / Google failed",
   other: "Other error",
 };
+
+/** Who can be added back into the figures (migration 24). Left out by default. */
+export const INCLUDE_KEYS = ["admins", "friends", "tests"] as const;
+export type IncludeKey = (typeof INCLUDE_KEYS)[number];
+export const INCLUDE_LABELS: Record<IncludeKey, string> = { admins: "Admins", friends: "Free-access friends", tests: "Test accounts" };
+
+/** "?include=friends,admins" → ["admins", "friends"]; unknown values are dropped. */
+export function parseInclude(value: string | undefined): IncludeKey[] {
+  const listed = new Set((value ?? "").split(",").map((s) => s.trim()));
+  return INCLUDE_KEYS.filter((k) => listed.has(k));
+}
+
+/** The dashboard's address for a range and include list (omitting defaults). */
+export function adminHref(days: number, include: readonly IncludeKey[]): string {
+  const params = new URLSearchParams();
+  if (days !== 30) params.set("days", String(days));
+  if (include.length) params.set("include", include.join(","));
+  const q = params.toString();
+  return q ? `/admin?${q}` : "/admin";
+}
+
+/** Adds or removes one key, keeping a fixed order. */
+export function toggleInclude(include: readonly IncludeKey[], key: IncludeKey): IncludeKey[] {
+  const next = new Set(include);
+  if (next.has(key)) next.delete(key);
+  else next.add(key);
+  return INCLUDE_KEYS.filter((k) => next.has(k));
+}
+
+export type Channel = "meta_ads" | "instagram" | "facebook" | "shares" | "search" | "direct" | "other";
+export const CHANNEL_LABELS: Record<Channel, string> = {
+  meta_ads: "Meta ads",
+  instagram: "Instagram (bio, posts, stories)",
+  facebook: "Facebook (not ads)",
+  shares: "Friends’ invites & shared links",
+  search: "Google & other search",
+  direct: "Direct (typed in, untagged)",
+  other: "Other websites",
+};
+
+/** admin_dashboard() (migration 24). Every account figure leaves out admins, friends and tests unless included. */
+export type AdminDashboard = {
+  days: number;
+  since: string;
+  include: IncludeKey[];
+  excluded: Record<IncludeKey, number>;
+  overview: { accounts: number; active_7d: number; workouts_total: number; paying: number; trials_running: number; mrr_pence: number };
+  period: { visits: number; signups: number; first_workouts: number; workouts: number; active_users: number; revenue_pence: number; payments: number };
+  funnel: { visits: number; signup_views: number; signups: number; confirmed: number; split: number; first_workout: number; paid: number; median_minutes_to_first: number | null };
+  channels: { channel: Channel; visits: number; signups: number; trained: number; paid: number }[];
+  shares: {
+    invite_links: number;
+    split_links: number;
+    group_invites: number;
+    visits: { link: number; group: number; split: number };
+    signups: number;
+    trained: number;
+    paid: number;
+    rewards: number;
+  };
+  trials: {
+    ended: number;
+    converted: number;
+    ended_all: number;
+    converted_all: number;
+    running: number;
+    ending_7d: number;
+    paid_early: number;
+    recent: { email: string; ended_at: string; converted: boolean; trained: boolean; workouts: number }[];
+  };
+  daily: { day: string; visits: number; signups: number; workouts: number }[];
+};
+
+/**
+ * Undoes campaign names that arrive encoded twice by some ad links
+ * ("NL+%E2%80%93+Sign-ups" → "NL – Sign-ups"). Anything else is returned unchanged.
+ */
+export function decodeCampaign(value: string): string {
+  if (!/%[0-9a-f]{2}/i.test(value)) return value;
+  try {
+    return decodeURIComponent(value.replace(/\+/g, " "));
+  } catch {
+    return value;
+  }
+}
+
+/** Merges source rows whose campaign names differ only by that encoding. */
+export function mergeSources<T extends { source: string; campaign: string; visits: number; signups: number; first_workout: number }>(rows: T[]): T[] {
+  const merged = new Map<string, T>();
+  for (const row of rows) {
+    const campaign = decodeCampaign(row.campaign);
+    const key = `${row.source}|${campaign}`;
+    const prev = merged.get(key);
+    merged.set(key, prev
+      ? { ...prev, visits: prev.visits + row.visits, signups: prev.signups + row.signups, first_workout: prev.first_workout + row.first_workout }
+      : { ...row, campaign });
+  }
+  return [...merged.values()].sort((a, b) => b.signups - a.signups || b.visits - a.visits);
+}

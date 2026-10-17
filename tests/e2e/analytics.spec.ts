@@ -33,8 +33,9 @@ test("a visit from a tagged ad link is counted and credited to the account that 
   await page.goto("/profile");
   await page.getByRole("link", { name: /Admin dashboard/ }).click();
   await page.waitForURL("**/admin");
-  await expect(page.getByRole("heading", { name: "Sign-up funnel" })).toBeVisible();
-  const row = page.getByRole("row").filter({ hasText: campaign });
+  await expect(page.getByRole("heading", { name: "From visit to paying" })).toBeVisible();
+  await page.locator("summary", { hasText: "More detail" }).click();
+  const row = page.getByRole("region", { name: "Every source and campaign" }).getByRole("row").filter({ hasText: campaign });
   await expect(row).toContainText("facebook");
   await expect(row.getByRole("cell").nth(1)).toHaveText("1");
   await expect(row.getByRole("cell").nth(2)).toHaveText("1");
@@ -43,8 +44,10 @@ test("a visit from a tagged ad link is counted and credited to the account that 
   // Today: the campaign's visit and sign-up happened just now.
   await page.getByRole("link", { name: "Today" }).click();
   await expect(page).toHaveURL(/days=1/);
-  await expect(page.getByText(/people who signed up today/)).toBeVisible();
-  await expect(page.getByRole("row").filter({ hasText: campaign }).getByRole("cell").nth(2)).toHaveText("1");
+  await expect(page.getByText(/signed up today and how far/)).toBeVisible();
+  // "More detail" stays open while switching range.
+  await expect(page.locator("details").filter({ has: page.locator("summary", { hasText: "More detail" }) })).toHaveAttribute("open", "");
+  await expect(page.getByRole("region", { name: "Every source and campaign" }).getByRole("row").filter({ hasText: campaign }).getByRole("cell").nth(2)).toHaveText("1");
 });
 
 test("browsers with Global Privacy Control are not counted", async ({ browser }) => {
@@ -69,16 +72,18 @@ test("activation shows sign-ups by campaign, and test accounts can be left out",
 
   await signIn(page, admin);
   await page.goto("/admin");
-  const section = page.locator("section").filter({ has: page.getByRole("heading", { name: "Activation" }) });
-  await expect(section.getByText("Second workout, another day")).toBeVisible();
+  await page.locator("summary", { hasText: "More detail" }).click();
+  await page.locator("summary", { hasText: "Manage" }).click();
+  const section = page.getByRole("region", { name: "Activation by campaign" });
   await expect(section.getByRole("row").filter({ hasText: campaign })).toContainText("instagram");
 
-  await section.getByLabel("Test account email").fill(member.email.toUpperCase());
-  await section.getByRole("button", { name: "Exclude" }).click();
+  const tests = page.getByRole("region", { name: "Test accounts" });
+  await tests.getByLabel("Test account email").fill(member.email.toUpperCase());
+  await tests.getByRole("button", { name: "Exclude" }).click();
   await expect(section.getByRole("row").filter({ hasText: campaign })).toHaveCount(0);
-  await expect(section.getByText(member.email)).toBeVisible();
+  await expect(tests.getByText(member.email)).toBeVisible();
 
-  await section.getByRole("button", { name: `Include ${member.email} again` }).click();
+  await tests.getByRole("button", { name: `Include ${member.email} again` }).click();
   await expect(section.getByRole("row").filter({ hasText: campaign })).toHaveCount(1);
 });
 

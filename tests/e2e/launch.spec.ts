@@ -15,6 +15,7 @@ test("admin keeps friends free, then launch starts 14-day trials for early acces
 
   await signIn(page, admin);
   await page.goto("/admin");
+  await page.locator("summary", { hasText: "Manage" }).click();
   // Everyone who signed up during early access is listed; promote the friend.
   await page.getByRole("button", { name: `Give ${friend.email} free access` }).click();
   const freeItem = page.getByRole("listitem").filter({ hasText: friend.email });

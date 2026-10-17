@@ -83,6 +83,7 @@ test("skipping a question means it isn't asked again; admins see answers and com
   const adminPage = await ctx.newPage();
   await signIn(adminPage, admin);
   await adminPage.goto("/admin");
+  await adminPage.locator("summary", { hasText: "More detail" }).click();
   const section = adminPage.getByRole("region", { name: "Feedback" });
   await expect(section.getByText(poster)).toBeVisible();
   await expect(section.getByRole("link", { name: jo.email })).toHaveAttribute("href", `mailto:${jo.email}`);
