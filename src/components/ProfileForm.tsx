@@ -19,7 +19,7 @@ import { InstallRow } from "./InstallPrompt";
 import { ShowTipsAgainRow } from "./PageTip";
 import { Button, ErrorNote, Field, Input, SectionTitle, Sheet, Toggle, cx, inputClass } from "./ui";
 
-type Profile = { display_name: string | null; default_rest_seconds: number; auto_start_rest: boolean; weight_unit: string };
+type Profile = { display_name: string | null; default_rest_seconds: number; auto_start_rest: boolean; weight_unit: string; reminder_emails?: boolean };
 type Status = { kind: "idle" } | { kind: "saving" } | { kind: "saved" } | { kind: "error"; message: string; retry: () => void };
 
 /**
@@ -43,6 +43,7 @@ export function ProfileForm({
   membership,
   referral = null,
   isAdmin = false,
+  reminderEmails = null,
 }: {
   userId: string;
   email: string | null;
@@ -50,12 +51,15 @@ export function ProfileForm({
   membership: Membership;
   referral?: ReferralStatus | null;
   isAdmin?: boolean;
+  /** Null until migration 25: the switch is hidden. */
+  reminderEmails?: boolean | null;
 }) {
   const router = useRouter();
   const [displayName, setDisplayName] = useState(profile.display_name ?? "");
   const [savedName, setSavedName] = useState(profile.display_name ?? "");
   const [rest, setRest] = useState(profile.default_rest_seconds);
   const [autoRest, setAutoRest] = useState(profile.auto_start_rest);
+  const [reminders, setReminders] = useState(reminderEmails ?? true);
   const [unit, setUnit] = useState<WeightUnit>(isWeightUnit(profile.weight_unit) ? profile.weight_unit : "kg");
   const [status, setStatus] = useState<Record<string, Status>>({});
   const [busy, setBusy] = useState(false);
@@ -230,6 +234,20 @@ export function ProfileForm({
             <span className="text-sm font-medium text-muted">Email</span>
             <span className="min-w-0 truncate">{email}</span>
           </div>
+          {reminderEmails !== null ? (
+            <div className="px-4 py-2">
+              <Toggle
+                label="Reminder emails"
+                description="Occasional emails about getting started and your free trial. Account emails, like password resets, always arrive."
+                checked={reminders}
+                onChange={(v) => {
+                  setReminders(v);
+                  void save("reminders", { reminder_emails: v }, () => setReminders(!v));
+                }}
+              />
+              <StatusLine status={status.reminders} />
+            </div>
+          ) : null}
           <Link href={`/forgot-password${email ? `?email=${encodeURIComponent(email)}` : ""}`} className="flex min-h-13 items-center gap-3 px-4 py-3 hover:bg-surface-2/50">
             <span className="min-w-0 flex-1">
               <span className="block font-medium">Change password</span>
