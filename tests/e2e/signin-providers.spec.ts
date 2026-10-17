@@ -22,6 +22,7 @@ test("Continue with Apple / Google start the provider's sign-in and come back to
 
   await page.goto("/sign-in?mode=sign-up&next=/progress");
   await expect(page.getByRole("heading", { name: "Create your account" })).toBeVisible();
+  await expect(page.getByRole("list", { name: "What you get" })).toContainText("No card needed");
   await expect(page.getByRole("button", { name: "Continue with Google" })).toBeVisible();
   await page.getByRole("button", { name: "Continue with Apple" }).click();
   await page.waitForURL("**/auth/v1/authorize**");
