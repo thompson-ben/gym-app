@@ -32,11 +32,24 @@ export function isPublicPath(path: string): boolean {
   return path === "/" || ["/sign-in", "/join/", "/s/", "/privacy", "/terms"].some((p) => path.startsWith(p));
 }
 
+/**
+ * Some ad links encode their tags twice, so a campaign arrives as "NL+%E2%80%93+Sign-ups".
+ * Decode once more when that's what it looks like; anything else is left alone.
+ */
+function decodeTwice(value: string | undefined): string | undefined {
+  if (!value || !/%[0-9a-f]{2}/i.test(value)) return value;
+  try {
+    return decodeURIComponent(value.replace(/\+/g, " ")).trim();
+  } catch {
+    return value;
+  }
+}
+
 /** Where this page view came from, or null for a direct visit with nothing to attribute. */
 export function readTouch(url: URL, referrer: string, ownHost: string, now: Date): Touch | null {
   const touch: Touch = { landing_path: scrubText(url.pathname).slice(0, 200), from_meta_ad: url.searchParams.has("fbclid"), first_seen_at: now.toISOString() };
   for (const key of UTM) {
-    const v = url.searchParams.get(key)?.trim();
+    const v = decodeTwice(url.searchParams.get(key)?.trim());
     if (v) touch[key] = v.slice(0, key === "utm_source" || key === "utm_medium" ? 100 : 150);
   }
   try {

@@ -26,7 +26,7 @@ export function TestAccounts({ accounts }: { accounts: { email: string }[] }) {
 
   return (
     <div className="rounded-3xl border border-line bg-surface p-4">
-      <p className="text-sm text-muted">Your own test sign-ups, left out of these figures. Admin accounts are always left out.</p>
+      <p className="text-sm text-muted">Your own test sign-ups. They’re left out of the figures unless you tick “Test accounts” at the top of the dashboard.</p>
       <form
         className="mt-3 flex items-end gap-2"
         onSubmit={(e) => {

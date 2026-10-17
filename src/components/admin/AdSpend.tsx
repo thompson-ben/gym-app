@@ -3,7 +3,7 @@ import { costPer, pounds } from "@/lib/admin";
 import { AdSpendEntries, AdSpendForm } from "./AdSpendForm";
 
 /** Spend typed in from Ads Manager against what it brought: cost per sign-up, per first workout, per paying member. */
-export function AdSpend({ a }: { a: AdminAdSpend }) {
+export function AdSpend({ a, manage = true }: { a: AdminAdSpend; manage?: boolean }) {
   return (
     <div className="space-y-4">
       {a.campaigns.length ? (
@@ -26,16 +26,13 @@ export function AdSpend({ a }: { a: AdminAdSpend }) {
           </table>
         </div>
       ) : (
-        <p className="rounded-3xl border border-dashed border-line px-5 py-5 text-sm text-muted">No spend in this range yet. Add what Ads Manager shows below.</p>
+        <p className="rounded-3xl border border-dashed border-line px-5 py-5 text-sm text-muted">No spend in this range yet. Add what Ads Manager shows under Manage → Ad spend.</p>
       )}
       <p className="text-xs text-faint">
         Each cell shows the count and, underneath, the cost of each one. Sign-ups are accounts created in this range from that campaign or ad;
         Trained = logged a first workout; Paid = has paid. Days are UK days. Spend over several days is spread evenly across them.
       </p>
-      <div className="space-y-4 print:hidden">
-        <AdSpendForm known={a.known} />
-        <AdSpendEntries entries={a.entries} />
-      </div>
+      {manage ? <AdSpendManage a={a} /> : null}
     </div>
   );
 }
@@ -66,5 +63,15 @@ function Row({ label, r, strong }: { label: string; r: AdResult; strong?: boolea
       {cell(r.activated)}
       {cell(r.paid)}
     </tr>
+  );
+}
+
+/** Adding and removing spend entries. */
+export function AdSpendManage({ a }: { a: AdminAdSpend }) {
+  return (
+    <div className="space-y-4 print:hidden">
+      <AdSpendForm known={a.known} />
+      <AdSpendEntries entries={a.entries} />
+    </div>
   );
 }

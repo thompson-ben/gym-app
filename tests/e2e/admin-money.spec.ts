@@ -26,6 +26,7 @@ test("admin sees yesterday at a glance, adds ad spend to get cost per sign-up, a
   await expect(page.getByRole("heading", { name: /^Yesterday/ })).toBeVisible();
 
   // Spend for today on that ad: £10 for 2 sign-ups is £5 each.
+  await page.locator("summary", { hasText: "Manage" }).click();
   const form = page.getByRole("form", { name: "Add ad spend" });
   const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/London" }).format(new Date());
   await form.getByLabel("From").fill(today);
