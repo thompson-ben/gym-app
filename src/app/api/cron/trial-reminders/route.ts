@@ -5,6 +5,7 @@ import { referralRewardEmail } from "@/lib/emails/referral-reward";
 import { trialEndedEmail } from "@/lib/emails/trial-ended";
 import { trialEndingEmail } from "@/lib/emails/trial-ending";
 import { emailConfigured, sendEmail } from "@/lib/emails/send";
+import { unsubscribeOneClickUrl, unsubscribePageUrl } from "@/lib/emails/unsubscribe";
 import { SITE_URL } from "@/lib/site";
 import { supabaseAnon } from "@/lib/supabase/anon";
 import { isWeightUnit } from "@/lib/units";
@@ -16,7 +17,8 @@ type Due = { user_id: string; email: string; display_name: string | null; trial_
 /**
  * Daily: emails everyone whose trial ends within 3 days (once each), anyone who earned
  * referral days since the last run, asks once why a trial ended without a plan, and nudges
- * new accounts that haven't logged a first workout by the next morning. Called by a scheduled job with
+ * new accounts that haven't logged a first workout by the next morning. Reminder emails carry an
+ * unsubscribe link and header, and skip anyone who has turned them off. Called by a scheduled job with
  * "Authorization: Bearer <CRON_SECRET>".
  */
 export async function POST(request: Request) {
@@ -31,9 +33,21 @@ export async function POST(request: Request) {
   const { data, error } = await db.rpc("trial_reminders_due", { p_secret: secret });
   if (error) return NextResponse.json({ error: "query failed" }, { status: 500 });
 
+  // People who turned reminder emails off (migration 25; before it nobody has). Their reminders
+  // are marked as handled without sending, so they aren't picked up again tomorrow.
+  const { data: optOutRows } = await db.rpc("reminder_opt_outs", { p_secret: secret });
+  const optedOut = new Set(((optOutRows ?? []) as { user_id: string }[]).map((r) => r.user_id));
+  const links = (userId: string) => ({ pageUrl: unsubscribePageUrl(SITE_URL, userId, secret), oneClickUrl: unsubscribeOneClickUrl(SITE_URL, userId, secret) });
+
   let sent = 0;
   let failed = 0;
+  let skipped = 0;
   for (const row of (data ?? []) as Due[]) {
+    if (optedOut.has(row.user_id)) {
+      await db.rpc("mark_trial_reminded", { p_secret: secret, p_user: row.user_id });
+      skipped++;
+      continue;
+    }
     const msg = trialEndingEmail({
       displayName: row.display_name,
       trialEndsAt: row.trial_ends_at,
@@ -43,7 +57,7 @@ export async function POST(request: Request) {
       volumeKg: Number(row.volume_kg),
       siteUrl: SITE_URL,
     });
-    if (await sendEmail(row.email, msg)) {
+    if (await sendEmail(row.email, msg, links(row.user_id))) {
       await db.rpc("mark_trial_reminded", { p_secret: secret, p_user: row.user_id });
       sent++;
     } else {
@@ -70,7 +84,12 @@ export async function POST(request: Request) {
   const { data: ended, error: endedError } = await db.rpc("trial_exit_emails_due", { p_secret: secret });
   if (!endedError) {
     for (const row of (ended ?? []) as { user_id: string; email: string; display_name: string | null; workouts: number }[]) {
-      if (await sendEmail(row.email, trialEndedEmail({ displayName: row.display_name, workouts: row.workouts, siteUrl: SITE_URL }))) {
+      if (optedOut.has(row.user_id)) {
+        await db.rpc("mark_trial_exit_emailed", { p_secret: secret, p_user: row.user_id });
+        skipped++;
+        continue;
+      }
+      if (await sendEmail(row.email, trialEndedEmail({ displayName: row.display_name, workouts: row.workouts, siteUrl: SITE_URL }), links(row.user_id))) {
         await db.rpc("mark_trial_exit_emailed", { p_secret: secret, p_user: row.user_id });
         exits++;
       } else {
@@ -84,8 +103,13 @@ export async function POST(request: Request) {
   const { data: idle, error: idleError } = await db.rpc("first_workout_nudges_due", { p_secret: secret });
   if (!idleError) {
     for (const row of (idle ?? []) as { user_id: string; email: string; display_name: string | null; trial_ends_at: string | null; split_name: string | null; workout_name: string | null }[]) {
+      if (optedOut.has(row.user_id)) {
+        await db.rpc("mark_first_workout_nudged", { p_secret: secret, p_user: row.user_id });
+        skipped++;
+        continue;
+      }
       const msg = firstWorkoutEmail({ displayName: row.display_name, splitName: row.split_name, workoutName: row.workout_name, trialEndsAt: row.trial_ends_at, siteUrl: SITE_URL });
-      if (await sendEmail(row.email, msg)) {
+      if (await sendEmail(row.email, msg, links(row.user_id))) {
         await db.rpc("mark_first_workout_nudged", { p_secret: secret, p_user: row.user_id });
         nudges++;
       } else {
@@ -93,5 +117,5 @@ export async function POST(request: Request) {
       }
     }
   }
-  return NextResponse.json({ sent, rewards, exits, nudges, failed });
+  return NextResponse.json({ sent, rewards, exits, nudges, skipped, failed });
 }
