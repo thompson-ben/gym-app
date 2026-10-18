@@ -11,3 +11,6 @@ export const COMPANY = {
 export const CONTACT_EMAIL = process.env.NEXT_PUBLIC_CONTACT_EMAIL || "hello@notchlift.com";
 
 export const COMPANY_LINE = `NotchLift is a trading name of ${COMPANY.name}, registered in ${COMPANY.registeredIn}, company no. ${COMPANY.number}. Registered office: ${COMPANY.office}. VAT no. ${COMPANY.vat}.`;
+
+/** Who signs the personal check-in email. */
+export const FOUNDER_NAME = "Ben";

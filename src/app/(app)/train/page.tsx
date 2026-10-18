@@ -7,6 +7,7 @@ import { PageTip } from "@/components/PageTip";
 import { QuickWorkoutButton } from "@/components/QuickWorkoutButton";
 import { StarterSplits } from "@/components/StarterSplits";
 import { SurveyCard } from "@/components/SurveyCard";
+import { TrainingDaysCard } from "@/components/TrainingDays";
 import { LogPastWorkoutButton, StartWorkoutButton } from "@/components/StartWorkoutButton";
 import { MembershipBanner } from "@/components/billing/MembershipBanner";
 import { GroupWorkoutsSection, type UpcomingGroup } from "@/components/together/GroupWorkoutsSection";
@@ -57,10 +58,13 @@ export default async function TrainPage() {
   // Trial members who haven't earned their referral days yet see an invite nudge (migration 18).
   // One question at most: why a trial ended unpaid, or where a new account heard about us
   // (migration 19; before it the list is empty).
-  const [invite, survey] = await Promise.all([
+  const [invite, survey, askDays] = await Promise.all([
     membershipNow.kind === "trial" &&
       supabase.rpc("my_referral_status").then(({ data, error }) => !error && !(data as { rewarded_at?: string | null } | null)?.rewarded_at),
     supabase.rpc("my_survey_prompts").then(({ data, error }) => (error ? null : surveyFor("train", (data as string[] | null) ?? []))),
+    // Training days, asked once (migration 26; before it the column is missing and nothing is asked).
+    supabase.from("profiles").select("training_days").eq("id", userId).maybeSingle()
+      .then(({ data, error }) => !error && data !== null && (data as { training_days: number[] | null }).training_days === null),
   ]);
   if (periodError) throw periodError;
   if (openError) throw openError;
@@ -189,6 +193,9 @@ export default async function TrainPage() {
               <p className="mt-1 text-[15px] text-muted">{next?.reason}</p>
             </section>
           ) : null}
+
+          {/* Before a first workout, once a split is ready: which days do you train? */}
+          {askDays && !open && !recent.data.length && startable.length ? <TrainingDaysCard userId={userId} className="mt-4" /> : null}
 
           {(open ? workouts : others).length ? (
             <section className="mt-6" aria-labelledby="workouts-title">

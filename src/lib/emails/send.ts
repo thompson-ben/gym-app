@@ -1,25 +1,29 @@
 import "server-only";
 import { COMPANY_LINE, CONTACT_EMAIL } from "../company";
+import { fromWithName } from "./checkin";
 import { withUnsubscribeFooter } from "./unsubscribe";
 
 /**
  * Sends an email through Resend's API. Replies go to the contact address; every email carries
  * the company details. Reminder emails pass `unsubscribe` links: a footer link and the
- * one-click List-Unsubscribe headers mail apps show. Returns false (never throws) when it can't.
+ * one-click List-Unsubscribe headers mail apps show. `fromName` replaces the sender's display
+ * name (same address), for the personal check-in. Returns false (never throws) when it can't.
  */
 export async function sendEmail(
   to: string,
   msg: { subject: string; html: string; text: string },
   unsubscribe?: { pageUrl: string; oneClickUrl: string },
+  opts: { fromName?: string } = {},
 ): Promise<boolean> {
   const key = process.env.RESEND_API_KEY;
   if (!key) return false;
+  const from = process.env.EMAIL_FROM ?? "NotchLift <hello@notchlift.com>";
   try {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        from: process.env.EMAIL_FROM ?? "NotchLift <hello@notchlift.com>",
+        from: opts.fromName ? fromWithName(from, opts.fromName) : from,
         reply_to: CONTACT_EMAIL,
         to: [to],
         subject: msg.subject,
