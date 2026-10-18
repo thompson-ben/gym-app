@@ -257,3 +257,14 @@ export function mergeSources<T extends { source: string; campaign: string; visit
   }
   return [...merged.values()].sort((a, b) => b.signups - a.signups || b.visits - a.visits);
 }
+
+/** admin_training_days (migration 26). by_day is Monday first. */
+export type AdminTrainingDays = {
+  picked: number;
+  skipped: number;
+  by_day: number[];
+  reminded: number;
+  reminded_trained: number;
+  checkins: number;
+  checkins_trained: number;
+};

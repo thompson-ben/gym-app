@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { db, newUser, signIn } from "./helpers";
+import { db, newUser, seedSplit, signIn } from "./helpers";
 
 test("a new account is welcomed, can start from a template and train straight away", async ({ page }) => {
   const user = await newUser("first-run");
@@ -45,4 +45,40 @@ test("phone browsers are shown how to add NotchLift to the Home Screen, and can 
   await page.goto("/profile");
   await page.getByRole("button", { name: /Add to Home Screen/ }).click();
   await expect(page.getByRole("dialog", { name: "Add to Home Screen" })).toBeVisible();
+});
+
+test("once a split is ready, Train asks which days they train; Profile can change them", async ({ page }) => {
+  const user = await newUser("training-days");
+  await seedSplit(user, "Upper / Lower", "Upper A", ["dip"]);
+  await signIn(page, user);
+  const card = page.getByRole("region", { name: "Which days do you train?" });
+  await expect(card).toBeVisible();
+  await expect(card.getByRole("button", { name: "Pick your days" })).toBeDisabled();
+  await card.getByRole("button", { name: "Monday" }).click();
+  await card.getByRole("button", { name: "Thursday" }).click();
+  await card.getByRole("button", { name: "Save Mon and Thu" }).click();
+  await expect(page.getByText("Got it: Mondays and Thursdays.")).toBeVisible();
+  expect((await db.query("select training_days from profiles where id = $1", [user.id])).rows[0].training_days).toEqual([1, 4]);
+  await page.reload();
+  await expect(page.getByRole("region", { name: "Which days do you train?" })).toHaveCount(0);
+
+  await page.goto("/profile");
+  const days = page.getByRole("group", { name: "Training days" });
+  await expect(days.getByRole("button", { name: "Monday" })).toHaveAttribute("aria-pressed", "true");
+  await days.getByRole("button", { name: "Saturday" }).click();
+  await expect(page.getByText("Saved", { exact: true }).last()).toBeVisible();
+  await expect.poll(async () => (await db.query("select training_days from profiles where id = $1", [user.id])).rows[0].training_days).toEqual([1, 4, 6]);
+});
+
+test("skipping the training-days question doesn't ask again", async ({ page }) => {
+  const user = await newUser("training-days-skip");
+  await seedSplit(user, "Full Body", "Full Body A", ["dip"]);
+  await signIn(page, user);
+  const card = page.getByRole("region", { name: "Which days do you train?" });
+  await card.getByRole("button", { name: "Skip" }).click();
+  await expect(card).toHaveCount(0);
+  await expect.poll(async () => (await db.query("select training_days from profiles where id = $1", [user.id])).rows[0].training_days).toEqual([]);
+  await page.reload();
+  await expect(page.getByRole("heading", { level: 1, name: "Full Body A" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Which days do you train?" })).toHaveCount(0);
 });

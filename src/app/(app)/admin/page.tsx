@@ -34,11 +34,13 @@ import {
   type AdminRefundWindow,
   type AdminSignupSteps,
   type AdminSurveys,
+  type AdminTrainingDays,
   type IncludeKey,
 } from "@/lib/admin";
 import { emailConfigured } from "@/lib/emails/send";
 import { paymentsConfigured } from "@/lib/billing/server";
 import { formatDate } from "@/lib/format";
+import { DAY_SHORT, WEEKDAYS } from "@/lib/training-days";
 import { requireUser } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Admin", robots: { index: false, follow: false } };
@@ -63,7 +65,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const days = RANGES.find((d) => String(d) === params.days) ?? 30;
   const include = parseInclude(params.include);
   const { supabase } = await requireUser();
-  const [dashRes, overviewRes, freeList, activationRes, surveyRes, spendRes, refundRes, glanceRes, nudgeRes, stepsRes] = await Promise.all([
+  const [dashRes, overviewRes, freeList, activationRes, surveyRes, spendRes, refundRes, glanceRes, nudgeRes, stepsRes, daysRes] = await Promise.all([
     supabase.rpc("admin_dashboard", { p_days: days, p_include: include }),
     supabase.rpc("admin_overview", { p_days: days }),
     supabase.rpc("admin_free_access_list"),
@@ -74,6 +76,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
     supabase.rpc("admin_glance"),
     supabase.rpc("admin_nudges", { p_days: days }),
     supabase.rpc("admin_signup_steps", { p_days: days }),
+    supabase.rpc("admin_training_days", { p_days: days }),
   ]);
   // Not an admin (or migration 13 not applied): the page does not exist for them.
   if (overviewRes.error || !overviewRes.data) notFound();
@@ -87,6 +90,8 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const glance = glanceRes.data as AdminGlance | null;
   const nudges = nudgeRes.data as { nudged: number; trained_3d: number; settled: number } | null;
   const steps = stepsRes.data as AdminSignupSteps | null;
+  // Missing until migration 26: the lines are hidden.
+  const trainingDays = daysRes.data as AdminTrainingDays | null;
   const free = freeList.data as FreeAccessList | null;
 
   return (
@@ -178,6 +183,15 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                 </>
               ) : null}
             </p>
+            {trainingDays ? (
+              <p className="mt-1 text-sm text-muted">
+                <span className="font-medium text-fg">Training-day reminders:</span>{" "}
+                {trainingDays.reminded ? `${trainingDays.reminded} ${trainingDays.reminded === 1 ? "person" : "people"}, ${trainingDays.reminded_trained} trained after` : "none sent"}
+                {" · "}
+                <span className="font-medium text-fg">Week-one check-in:</span>{" "}
+                {trainingDays.checkins ? `${trainingDays.checkins} sent, ${trainingDays.checkins_trained} trained after (replies go to your inbox)` : "none sent"}
+              </p>
+            ) : null}
           </Section>
 
           <Section id="trials" title="Trials" note="What happened when free trials ended.">
@@ -329,6 +343,22 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
             ))}
           </ul>
         </Sub>
+
+        {trainingDays ? (
+          <Sub title="Training days">
+            <div className="grid grid-cols-7 gap-1.5">
+              {WEEKDAYS.map((d, i) => (
+                <div key={d} className="rounded-2xl border border-line bg-surface px-1 py-2 text-center">
+                  <p className="text-xs text-muted">{DAY_SHORT[d]}</p>
+                  <p className="font-semibold tabular">{trainingDays.by_day[i] ?? 0}</p>
+                </div>
+              ))}
+            </div>
+            <p className="mt-2 text-sm text-faint">
+              {trainingDays.picked} {trainingDays.picked === 1 ? "customer has" : "customers have"} picked their days, {trainingDays.skipped} skipped. Asked on Train once a split is ready, before a first workout.
+            </p>
+          </Sub>
+        ) : null}
 
         {surveys ? (
           <Sub title="Feedback">

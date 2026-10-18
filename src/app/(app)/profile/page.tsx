@@ -18,13 +18,16 @@ export default async function ProfilePage() {
     ({ data } = await supabase.from("profiles").upsert({ id: userId }, { onConflict: "id" }).select(columns).maybeSingle());
   }
   // Membership is read-only for users; a missing table (before migration 9) just hides the badge.
-  const [{ data: membership }, { data: isAdmin }, { data: emailPrefs }] = await Promise.all([
+  const [{ data: membership }, { data: isAdmin }, { data: emailPrefs }, days] = await Promise.all([
     supabase.from("memberships").select(MEMBERSHIP_COLUMNS).eq("user_id", userId).maybeSingle(),
     // Missing before migration 13: then nobody is an admin.
     supabase.rpc("is_admin"),
     // Missing before migration 25: the switch is hidden.
     supabase.from("profiles").select("reminder_emails").eq("id", userId).maybeSingle(),
+    // Missing before migration 26: the row is hidden.
+    supabase.from("profiles").select("training_days").eq("id", userId).maybeSingle(),
   ]);
+  const trainingDays = days.error || !days.data ? undefined : ((days.data as { training_days: number[] | null }).training_days ?? null);
   // Trial members can invite a friend for more days (migration 18; missing before it: hidden).
   let referral: ReferralStatus | null = null;
   if ((membership as MembershipRow)?.status === "trial") {
@@ -42,7 +45,7 @@ export default async function ProfilePage() {
           Your profile settings could not be loaded, so defaults are shown. Your splits and workouts are not affected.
         </p>
       ) : null}
-      <ProfileForm userId={userId} email={email} profile={data ?? defaults} membership={(membership as MembershipRow) ?? null} referral={referral} isAdmin={isAdmin === true} reminderEmails={(emailPrefs as { reminder_emails?: boolean } | null)?.reminder_emails ?? null} />
+      <ProfileForm userId={userId} email={email} profile={data ?? defaults} membership={(membership as MembershipRow) ?? null} referral={referral} isAdmin={isAdmin === true} reminderEmails={(emailPrefs as { reminder_emails?: boolean } | null)?.reminder_emails ?? null} trainingDays={trainingDays} />
       <div className="mt-12 text-center">
         <Wordmark size="sm" className="text-muted" />
         <p className="text-xs text-faint">Workout Planner &amp; Tracker</p>

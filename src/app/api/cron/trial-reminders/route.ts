@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
 import { billingSecret } from "@/lib/billing/server";
+import { checkinEmail } from "@/lib/emails/checkin";
 import { firstWorkoutEmail } from "@/lib/emails/first-workout";
 import { referralRewardEmail } from "@/lib/emails/referral-reward";
 import { trialEndedEmail } from "@/lib/emails/trial-ended";
 import { trialEndingEmail } from "@/lib/emails/trial-ending";
+import { trainingDayEmail } from "@/lib/emails/training-day";
 import { emailConfigured, sendEmail } from "@/lib/emails/send";
 import { unsubscribeOneClickUrl, unsubscribePageUrl } from "@/lib/emails/unsubscribe";
+import { FOUNDER_NAME } from "@/lib/company";
 import { SITE_URL } from "@/lib/site";
 import { supabaseAnon } from "@/lib/supabase/anon";
 import { isWeightUnit } from "@/lib/units";
@@ -17,7 +20,9 @@ type Due = { user_id: string; email: string; display_name: string | null; trial_
 /**
  * Daily: emails everyone whose trial ends within 3 days (once each), anyone who earned
  * referral days since the last run, asks once why a trial ended without a plan, and nudges
- * new accounts that haven't logged a first workout by the next morning. Reminder emails carry an
+ * new accounts that haven't logged a first workout by the next morning. Until that first workout,
+ * people who chose training days get a short reminder on those mornings, and a week after
+ * sign-up one personal check-in from the founder. Nobody gets two of these in one run. Reminder emails carry an
  * unsubscribe link and header, and skip anyone who has turned them off. Called by a scheduled job with
  * "Authorization: Bearer <CRON_SECRET>".
  */
@@ -39,6 +44,8 @@ export async function POST(request: Request) {
   const optedOut = new Set(((optOutRows ?? []) as { user_id: string }[]).map((r) => r.user_id));
   const links = (userId: string) => ({ pageUrl: unsubscribePageUrl(SITE_URL, userId, secret), oneClickUrl: unsubscribeOneClickUrl(SITE_URL, userId, secret) });
 
+  // Everyone emailed in this run, so the getting-started emails never double up on one morning.
+  const emailed = new Set<string>();
   let sent = 0;
   let failed = 0;
   let skipped = 0;
@@ -59,6 +66,7 @@ export async function POST(request: Request) {
     });
     if (await sendEmail(row.email, msg, links(row.user_id))) {
       await db.rpc("mark_trial_reminded", { p_secret: secret, p_user: row.user_id });
+      emailed.add(row.user_id);
       sent++;
     } else {
       failed++;
@@ -72,6 +80,7 @@ export async function POST(request: Request) {
     for (const row of (rewarded ?? []) as { user_id: string; email: string; display_name: string | null; trial_ends_at: string }[]) {
       if (await sendEmail(row.email, referralRewardEmail({ displayName: row.display_name, trialEndsAt: row.trial_ends_at, siteUrl: SITE_URL }))) {
         await db.rpc("mark_referral_notified", { p_secret: secret, p_user: row.user_id });
+        emailed.add(row.user_id);
         rewards++;
       } else {
         failed++;
@@ -91,6 +100,7 @@ export async function POST(request: Request) {
       }
       if (await sendEmail(row.email, trialEndedEmail({ displayName: row.display_name, workouts: row.workouts, siteUrl: SITE_URL }), links(row.user_id))) {
         await db.rpc("mark_trial_exit_emailed", { p_secret: secret, p_user: row.user_id });
+        emailed.add(row.user_id);
         exits++;
       } else {
         failed++;
@@ -111,11 +121,47 @@ export async function POST(request: Request) {
       const msg = firstWorkoutEmail({ displayName: row.display_name, splitName: row.split_name, workoutName: row.workout_name, trialEndsAt: row.trial_ends_at, siteUrl: SITE_URL });
       if (await sendEmail(row.email, msg, links(row.user_id))) {
         await db.rpc("mark_first_workout_nudged", { p_secret: secret, p_user: row.user_id });
+        emailed.add(row.user_id);
         nudges++;
       } else {
         failed++;
       }
     }
   }
-  return NextResponse.json({ sent, rewards, exits, nudges, skipped, failed });
+
+  // A week after sign-up and still no workout: one personal check-in (migration 26; before it this is skipped).
+  // People who turned reminders off aren't returned. Anyone already emailed in this run waits until tomorrow.
+  let checkins = 0;
+  const { data: quiet, error: quietError } = await db.rpc("checkin_emails_due", { p_secret: secret });
+  if (!quietError) {
+    for (const row of (quiet ?? []) as { user_id: string; email: string; display_name: string | null; training_days: number[] | null; has_split: boolean; split_name: string | null }[]) {
+      if (emailed.has(row.user_id)) continue;
+      const msg = checkinEmail({ displayName: row.display_name, trainingDays: row.training_days, hasSplit: row.has_split, splitName: row.split_name, siteUrl: SITE_URL });
+      if (await sendEmail(row.email, msg, links(row.user_id), { fromName: `${FOUNDER_NAME} from NotchLift` })) {
+        await db.rpc("mark_checkin_emailed", { p_secret: secret, p_user: row.user_id });
+        emailed.add(row.user_id);
+        checkins++;
+      } else {
+        failed++;
+      }
+    }
+  }
+
+  // On one of their training days, until their first workout: "your workout is ready" (migration 26).
+  let trainingDays = 0;
+  const { data: today, error: todayError } = await db.rpc("training_day_reminders_due", { p_secret: secret });
+  if (!todayError) {
+    for (const row of (today ?? []) as { user_id: string; email: string; display_name: string | null; training_days: number[]; split_name: string | null; workout_name: string | null; reminders_sent: number }[]) {
+      if (emailed.has(row.user_id)) continue;
+      const msg = trainingDayEmail({ displayName: row.display_name, trainingDays: row.training_days, splitName: row.split_name, workoutName: row.workout_name, remindersSent: row.reminders_sent, siteUrl: SITE_URL });
+      if (await sendEmail(row.email, msg, links(row.user_id))) {
+        await db.rpc("mark_training_reminder_sent", { p_secret: secret, p_user: row.user_id });
+        emailed.add(row.user_id);
+        trainingDays++;
+      } else {
+        failed++;
+      }
+    }
+  }
+  return NextResponse.json({ sent, rewards, exits, nudges, checkins, trainingDays, skipped, failed });
 }
