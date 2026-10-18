@@ -34,6 +34,7 @@ import {
   type AdminRefundWindow,
   type AdminSignupSteps,
   type AdminSurveys,
+  type AdminDemo,
   type AdminTrainingDays,
   type IncludeKey,
 } from "@/lib/admin";
@@ -65,7 +66,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const days = RANGES.find((d) => String(d) === params.days) ?? 30;
   const include = parseInclude(params.include);
   const { supabase } = await requireUser();
-  const [dashRes, overviewRes, freeList, activationRes, surveyRes, spendRes, refundRes, glanceRes, nudgeRes, stepsRes, daysRes] = await Promise.all([
+  const [dashRes, overviewRes, freeList, activationRes, surveyRes, spendRes, refundRes, glanceRes, nudgeRes, stepsRes, daysRes, demoRes] = await Promise.all([
     supabase.rpc("admin_dashboard", { p_days: days, p_include: include }),
     supabase.rpc("admin_overview", { p_days: days }),
     supabase.rpc("admin_free_access_list"),
@@ -77,6 +78,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
     supabase.rpc("admin_nudges", { p_days: days }),
     supabase.rpc("admin_signup_steps", { p_days: days }),
     supabase.rpc("admin_training_days", { p_days: days }),
+    supabase.rpc("admin_demo", { p_days: days }),
   ]);
   // Not an admin (or migration 13 not applied): the page does not exist for them.
   if (overviewRes.error || !overviewRes.data) notFound();
@@ -92,6 +94,8 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const steps = stepsRes.data as AdminSignupSteps | null;
   // Missing until migration 26: the lines are hidden.
   const trainingDays = daysRes.data as AdminTrainingDays | null;
+  // Missing until migration 27: the line is hidden.
+  const demo = demoRes.data as AdminDemo | null;
   const free = freeList.data as FreeAccessList | null;
 
   return (
@@ -183,6 +187,14 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                 </>
               ) : null}
             </p>
+            {demo ? (
+              <p className="mt-1 text-sm text-muted">
+                <span className="font-medium text-fg">Try a workout (no account):</span>{" "}
+                {demo.started
+                  ? `${demo.started} opened it, ${demo.logged_set} ticked a set, ${demo.tapped_signup} tapped to sign up · ${demo.accounts} ${demo.accounts === 1 ? "account" : "accounts"} from it, ${demo.trained} trained`
+                  : "nobody yet"}
+              </p>
+            ) : null}
             {trainingDays ? (
               <p className="mt-1 text-sm text-muted">
                 <span className="font-medium text-fg">Training-day reminders:</span>{" "}

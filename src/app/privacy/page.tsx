@@ -37,7 +37,7 @@ export default function PrivacyPage() {
           </li>
           <li>
             <strong>Visits to our public pages</strong> (not the app itself): the page, the site that linked to it, campaign tags in the link (for
-            example from an ad), your device type and country, whether the pricing section or sign-up form was opened, whether someone tapped to create an account (and, if it didn’t go through, a short reason such as “password too short”, never what was typed), and whether the page was open inside the Facebook or Instagram app. No IP address and no ID for you are stored. If you came from a campaign or another
+            example from an ad), your device type and country, whether the pricing section or sign-up form was opened, whether the “Try a workout” demo was opened, a set ticked in it or create account tapped from it, whether someone tapped to create an account (and, if it didn’t go through, a short reason such as “password too short”, never what was typed), and whether the page was open inside the Facebook or Instagram app. No IP address and no ID for you are stored. If you came from a campaign or another
             site, a small cookie remembers where from (not who you are) for up to 30 days. If you then create an account, that source is attached to
             your account so we can see which campaigns bring people who keep training, and the cookie is deleted. Browsers that send Global
             Privacy Control or Do Not Track are not counted.
@@ -76,7 +76,7 @@ export default function PrivacyPage() {
         <h2>Cookies and ad measurement</h2>
         <p>
           We advertise on Instagram and Facebook. If you click <strong>Accept</strong> on the cookie banner, our website loads the Meta Pixel,
-          which sets Meta cookies and tells Meta when you visit our public pages (home, sign-in, privacy and terms), create an account or start
+          which sets Meta cookies and tells Meta when you visit our public pages (home, the demo workout, sign-in, privacy and terms), create an account or start
           a paid membership (with the plan price). Meta uses this to show us which ads work and may use it under its own privacy policy. Nothing
           about your training is ever sent, and the Pixel does not run inside the app’s screens.
         </p>

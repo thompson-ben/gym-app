@@ -43,8 +43,11 @@ export function ExerciseCard({
   onSwap,
   onSetupTargets,
   unit,
+  demo = false,
 }: {
   unit: WeightUnit;
+  /** The signed-out demo (/try): example "last time" numbers, no links, menus, swaps or history. */
+  demo?: boolean;
   /** Opens target settings for this entry; absent when targets are not available for it. */
   onSetupTargets?: () => void;
   target?: TargetInfo;
@@ -160,7 +163,9 @@ export function ExerciseCard({
             {prescription}
             {entry.skipped ? <span className="text-warn"> · Skipped</span> : null}
           </p>
-          {previous ? (
+          {previous && demo ? (
+            <p className="mt-3 text-[15px] text-accent-text">Last time (example): {formatShortDate(previous.completed_at, timeZone)} · {previous.template_name}</p>
+          ) : previous ? (
             <Link
               href={`/progress/${entry.exercise_id}`}
               className="mt-3 inline-flex items-center gap-1 text-[15px] text-accent-text underline-offset-4 hover:underline"
@@ -173,9 +178,11 @@ export function ExerciseCard({
             <p className="mt-3 text-[15px] text-faint">First time logging this exercise. No previous sets yet.</p>
           )}
         </div>
-        <IconButton label={`${entry.exercise_name} options`} onClick={onOpenMenu} className="-mt-1 -mr-2">
-          <IconMore />
-        </IconButton>
+        {!demo ? (
+          <IconButton label={`${entry.exercise_name} options`} onClick={onOpenMenu} className="-mt-1 -mr-2">
+            <IconMore />
+          </IconButton>
+        ) : null}
       </header>
 
       {readyReps ? (
@@ -301,16 +308,18 @@ export function ExerciseCard({
               <IconMinus size={16} /> Remove
             </Button>
           ) : null}
-          {done === 0 ? (
+          {done === 0 && !demo ? (
             <Button size="sm" variant="quiet" onClick={onSwap} aria-label={`Swap ${entry.exercise_name} for another exercise this session`}>
               <IconSwap size={16} /> Swap
             </Button>
           ) : null}
         </div>
-        <Button size="sm" variant="quiet" onClick={toggleHistory} aria-expanded={historyOpen}>
-          <IconHistory size={16} /> History
-          <IconChevronDown size={16} className={cx("transition", historyOpen && "rotate-180")} />
-        </Button>
+        {!demo ? (
+          <Button size="sm" variant="quiet" onClick={toggleHistory} aria-expanded={historyOpen}>
+            <IconHistory size={16} /> History
+            <IconChevronDown size={16} className={cx("transition", historyOpen && "rotate-180")} />
+          </Button>
+        ) : null}
       </div>
 
       {historyOpen ? (

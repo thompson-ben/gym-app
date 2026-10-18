@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import Link from "next/link";
 import { IconChevronRight, IconPlay } from "@/components/icons";
 import { buttonClass, cx } from "@/components/styles";
 import { InstallCard } from "@/components/InstallPrompt";
 import { PageTip } from "@/components/PageTip";
 import { QuickWorkoutButton } from "@/components/QuickWorkoutButton";
-import { StarterSplits } from "@/components/StarterSplits";
+import { DemoSplitCard, StarterSplits } from "@/components/StarterSplits";
 import { SurveyCard } from "@/components/SurveyCard";
 import { TrainingDaysCard } from "@/components/TrainingDays";
 import { LogPastWorkoutButton, StartWorkoutButton } from "@/components/StartWorkoutButton";
@@ -17,6 +18,7 @@ import { formatDate, formatElapsed, formatShortDate } from "@/lib/format";
 import { suggestNextWorkout, type NextWorkout } from "@/lib/next-workout";
 import { surveyFor } from "@/lib/surveys";
 import { requireUser, viewerTimeZone } from "@/lib/supabase/server";
+import { DEMO_COOKIE, cameFromDemo } from "@/lib/demo";
 
 export const metadata: Metadata = { title: "Train" };
 
@@ -30,7 +32,7 @@ type TemplateRow = {
 type WorkoutSummary = { id: string; name: string; position: number; exerciseCount: number; workingSets: number; lastPerformed: string | null };
 
 export default async function TrainPage() {
-  const { supabase, userId } = await requireUser();
+  const { supabase, userId, metadata } = await requireUser();
   const tz = await viewerTimeZone();
 
   // Two round trips: the active split with its workouts (one nested query) plus the open and
@@ -113,6 +115,9 @@ export default async function TrainPage() {
     const { count } = await supabase.from("splits").select("id", { count: "exact", head: true });
     hasSplits = (count ?? 0) > 0;
   }
+
+  // Came from the "Try a workout" demo: offer the same split first (email sign-ups carry it; Google ones the cookie).
+  const fromDemo = !hasSplits && cameFromDemo(metadata, (await cookies()).get(DEMO_COOKIE)?.value);
 
   const suggested = next && next.kind !== "choose" ? workouts.find((w) => w.id === next.templateId) ?? null : null;
   const others = workouts.filter((w) => w.id !== suggested?.id);
@@ -268,7 +273,8 @@ export default async function TrainPage() {
               </li>
             </ol>
             <div className="mt-6 flex flex-col gap-3">
-              <StarterSplits />
+              {fromDemo ? <DemoSplitCard /> : null}
+              <StarterSplits label={fromDemo ? "Choose a different split" : undefined} />
               <Link href="/splits?new=1" className={buttonClass("ghost", "lg")}>Build my own split</Link>
             </div>
             <p className="mt-4 text-sm text-faint">Got a split link from a friend? Open it and tap Copy to use their split.</p>
