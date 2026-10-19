@@ -160,7 +160,11 @@ export function AuthForm({
       <div className="space-y-4">
         <h1 className="text-2xl font-semibold">Check your email</h1>
         <p className="text-muted">
-          We sent a confirmation link to <span className="text-fg">{email}</span>. Open it to finish creating your account. It can take a minute; check spam too.
+          We sent a confirmation link to <span className="text-fg">{email}</span>. Open it to finish creating your account. It can take a minute.
+        </p>
+        <p className="rounded-2xl border border-accent-text/50 bg-accent-soft px-4 py-3 text-sm">
+          <span className="font-medium">Not in your inbox?</span>{" "}
+          <span className="text-muted">Check your Junk or Spam folder for “Confirm your NotchLift account”, and mark it “Not junk” so your workout reminders arrive too.</span>
         </p>
         <ResendLine state={resend} onResend={resendConfirmation} />
         <Button variant="secondary" onClick={() => { setCheckEmail(false); setMode("sign-in"); }}>

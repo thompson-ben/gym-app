@@ -15,6 +15,7 @@ test("sign-up requires email confirmation and continues to the original destinat
   await page.getByLabel("Password").fill("correct-horse-battery");
   await page.getByRole("button", { name: "Create account" }).click();
   await expect(page.getByRole("heading", { name: "Check your email" })).toBeVisible();
+  await expect(page.getByText(/Check your Junk or Spam folder/)).toBeVisible();
 
   // Unconfirmed accounts cannot sign in yet.
   await page.getByRole("button", { name: "Back to sign in" }).click();
