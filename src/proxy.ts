@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { authCookieOptions } from "@/lib/supabase/env";
 
-const PUBLIC_PATHS = ["/sign-in", "/forgot-password", "/reset-password", "/auth", "/s/", "/offline", "/privacy", "/terms", "/manifest.webmanifest", "/sw.js", "/robots.txt", "/sitemap.xml", "/join/", "/api/track", "/api/stripe/webhook", "/api/cron/", "/unsubscribe", "/api/unsubscribe"];
+const PUBLIC_PATHS = ["/sign-in", "/forgot-password", "/reset-password", "/auth", "/s/", "/offline", "/privacy", "/terms", "/manifest.webmanifest", "/sw.js", "/robots.txt", "/sitemap.xml", "/join/", "/api/track", "/api/stripe/webhook", "/api/cron/", "/unsubscribe", "/api/unsubscribe", "/try", "/add-weight"];
 
 /** Refreshes the Supabase session cookie and keeps signed-out visitors out of the app. */
 export async function proxy(request: NextRequest) {

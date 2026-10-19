@@ -31,7 +31,13 @@ export const requireUser = cache(async () => {
   const { data } = await supabase.auth.getClaims();
   const userId = data?.claims?.sub;
   if (!userId) redirect("/sign-in");
-  return { supabase, userId, email: (data.claims.email as string | undefined) ?? null };
+  return {
+    supabase,
+    userId,
+    email: (data.claims.email as string | undefined) ?? null,
+    /** What was given at sign-up (e.g. via: "demo"), from the verified token. */
+    metadata: (data.claims.user_metadata as Record<string, unknown> | undefined) ?? null,
+  };
 });
 
 export const getOptionalUser = cache(async () => {

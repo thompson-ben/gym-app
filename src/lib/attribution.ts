@@ -29,7 +29,7 @@ const UTM = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_ter
 
 /** Paths whose visits count as marketing traffic (signed-in app screens never do). */
 export function isPublicPath(path: string): boolean {
-  return path === "/" || ["/sign-in", "/join/", "/s/", "/privacy", "/terms"].some((p) => path.startsWith(p));
+  return path === "/" || ["/sign-in", "/join/", "/s/", "/privacy", "/terms", "/try", "/add-weight"].some((p) => path.startsWith(p));
 }
 
 /**

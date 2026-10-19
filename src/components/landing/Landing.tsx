@@ -16,7 +16,7 @@ import { PricingSeen } from "./PricingSeen";
 
 const SIGN_UP = "/sign-in?mode=sign-up";
 
-function Phone({ src, alt, priority, className }: { src: string; alt: string; priority?: boolean; className?: string }) {
+export function Phone({ src, alt, priority, className }: { src: string; alt: string; priority?: boolean; className?: string }) {
   return (
     <div className={cx("rounded-[2.75rem] border border-white/10 bg-[#0b0c0d] p-2.5 shadow-[0_30px_80px_-20px_rgb(0_0_0/0.65)]", className)}>
       <div className="overflow-hidden rounded-[2.2rem]">
@@ -45,7 +45,7 @@ const FACTS = [
   { icon: IconCheck, label: "No ads, no social feed" },
 ];
 
-const STEPS = [
+export const STEPS = [
   { title: "Pick your split", body: "Start from Push / Pull / Legs, Upper / Lower or Full Body, or build your own workouts with sets, rep ranges and rest times." },
   { title: "Log every set", body: "Last session sits beside every set, weights are filled in, and one tap records it. The rest timer starts itself if you want it to." },
   { title: "Get told when to go up", body: "Hit the top of your rep range on every set and NotchLift gives you your next weight. Miss it, and it tells you how many reps to chase." },
@@ -190,7 +190,7 @@ export function Landing({ paidPlans = false }: { paidPlans?: boolean }) {
               </p>
               <div className="mt-9 flex flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-start">
                 <Cta className="w-full sm:w-auto" label="Start training free" />
-                <a href="#how-it-works" className={buttonClass("secondary", "lg", "w-full px-7 sm:w-auto")}>See how it works</a>
+                <Link href="/try" className={buttonClass("secondary", "lg", "w-full px-7 sm:w-auto")}>Try a workout, no sign-up</Link>
               </div>
               <p className="mt-5 text-sm text-faint">{paidPlans ? "14-day free trial" : "Free during early access"} · No card needed</p>
               <p className="mt-1.5 text-sm text-faint">Works in your phone’s browser, no app store needed. Add it to your home screen.</p>

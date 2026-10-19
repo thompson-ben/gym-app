@@ -18,7 +18,8 @@ function once(key: string): boolean {
   }
 }
 
-type EventName = "visit" | "signup_view" | "pricing_view" | "signup_submit" | "signup_error" | "oauth_start";
+type EventName = "visit" | "signup_view" | "pricing_view" | "signup_submit" | "signup_error" | "oauth_start" | DemoEvent;
+export type DemoEvent = "demo_start" | "demo_set" | "demo_signup";
 
 function send(name: EventName, props: Partial<Touch> & { path?: string; detail?: string }) {
   const body = JSON.stringify({ name, props });
@@ -76,4 +77,10 @@ export function trackSignupView() {
 export function trackSignupStep(name: "signup_submit" | "signup_error" | "oauth_start", detail?: string) {
   if (!trackingAllowed() || !once(`nl_${name}_${detail ?? ""}`)) return;
   send(name, { path: "/sign-in", detail });
+}
+
+/** The "Try a workout" demo: opened it, ticked a first set, tapped create account. Each once per tab session. */
+export function trackDemo(name: DemoEvent) {
+  if (!trackingAllowed() || !once(`nl_${name}`)) return;
+  send(name, { path: "/try" });
 }

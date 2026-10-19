@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { IconCheck } from "@/components/icons";
 import { Button, ErrorNote, Field, Input } from "@/components/ui";
 import { supabaseBrowser } from "@/lib/supabase/client";
+import { DEMO_COOKIE } from "@/lib/demo";
 import { IN_APP_NAME, PROVIDER_LABEL, signupErrorMessage, signupErrorReason, type InApp, type OAuthProvider, type SignupErrorReason } from "@/lib/auth-providers";
 import { pixelEvent } from "@/lib/pixel";
 import { trackSignupStep, trackSignupView } from "@/lib/track";
@@ -128,7 +129,11 @@ export function AuthForm({
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: `${window.location.origin}/auth/confirm` },
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth/confirm`,
+            // Came from the "Try a workout" demo: the account starts with the same split (see Train).
+            ...(document.cookie.includes(`${DEMO_COOKIE}=`) ? { data: { via: "demo" } } : {}),
+          },
         });
         if (error) {
           failSignup(signupErrorReason(error));

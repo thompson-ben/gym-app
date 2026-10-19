@@ -268,3 +268,6 @@ export type AdminTrainingDays = {
   checkins: number;
   checkins_trained: number;
 };
+
+/** admin_demo (migration 27): the "Try a workout" demo. Events are counted once per browser tab. */
+export type AdminDemo = { started: number; logged_set: number; tapped_signup: number; accounts: number; trained: number };
