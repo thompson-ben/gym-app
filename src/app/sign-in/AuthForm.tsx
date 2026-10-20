@@ -175,7 +175,13 @@ export function AuthForm({
   }
 
   return (
-    <form onSubmit={submit} className="space-y-5" noValidate={false}>
+    <form
+      onSubmit={submit}
+      // First tap into the create-account form (nothing typed is recorded).
+      onFocusCapture={() => mode === "sign-up" && trackSignupStep("signup_started")}
+      className="space-y-5"
+      noValidate={false}
+    >
       <h1 className="text-2xl font-semibold">{mode === "sign-in" ? "Sign in" : "Create your account"}</h1>
       {mode === "sign-up" ? <Reassurance paidPlans={paidPlans} /> : null}
       {/* With Apple / Google above the form, the terms come first so they're seen before either. */}

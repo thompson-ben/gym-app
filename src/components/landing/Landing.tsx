@@ -7,6 +7,7 @@ import { Wordmark } from "../Wordmark";
 import { PLANS, YEARLY_PER_MONTH, YEARLY_SAVING_PCT } from "@/lib/billing/plans";
 import { COMPANY, COMPANY_LINE, CONTACT_EMAIL } from "@/lib/company";
 import { PricingSeen } from "./PricingSeen";
+import { ScrollDepth, TrackedLink } from "./Tracked";
 
 /**
  * Public landing page (signed-out visitors to /). Every screenshot is the real app, captured
@@ -30,11 +31,11 @@ function Eyebrow({ children }: { children: ReactNode }) {
   return <p className="text-xs font-semibold tracking-[0.18em] text-accent-text uppercase">{children}</p>;
 }
 
-function Cta({ className, label = "Start free" }: { className?: string; label?: string }) {
+function Cta({ className, label = "Start free", track }: { className?: string; label?: string; track: string }) {
   return (
-    <Link href={SIGN_UP} className={buttonClass("primary", "lg", cx("px-7 text-[17px]", className))}>
+    <TrackedLink track={track} href={SIGN_UP} className={buttonClass("primary", "lg", cx("px-7 text-[17px]", className))}>
       {label}
-    </Link>
+    </TrackedLink>
   );
 }
 
@@ -168,8 +169,8 @@ export function Landing({ paidPlans = false }: { paidPlans?: boolean }) {
             <a href="#faq" className="hover:text-fg">FAQ</a>
           </div>
           <div className="flex items-center gap-2">
-            <Link href="/sign-in" className={buttonClass("ghost", "md", "px-4")}>Sign in</Link>
-            <Link href={SIGN_UP} className={buttonClass("primary", "md", "px-4")}>Start free</Link>
+            <TrackedLink track="nav_signin" href="/sign-in" className={buttonClass("ghost", "md", "px-4")}>Sign in</TrackedLink>
+            <TrackedLink track="nav_start" href={SIGN_UP} className={buttonClass("primary", "md", "px-4")}>Start free</TrackedLink>
           </div>
         </nav>
       </header>
@@ -189,8 +190,8 @@ export function Landing({ paidPlans = false }: { paidPlans?: boolean }) {
                 NotchLift plans your split, puts last session beside every set, and tells you when it’s time to add weight. Fast enough for the gym floor, and it works without signal.
               </p>
               <div className="mt-9 flex flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-start">
-                <Cta className="w-full sm:w-auto" label="Start training free" />
-                <Link href="/try" className={buttonClass("secondary", "lg", "w-full px-7 sm:w-auto")}>Try a workout, no sign-up</Link>
+                <Cta track="hero_start" className="w-full sm:w-auto" label="Start training free" />
+                <TrackedLink track="hero_try" href="/try" className={buttonClass("secondary", "lg", "w-full px-7 sm:w-auto")}>Try a workout, no sign-up</TrackedLink>
               </div>
               <p className="mt-5 text-sm text-faint">{paidPlans ? "14-day free trial" : "Free during early access"} · No card needed</p>
               <p className="mt-1.5 text-sm text-faint">Works in your phone’s browser, no app store needed. Add it to your home screen.</p>
@@ -321,13 +322,13 @@ export function Landing({ paidPlans = false }: { paidPlans?: boolean }) {
                 </div>
                 <p className="mt-4"><span className="text-5xl font-bold tracking-tight">Free</span></p>
                 <Included />
-                <Cta className="mt-8 w-full" label="Start training free" />
+                <Cta track="pricing_start" className="mt-8 w-full" label="Start training free" />
                 <p className="mt-4 text-center text-sm text-faint">If pricing ever changes, you’ll hear from us first.</p>
               </div>
             )}
             {paidPlans ? (
               <div className="mx-auto mt-8 max-w-3xl text-center">
-                <Cta label="Start your free trial" />
+                <Cta track="pricing_start" label="Start your free trial" />
                 <p className="mt-4 text-sm text-faint">After 14 days, choose a plan to keep logging new workouts. Your history stays viewable and exportable either way. Prices include VAT.</p>
               </div>
             ) : null}
@@ -361,14 +362,15 @@ export function Landing({ paidPlans = false }: { paidPlans?: boolean }) {
             <div className="relative overflow-hidden rounded-[2.5rem] bg-accent px-6 py-16 text-center text-accent-ink sm:px-12">
               <h2 className="text-3xl font-bold tracking-[-0.03em] text-balance sm:text-5xl">Your next PR starts with your next set.</h2>
               <p className="mx-auto mt-4 max-w-xl text-lg text-accent-ink/80">Set up your split in under a minute. {paidPlans ? "14 days free, no card needed." : "Free during early access."}</p>
-              <Link href={SIGN_UP} className="mt-8 inline-flex h-14 items-center justify-center gap-2 rounded-2xl bg-[#131416] px-8 text-[17px] font-semibold text-[#eaebed] transition hover:bg-black">
+              <TrackedLink track="final_start" href={SIGN_UP} className="mt-8 inline-flex h-14 items-center justify-center gap-2 rounded-2xl bg-[#131416] px-8 text-[17px] font-semibold text-[#eaebed] transition hover:bg-black">
                 Start training free <IconArrowUpRight size={18} />
-              </Link>
+              </TrackedLink>
             </div>
           </div>
         </section>
       </main>
 
+      <ScrollDepth />
       <footer className="border-t border-line pb-safe">
         <div className="mx-auto flex max-w-6xl flex-col gap-6 px-5 pt-10 pb-6 text-sm text-muted sm:flex-row sm:items-center sm:justify-between">
           <div>

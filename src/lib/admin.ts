@@ -271,3 +271,34 @@ export type AdminTrainingDays = {
 
 /** admin_demo (migration 27): the "Try a workout" demo. Events are counted once per browser tab. */
 export type AdminDemo = { started: number; logged_set: number; tapped_signup: number; accounts: number; trained: number };
+
+/** admin_engagement (migration 28): what visitors do before signing up, and new accounts' first steps. */
+export type AdminEngagement = {
+  visits_by_page: Record<string, number>;
+  clicks: { path: string; detail: string; count: number }[];
+  scroll: { path: string; detail: string; count: number }[];
+  signup_started: number;
+  consent_accepted: number;
+  consent_declined: number;
+  demo_three_sets: number;
+  demo_finished: number;
+  started_workout: number;
+  logged_a_set: number;
+};
+
+export const SCROLL_ORDER = ["quarter", "half", "three_quarters", "bottom"] as const;
+
+/** Button codes sent by the landing pages (TrackedLink). */
+export const CLICK_LABELS: Record<string, string> = {
+  hero_start: "Start free (top)",
+  hero_try: "Try a workout (top)",
+  nav_start: "Start free (menu)",
+  nav_signin: "Sign in",
+  pricing_start: "Start free (pricing)",
+  final_start: "Start free (bottom)",
+  final_try: "Try a workout (bottom)",
+};
+
+export function pageLabel(path: string): string {
+  return path === "/" ? "Home page" : path === "/add-weight" ? "Ad page (/add-weight)" : path;
+}

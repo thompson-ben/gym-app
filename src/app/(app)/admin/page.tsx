@@ -9,6 +9,7 @@ import { Glance } from "@/components/admin/Glance";
 import { LaunchPanel } from "@/components/admin/LaunchPanel";
 import { PrintButton } from "@/components/admin/PrintButton";
 import { RefundWindow } from "@/components/admin/RefundWindow";
+import { Engagement } from "@/components/admin/Engagement";
 import { SignupSteps } from "@/components/admin/SignupSteps";
 import { Surveys } from "@/components/admin/Surveys";
 import { TestAccounts } from "@/components/admin/TestAccounts";
@@ -35,6 +36,7 @@ import {
   type AdminSignupSteps,
   type AdminSurveys,
   type AdminDemo,
+  type AdminEngagement,
   type AdminTrainingDays,
   type IncludeKey,
 } from "@/lib/admin";
@@ -66,7 +68,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const days = RANGES.find((d) => String(d) === params.days) ?? 30;
   const include = parseInclude(params.include);
   const { supabase } = await requireUser();
-  const [dashRes, overviewRes, freeList, activationRes, surveyRes, spendRes, refundRes, glanceRes, nudgeRes, stepsRes, daysRes, demoRes] = await Promise.all([
+  const [dashRes, overviewRes, freeList, activationRes, surveyRes, spendRes, refundRes, glanceRes, nudgeRes, stepsRes, daysRes, demoRes, engageRes] = await Promise.all([
     supabase.rpc("admin_dashboard", { p_days: days, p_include: include }),
     supabase.rpc("admin_overview", { p_days: days }),
     supabase.rpc("admin_free_access_list"),
@@ -79,6 +81,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
     supabase.rpc("admin_signup_steps", { p_days: days }),
     supabase.rpc("admin_training_days", { p_days: days }),
     supabase.rpc("admin_demo", { p_days: days }),
+    supabase.rpc("admin_engagement", { p_days: days, p_include: include }),
   ]);
   // Not an admin (or migration 13 not applied): the page does not exist for them.
   if (overviewRes.error || !overviewRes.data) notFound();
@@ -96,6 +99,8 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const trainingDays = daysRes.data as AdminTrainingDays | null;
   // Missing until migration 27: the line is hidden.
   const demo = demoRes.data as AdminDemo | null;
+  // Missing until migration 28: the extra steps and the "Before sign-up" section are hidden.
+  const engagement = engageRes.data as AdminEngagement | null;
   const free = freeList.data as FreeAccessList | null;
 
   return (
@@ -173,6 +178,12 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                 { label: "Created account", value: d.funnel.signups },
                 { label: "Confirmed email", value: d.funnel.confirmed },
                 { label: "Set up a split", value: d.funnel.split },
+                ...(engagement
+                  ? [
+                      { label: "Started a workout", value: engagement.started_workout },
+                      { label: "Ticked a set", value: engagement.logged_a_set },
+                    ]
+                  : []),
                 { label: "First workout", value: d.funnel.first_workout },
                 { label: "Paid", value: d.funnel.paid },
               ]}
@@ -191,7 +202,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
               <p className="mt-1 text-sm text-muted">
                 <span className="font-medium text-fg">Try a workout (no account):</span>{" "}
                 {demo.started
-                  ? `${demo.started} opened it, ${demo.logged_set} ticked a set, ${demo.tapped_signup} tapped to sign up · ${demo.accounts} ${demo.accounts === 1 ? "account" : "accounts"} from it, ${demo.trained} trained`
+                  ? `${demo.started} opened it, ${demo.logged_set} ticked a set${engagement ? `, ${engagement.demo_three_sets} did 3 sets, ${engagement.demo_finished} finished` : ""}, ${demo.tapped_signup} tapped to sign up · ${demo.accounts} ${demo.accounts === 1 ? "account" : "accounts"} from it, ${demo.trained} trained`
                   : "nobody yet"}
               </p>
             ) : null}
@@ -318,6 +329,12 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
               <BarStrip title="Sign-ups" unit="sign-ups" points={d.daily.map((x) => ({ day: x.day, value: x.signups }))} />
               <BarStrip title="Workouts logged" unit="workouts" points={d.daily.map((x) => ({ day: x.day, value: x.workouts }))} />
             </div>
+          </Sub>
+        ) : null}
+
+        {engagement ? (
+          <Sub title="Before sign-up">
+            <Engagement e={engagement} signupViews={steps?.views ?? null} />
           </Sub>
         ) : null}
 

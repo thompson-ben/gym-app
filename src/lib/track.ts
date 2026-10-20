@@ -18,8 +18,10 @@ function once(key: string): boolean {
   }
 }
 
-type EventName = "visit" | "signup_view" | "pricing_view" | "signup_submit" | "signup_error" | "oauth_start" | DemoEvent;
+type EventName = "visit" | "signup_view" | "pricing_view" | "signup_submit" | "signup_error" | "oauth_start" | "signup_started" | DemoEvent | DetailEvent;
 export type DemoEvent = "demo_start" | "demo_set" | "demo_signup";
+/** Detail-coded events (migration 28): which button, how far down the page, cookie choice, demo progress. */
+export type DetailEvent = "cta_click" | "scroll_depth" | "consent" | "demo_progress";
 
 function send(name: EventName, props: Partial<Touch> & { path?: string; detail?: string }) {
   const body = JSON.stringify({ name, props });
@@ -74,7 +76,7 @@ export function trackSignupView() {
  * A step in creating an account: tapped Create account, tapped Continue with Apple / Google, or
  * why it didn't go through (a reason code, never what was typed). Each once per tab session.
  */
-export function trackSignupStep(name: "signup_submit" | "signup_error" | "oauth_start", detail?: string) {
+export function trackSignupStep(name: "signup_submit" | "signup_error" | "oauth_start" | "signup_started", detail?: string) {
   if (!trackingAllowed() || !once(`nl_${name}_${detail ?? ""}`)) return;
   send(name, { path: "/sign-in", detail });
 }
@@ -83,4 +85,15 @@ export function trackSignupStep(name: "signup_submit" | "signup_error" | "oauth_
 export function trackDemo(name: DemoEvent) {
   if (!trackingAllowed() || !once(`nl_${name}`)) return;
   send(name, { path: "/try" });
+}
+
+/**
+ * A tapped button, how far down a page someone scrolled, the cookie-banner choice or how far the
+ * demo got: a short code (lower-case letters and _), counted once per code, page and tab session.
+ */
+export function trackDetail(name: DetailEvent, detail: string) {
+  if (!trackingAllowed() || !/^[a-z_]{1,40}$/.test(detail)) return;
+  const path = window.location.pathname;
+  if (!once(`nl_${name}_${detail}_${path}`)) return;
+  send(name, { path, detail });
 }
