@@ -4,6 +4,7 @@ import { buttonClass } from "../styles";
 import { Wordmark } from "../Wordmark";
 import { COMPANY_LINE, CONTACT_EMAIL } from "@/lib/company";
 import { Phone, STEPS } from "./Landing";
+import { ScrollDepth, TrackedLink } from "./Tracked";
 
 const SIGN_UP = "/sign-in?mode=sign-up";
 
@@ -25,7 +26,7 @@ export function AdLanding({ paidPlans = false }: { paidPlans?: boolean }) {
       <header className="pt-safe">
         <nav aria-label="Main" className="mx-auto flex h-16 max-w-3xl items-center justify-between gap-4 px-5">
           <Link href="/" aria-label="NotchLift home"><Wordmark size="md" /></Link>
-          <Link href="/sign-in" className={buttonClass("ghost", "md", "px-4")}>Sign in</Link>
+          <TrackedLink track="nav_signin" href="/sign-in" className={buttonClass("ghost", "md", "px-4")}>Sign in</TrackedLink>
         </nav>
       </header>
 
@@ -40,9 +41,9 @@ export function AdLanding({ paidPlans = false }: { paidPlans?: boolean }) {
               Plan your split, log every set in seconds and see last session beside every set.
             </p>
             <div className="mx-auto mt-8 flex max-w-sm flex-col gap-3">
-              <Link href="/try" className={buttonClass("primary", "lg", "w-full text-[17px]")}>Try a workout now</Link>
+              <TrackedLink track="hero_try" href="/try" className={buttonClass("primary", "lg", "w-full text-[17px]")}>Try a workout now</TrackedLink>
               <p className="-mt-1 text-sm text-faint">No sign-up. Takes a minute.</p>
-              <Link href={SIGN_UP} className={buttonClass("secondary", "lg", "w-full text-[17px]")}>Create a free account</Link>
+              <TrackedLink track="hero_start" href={SIGN_UP} className={buttonClass("secondary", "lg", "w-full text-[17px]")}>Create a free account</TrackedLink>
               <p className="-mt-1 text-sm text-faint">{offer}</p>
             </div>
           </div>
@@ -93,14 +94,15 @@ export function AdLanding({ paidPlans = false }: { paidPlans?: boolean }) {
             <h2 className="text-3xl font-bold tracking-[-0.03em] text-balance">See it for yourself.</h2>
             <p className="mt-3 text-muted">Log a demo workout first. If you like it, your split is ready the moment you sign up.</p>
             <div className="mx-auto mt-6 flex max-w-sm flex-col gap-3">
-              <Link href="/try" className={buttonClass("primary", "lg", "w-full text-[17px]")}>Try a workout now</Link>
-              <Link href={SIGN_UP} className={buttonClass("ghost", "lg", "w-full")}>Create a free account</Link>
+              <TrackedLink track="final_try" href="/try" className={buttonClass("primary", "lg", "w-full text-[17px]")}>Try a workout now</TrackedLink>
+              <TrackedLink track="final_start" href={SIGN_UP} className={buttonClass("ghost", "lg", "w-full")}>Create a free account</TrackedLink>
             </div>
             <p className="mt-4 text-sm text-faint">{offer}</p>
           </div>
         </section>
       </main>
 
+      <ScrollDepth />
       <footer className="border-t border-line pb-safe">
         <nav aria-label="Footer" className="mx-auto flex max-w-3xl flex-wrap gap-x-6 gap-y-2 px-5 pt-8 text-sm text-muted">
           <Link href="/" className="hover:text-fg">More about NotchLift</Link>

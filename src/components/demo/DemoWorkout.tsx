@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { DEMO_COOKIE, DEMO_STARTER, DEMO_STORAGE_KEY, buildDemo, demoStarter, parseSavedDemo } from "@/lib/demo";
 import { addSet, completeSet, removeSet, summarize, uncompleteSet, updateSet } from "@/lib/session/doc";
-import { trackDemo } from "@/lib/track";
+import { trackDemo, trackDetail } from "@/lib/track";
 import type { PreviousMap, SessionDoc } from "@/lib/types";
 import { ExerciseCard } from "../logger/ExerciseCard";
 import { buttonClass, cx } from "../styles";
@@ -67,6 +67,12 @@ export function DemoWorkout({ cta }: { cta: string }) {
   const summary = state ? summarize(state.doc) : null;
   const done = summary?.completedSets ?? 0;
   const all = summary ? done > 0 && done >= summary.plannedSets : false;
+
+  // How far the demo got (once each per tab session): three sets, then every set.
+  useEffect(() => {
+    if (done >= 3) trackDetail("demo_progress", "three_sets");
+    if (all) trackDetail("demo_progress", "finished");
+  }, [done, all]);
   const starter = demoStarter();
 
   return (

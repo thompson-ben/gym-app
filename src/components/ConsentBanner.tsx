@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { isPublicPath } from "@/lib/attribution";
 import { shouldAsk } from "@/lib/consent";
 import { PIXEL_ID, pixelEvent, readConsent, saveConsent } from "@/lib/pixel";
-import { trackingAllowed } from "@/lib/track";
+import { trackDetail, trackingAllowed } from "@/lib/track";
 import { buttonClass } from "./styles";
 
 /**
@@ -33,6 +33,8 @@ export function ConsentBanner() {
   if (!ask) return null;
   const choose = (granted: boolean) => {
     saveConsent(granted ? "granted" : "denied");
+    // Anonymous count of the choice (not stored with anything about this browser).
+    trackDetail("consent", granted ? "accepted" : "declined");
     if (granted) pixelEvent("PageView");
   };
   return (
