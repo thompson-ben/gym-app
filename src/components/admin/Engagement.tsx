@@ -20,12 +20,15 @@ export function Engagement({ e, signupViews }: { e: AdminEngagement; signupViews
             return (
               <li key={path} className="rounded-3xl border border-line bg-surface p-4">
                 <p className="font-medium">
-                  {pageLabel(path)} <span className="text-sm font-normal text-muted">· {visits} {visits === 1 ? "visit" : "visits"} landed here</span>
+                  {pageLabel(path)}
+                  {visits ? <span className="text-sm font-normal text-muted"> · {visits} {visits === 1 ? "visit" : "visits"} landed here</span> : null}
                 </p>
-                <p className="mt-2 text-sm text-muted">
-                  <span className="font-medium text-fg">Scrolled:</span>{" "}
-                  {scroll.map(([d, n]) => `${SCROLL_LABEL[d]} ${n}${visits ? ` (${pct(n, visits)})` : ""}`).join(" · ")}
-                </p>
+                {scroll.some(([, n]) => n) ? (
+                  <p className="mt-2 text-sm text-muted">
+                    <span className="font-medium text-fg">Scrolled:</span>{" "}
+                    {scroll.map(([d, n]) => `${SCROLL_LABEL[d]} ${n}${visits ? ` (${pct(n, visits)})` : ""}`).join(" · ")}
+                  </p>
+                ) : null}
                 <p className="mt-1 text-sm text-muted">
                   <span className="font-medium text-fg">Tapped:</span>{" "}
                   {clicks.length ? clicks.map((c) => `${CLICK_LABELS[c.detail] ?? c.detail} ${c.count}`).join(" · ") : "nothing yet"}

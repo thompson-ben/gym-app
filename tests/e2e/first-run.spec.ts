@@ -82,3 +82,26 @@ test("skipping the training-days question doesn't ask again", async ({ page }) =
   await expect(page.getByRole("heading", { level: 1, name: "Full Body A" })).toBeVisible();
   await expect(page.getByRole("region", { name: "Which days do you train?" })).toHaveCount(0);
 });
+
+test("before a first workout, Train offers to log the last session and to have Ben set the split up", async ({ page }) => {
+  const user = await newUser("first-session-help");
+  await seedSplit(user, "Upper / Lower", "Upper A", ["dip"]);
+  await signIn(page, user);
+  const card = page.getByRole("region", { name: "Trained recently?" });
+  await expect(card).toBeVisible();
+  const help = page.getByRole("link", { name: "Send my programme" });
+  await expect(help).toHaveAttribute("href", /^mailto:.+\?subject=Set%20up%20my%20NotchLift%20split&body=/);
+  await card.getByRole("button", { name: "Log my last session" }).click();
+  // The existing past-workout flow: pick when it was performed.
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await expect.poll(async () =>
+    (await db.query("select count(*)::int as n from analytics_events where name = 'cta_click' and detail = 'log_last_session' and path = '/train' and created_at > now() - interval '2 minutes'")).rows[0].n,
+  ).toBeGreaterThanOrEqual(1);
+});
+
+test("a brand-new account can ask Ben to set up its split", async ({ page }) => {
+  const user = await newUser("setup-help-welcome");
+  await signIn(page, user);
+  await expect(page.getByRole("heading", { name: "Welcome to NotchLift" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Send my programme" })).toBeVisible();
+});
