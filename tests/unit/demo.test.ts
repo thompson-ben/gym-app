@@ -14,7 +14,9 @@ describe("try-a-workout demo", () => {
     expect(doc.exercises.map((e) => e.exercise_name)).toEqual(["Back squat", "Barbell bench press", "Seated cable row"]);
     const bench = doc.exercises[1];
     expect(bench.sets).toHaveLength(3);
-    expect(bench.sets.every((s) => s.weight_kg === 60 && s.reps === null && !s.completed_at)).toBe(true);
+    // Reps start at last time's, so one tap logs a set; nothing is confirmed yet.
+    expect(bench.sets.map((s) => [s.weight_kg, s.reps, s.completed_at])).toEqual([[60, 10, null], [60, 10, null], [60, 10, null]]);
+    expect(doc.exercises[0].sets.map((s) => s.reps)).toEqual([8, 8, 7]);
     expect(previous[bench.exercise_id]?.sets.map((s) => s.reps)).toEqual([10, 10, 10]);
     expect(previous[bench.exercise_id]?.completed_at).toBe("2026-10-15T18:00:00.000Z");
     expect(summarize(doc)).toMatchObject({ completedSets: 0, plannedSets: 9 });
@@ -23,9 +25,8 @@ describe("try-a-workout demo", () => {
   it("logs with the real session rules and round-trips through storage", () => {
     const { doc } = buildDemo(now, id);
     const ex = doc.exercises[0];
-    expect(completeSet(doc, ex.id, ex.sets[0].id, now)).toEqual({ error: "reps_required" });
-    const withReps = updateSet(doc, ex.id, ex.sets[0].id, { reps: 8 });
-    const r = completeSet(withReps, ex.id, ex.sets[0].id, now);
+    const r = completeSet(doc, ex.id, ex.sets[0].id, now);
+    expect(completeSet(updateSet(doc, ex.id, ex.sets[1].id, { reps: null }), ex.id, ex.sets[1].id, now)).toEqual({ error: "reps_required" });
     if (!("doc" in r)) throw new Error("not completed");
     expect(summarize(r.doc).completedSets).toBe(1);
     expect(parseSavedDemo(JSON.stringify(r.doc))).toEqual(r.doc);

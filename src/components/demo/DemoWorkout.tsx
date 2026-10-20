@@ -81,7 +81,7 @@ export function DemoWorkout({ cta }: { cta: string }) {
       <div className="mt-3 rounded-2xl border border-dashed border-accent-text/50 px-4 py-3 text-[15px]">
         <p className="font-medium">Try it: this is how a workout feels in NotchLift.</p>
         <p className="mt-1 text-muted">
-          Change a weight, enter your reps and tick ✓. “Last time” shows example numbers; in your account it’s your own. Nothing is saved to an account.
+          Tap ✓ to log a set. Change the weight or reps first if you like. “Last time” shows example numbers; in your account it’s your own. Nothing is saved to an account.
         </p>
       </div>
 
@@ -139,7 +139,7 @@ export function DemoWorkout({ cta }: { cta: string }) {
       <div className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-bg/95 px-4 pt-3 pb-[max(env(safe-area-inset-bottom),12px)] backdrop-blur">
         <div className="mx-auto flex max-w-xl items-center gap-3">
           <p className={cx("min-w-0 flex-1 text-sm", done ? "text-fg" : "text-muted")}>
-            {done ? "Like it? Keep going for real." : "Tick a set to see how it works."}
+            {done ? "Like it? Keep going for real." : "Tap ✓ on a set to see how it works."}
           </p>
           <Link href={SIGN_UP} onClick={markFromDemo} className={buttonClass(done ? "primary" : "secondary", "md", "shrink-0")}>
             {cta}
