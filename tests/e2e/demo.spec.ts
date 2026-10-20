@@ -13,11 +13,16 @@ test("the ad page leads to a demo workout that logs with no account and survives
   await expect(page.getByRole("region", { name: "Barbell bench press" }).getByText("Ready to go heavier.")).toBeVisible();
   await expect(page.getByRole("button", { name: /History/ })).toHaveCount(0);
 
-  await logSet(page, "Back squat", 1, 8, 82.5);
+  // One tap logs a set: reps start at last time's.
+  const first = page.getByRole("group", { name: "Back squat, set 1" });
+  await first.getByRole("button", { name: /Confirm Back squat, set 1/ }).click();
+  await expect(first.getByRole("button", { name: /completed/ })).toBeVisible();
   await expect(page.getByText("1 / 9 sets")).toBeVisible();
+  await logSet(page, "Back squat", 2, 9, 82.5);
+  await expect(page.getByText("2 / 9 sets")).toBeVisible();
   await expect(page.getByText("Like it? Keep going for real.")).toBeVisible();
   await page.reload();
-  await expect(page.getByText("1 / 9 sets")).toBeVisible();
+  await expect(page.getByText("2 / 9 sets")).toBeVisible();
 
   // Anonymous events, no account.
   await expect.poll(async () => (await db.query("select count(*)::int as n from analytics_events where name in ('demo_start', 'demo_set') and created_at > now() - interval '1 minute'")).rows[0].n).toBeGreaterThanOrEqual(2);

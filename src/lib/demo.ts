@@ -14,7 +14,7 @@ import type { PreviousMap, SessionDoc } from "./types";
 export const DEMO_STARTER = "full-body";
 /** Set when someone taps create account from the demo (read at sign-up and on Train). */
 export const DEMO_COOKIE = "nl_demo";
-export const DEMO_STORAGE_KEY = "notchlift-demo-v1";
+export const DEMO_STORAGE_KEY = "notchlift-demo-v2";
 
 const NAMES: Record<string, string> = { "back-squat": "Back squat", "barbell-bench-press": "Barbell bench press", "seated-cable-row": "Seated cable row" };
 /** Example "last time" sets. Bench reached the top of its range, so the demo shows the go-heavier nudge. */
@@ -74,7 +74,19 @@ export function buildDemo(now: Date, id: () => string): { doc: SessionDoc; previ
       sets: [],
     })),
   };
-  return { doc: ensurePlannedSets(doc, previous, id), previous };
+  // Reps start at last time's numbers, so one tap on ✓ logs a set (an empty box looked filled
+  // in, and ticking it only asked for reps). Weights and reps can still be changed first.
+  const planned = ensurePlannedSets(doc, previous, id);
+  return {
+    doc: {
+      ...planned,
+      exercises: planned.exercises.map((ex) => ({
+        ...ex,
+        sets: ex.sets.map((s, i) => ({ ...s, reps: previous[ex.exercise_id]?.sets[i]?.reps ?? s.reps })),
+      })),
+    },
+    previous,
+  };
 }
 
 /** A saved demo from this browser, or null when it's missing or not a demo document. */
