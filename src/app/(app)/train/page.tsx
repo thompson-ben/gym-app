@@ -6,6 +6,7 @@ import { buttonClass, cx } from "@/components/styles";
 import { InstallCard } from "@/components/InstallPrompt";
 import { PageTip } from "@/components/PageTip";
 import { QuickWorkoutButton } from "@/components/QuickWorkoutButton";
+import { LogLastSessionCard, SetupHelp } from "@/components/FirstSessionHelp";
 import { DemoSplitCard, StarterSplits } from "@/components/StarterSplits";
 import { SurveyCard } from "@/components/SurveyCard";
 import { TrainingDaysCard } from "@/components/TrainingDays";
@@ -199,6 +200,14 @@ export default async function TrainPage() {
             </section>
           ) : null}
 
+          {/* Before a first workout: log the last session from memory, or have Ben set the split up. */}
+          {!open && !recent.data.length && startable.length ? (
+            <>
+              <LogLastSessionCard workouts={startable} className="mt-4" />
+              <SetupHelp className="mt-3" />
+            </>
+          ) : null}
+
           {/* Before a first workout, once a split is ready: which days do you train? */}
           {askDays && !open && !recent.data.length && startable.length ? <TrainingDaysCard userId={userId} className="mt-4" /> : null}
 
@@ -277,6 +286,7 @@ export default async function TrainPage() {
               <StarterSplits label={fromDemo ? "Choose a different split" : undefined} />
               <Link href="/splits?new=1" className={buttonClass("ghost", "lg")}>Build my own split</Link>
             </div>
+            <SetupHelp className="mt-4" />
             <p className="mt-4 text-sm text-faint">Got a split link from a friend? Open it and tap Copy to use their split.</p>
             <div className="mt-6">
               <QuickWorkoutButton disabled={Boolean(open)} />
