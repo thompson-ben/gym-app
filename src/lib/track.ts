@@ -91,9 +91,10 @@ export function trackDemo(name: DemoEvent) {
  * A tapped button, how far down a page someone scrolled, the cookie-banner choice or how far the
  * demo got: a short code (lower-case letters and _), counted once per code, page and tab session.
  */
-export function trackDetail(name: DetailEvent, detail: string) {
+export function trackDetail(name: DetailEvent, detail: string, pathOverride?: string) {
   if (!trackingAllowed() || !/^[a-z_]{1,40}$/.test(detail)) return;
-  const path = window.location.pathname;
+  // A fixed path for pages with IDs in them (e.g. "/sessions"), so they add up in admin.
+  const path = pathOverride ?? window.location.pathname;
   if (!once(`nl_${name}_${detail}_${path}`)) return;
   send(name, { path, detail });
 }

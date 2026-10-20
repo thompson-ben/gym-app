@@ -7,6 +7,7 @@ import { removeSet, toPayload, updateSet } from "@/lib/session/doc";
 import { formatDate, formatMinutes, formatSet, formatTarget, repUnit, weightLabel } from "@/lib/format";
 import { formatTargetSets } from "@/lib/progression";
 import type { PersonalRecord } from "@/lib/records";
+import { shareCard } from "@/lib/share-card";
 import type { TargetMap } from "@/lib/targets";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { friendlyError } from "@/lib/supabase/errors";
@@ -16,6 +17,7 @@ import { MAX_REPS, MAX_SECONDS, isValidNumber, parseReps, parseWeight } from "@/
 import { IconCheck, IconPlus, IconTrash } from "./icons";
 import { cx } from "./styles";
 import { Button, ErrorNote, IconButton, PageHeader } from "./ui";
+import { ShareWorkoutButton } from "./ShareWorkoutButton";
 import { WorkoutDateSheet } from "./WorkoutDateSheet";
 
 export type SessionInsights = {
@@ -193,6 +195,16 @@ export function SessionView({
             </p>
           </details>
         </section>
+      ) : null}
+      {!editing && performed.length ? (
+        <ShareWorkoutButton
+          card={shareCard(doc, uniqueRecords, {
+            unit,
+            date: doc.completed_at ? formatDate(doc.completed_at, timeZone, { weekday: "short", year: undefined }) : "",
+            durationMinutes: insights.durationMinutes,
+          })}
+          fileName={`notchlift-${doc.template_name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "workout"}`}
+        />
       ) : null}
       {editing ? (
         <div className="mb-4 flex items-center justify-between gap-3 rounded-2xl border border-line bg-surface px-4 py-3">
