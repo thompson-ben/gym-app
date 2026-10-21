@@ -1,5 +1,6 @@
 import { humanize, formatDuration, formatTarget } from "@/lib/format";
 import type { TrackingMode } from "@/lib/types";
+import { supersetLabels } from "@/lib/supersets";
 
 export type SharedExercise =
   | { kind: "catalogue"; id: string; name: string; primary_muscle: string; equipment: string; tracking_mode: string }
@@ -9,7 +10,7 @@ export type SharedSnapshot = {
   version: 1;
   workouts: {
     name: string;
-    exercises: { exercise: SharedExercise; target_sets: number; rep_min: number | null; rep_max: number | null; rest_seconds: number | null; notes: string | null }[];
+    exercises: { exercise: SharedExercise; target_sets: number; rep_min: number | null; rep_max: number | null; rest_seconds: number | null; notes: string | null; superset_next?: boolean }[];
   }[];
 };
 
@@ -27,6 +28,7 @@ export function SharedSplitView({ snapshot }: { snapshot: SharedSnapshot }) {
                 <li key={j} className="text-sm">
                   <div className="flex items-baseline justify-between gap-3">
                     <span className="min-w-0">
+                      {supersetLabels(w.exercises)[j] ? <span className="mr-1.5 font-semibold text-accent-text">{supersetLabels(w.exercises)[j]}</span> : null}
                       {x.exercise.name}
                       {x.exercise.kind === "custom" && x.exercise.variant ? <span className="text-muted"> · {x.exercise.variant}</span> : null}
                       {x.exercise.kind === "custom" ? <span className="ml-2 rounded-full bg-surface-3 px-1.5 py-0.5 text-[11px] text-muted">Custom</span> : null}

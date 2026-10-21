@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { LogPastWorkoutButton, StartWorkoutButton } from "@/components/StartWorkoutButton";
-import { buttonClass } from "@/components/styles";
+import { buttonClass, cx } from "@/components/styles";
 import { PageHeader } from "@/components/ui";
 import { exerciseLabel } from "@/lib/exercises";
 import { formatSet, formatShortDate, formatTargetLong } from "@/lib/format";
 import { formatTargetSets } from "@/lib/progression";
 import { requireUser, viewerTimeZone, viewerUnit } from "@/lib/supabase/server";
+import { supersetLabels } from "@/lib/supersets";
 import { loadTargets } from "@/lib/targets";
 import type { PreviousPerformance, TrackingMode } from "@/lib/types";
 
@@ -21,6 +22,7 @@ type EntryRow = {
   rep_max: number | null;
   rest_seconds: number | null;
   notes: string | null;
+  superset_next: boolean;
   exercise: { id: string; name: string; variant: string | null; tracking_mode: TrackingMode } | null;
 };
 
@@ -35,7 +37,7 @@ export default async function WorkoutPreviewPage({ params }: { params: Promise<{
     supabase.from("workout_templates").select("id, name, split_id, splits(id, name)").eq("id", templateId).maybeSingle(),
     supabase
       .from("template_exercises")
-      .select("id, position, target_sets, rep_min, rep_max, rest_seconds, notes, exercise:exercises(id, name, variant, tracking_mode)")
+      .select("id, position, target_sets, rep_min, rep_max, rest_seconds, notes, superset_next, exercise:exercises(id, name, variant, tracking_mode)")
       .eq("template_id", templateId)
       .order("position")
       .order("created_at"),
@@ -61,6 +63,7 @@ export default async function WorkoutPreviewPage({ params }: { params: Promise<{
   if (prev.error) throw prev.error;
   const previous = new Map((prev.data as PreviousPerformance[]).map((p) => [p.exercise_id, p]));
   const workingSets = rows.reduce((n, r) => n + r.target_sets, 0);
+  const labels = supersetLabels(rows);
 
   return (
     <>
@@ -89,7 +92,9 @@ export default async function WorkoutPreviewPage({ params }: { params: Promise<{
             return (
               <li key={r.id} className="rounded-2xl border border-line bg-surface px-4 py-3">
                 <div className="flex items-baseline gap-3">
-                  <span className="tabular w-5 shrink-0 text-sm text-faint">{i + 1}</span>
+                  <span className={cx("tabular shrink-0 text-sm", labels[i] ? "w-7 font-semibold text-accent-text" : "w-5 text-faint")}>
+                    {labels[i] ? <><span className="sr-only">Superset </span>{labels[i]}</> : i + 1}
+                  </span>
                   <div className="min-w-0 flex-1">
                     <Link href={`/progress/${e.id}`} className="font-medium break-words underline-offset-4 hover:underline">{exerciseLabel(e)}</Link>
                     <p className="text-sm text-muted">{formatTargetLong(r.target_sets, r.rep_min, r.rep_max, r.exercise?.tracking_mode) || "No sets or reps set"}</p>

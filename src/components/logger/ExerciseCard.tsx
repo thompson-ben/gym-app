@@ -44,8 +44,11 @@ export function ExerciseCard({
   onSetupTargets,
   unit,
   demo = false,
+  supersetLabel = null,
 }: {
   unit: WeightUnit;
+  /** "A1", "A2"… when this exercise is part of a superset. */
+  supersetLabel?: string | null;
   /** The signed-out demo (/try): example "last time" numbers, no links, menus, swaps or history. */
   demo?: boolean;
   /** Opens target settings for this entry; absent when targets are not available for it. */
@@ -158,7 +161,15 @@ export function ExerciseCard({
       {celebrating ? <Burst /> : null}
       <header className="flex items-start justify-between gap-2 px-1">
         <div className="min-w-0 pt-0.5">
-          <h3 className="text-[20px] leading-snug font-medium tracking-[-0.01em]">{entry.exercise_name}</h3>
+          <h3 className="text-[20px] leading-snug font-medium tracking-[-0.01em]">
+            {supersetLabel ? (
+              <span className="mr-2 inline-flex h-7 min-w-9 items-center justify-center rounded-lg bg-accent-soft px-1.5 align-[2px] text-sm font-semibold text-accent-text">
+                <span className="sr-only">Superset </span>
+                {supersetLabel}
+              </span>
+            ) : null}
+            {entry.exercise_name}
+          </h3>
           <p className="mt-0.5 text-[15px] text-muted">
             {prescription}
             {entry.skipped ? <span className="text-warn"> · Skipped</span> : null}

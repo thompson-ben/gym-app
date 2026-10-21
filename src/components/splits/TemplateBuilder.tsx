@@ -4,12 +4,13 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { exerciseLabel } from "@/lib/exercises";
 import { formatDuration, formatTarget, humanize } from "@/lib/format";
+import { supersetLabels } from "@/lib/supersets";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { friendlyError } from "@/lib/supabase/errors";
 import { isTimed, type Exercise } from "@/lib/types";
 import { formatWeight, INCREMENT_RANGE, formatWeightValue, parseIncrement, type WeightUnit } from "@/lib/units";
 import { ExercisePicker } from "../ExercisePicker";
-import { IconArrowDown, IconArrowUp, IconEdit, IconMinus, IconPlus, IconSwap, IconTrash } from "../icons";
+import { IconArrowDown, IconArrowUp, IconEdit, IconLink, IconMinus, IconPlus, IconSwap, IconTrash } from "../icons";
 import { cx } from "../styles";
 import { Button, ErrorNote, Field, IconButton, Input, PageHeader, Sheet, Toggle, inputClass } from "../ui";
 
@@ -23,6 +24,8 @@ export type Entry = {
   notes: string | null;
   progression_enabled: boolean;
   progression_increment_kg: number | null;
+  /** Done back to back with the next exercise (migration 29). */
+  superset_next: boolean;
   exercise: Exercise;
 };
 
@@ -52,6 +55,7 @@ export function TemplateBuilder({
   const [editing, setEditing] = useState<Entry | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const labels = supersetLabels(entries);
 
   async function run<T>(op: PromiseLike<{ error: { message: string } | null; data?: T | null }>, fallback?: () => void) {
     setSaving(true);
@@ -98,13 +102,16 @@ export function TemplateBuilder({
           // Holds start at 10–20 seconds, other exercises at 8–12 reps.
           ...(isTimed(exercise.tracking_mode) ? { rep_min: 10, rep_max: 20 } : { rep_min: 8, rep_max: 12 }),
         })
-        .select("id, position, target_sets, rep_min, rep_max, rest_seconds, notes, progression_enabled, progression_increment_kg")
+        .select("id, position, target_sets, rep_min, rep_max, rest_seconds, notes, progression_enabled, progression_increment_kg, superset_next")
         .single(),
     );
     if (data && data !== true) setEntries((list) => [...list, { ...(data as Entry), exercise }]);
   }
 
-  async function update(id: string, patch: Partial<Pick<Entry, "target_sets" | "rep_min" | "rep_max" | "rest_seconds" | "notes" | "progression_enabled" | "progression_increment_kg">>) {
+  async function update(
+    id: string,
+    patch: Partial<Pick<Entry, "target_sets" | "rep_min" | "rep_max" | "rest_seconds" | "notes" | "progression_enabled" | "progression_increment_kg" | "superset_next">>,
+  ) {
     const before = entries;
     setEntries((list) => list.map((e) => (e.id === id ? { ...e, ...patch } : e)));
     await run(supabase.from("template_exercises").update(patch).eq("id", id), () => setEntries(before));
@@ -152,10 +159,16 @@ export function TemplateBuilder({
       <ol className="mt-3 space-y-3">
         {entries.map((entry, i) => {
           const dupes = entries.filter((e) => e.exercise.id === entry.exercise.id).length > 1;
+          const label = labels[i];
+          const linked = entry.superset_next && i < entries.length - 1;
           return (
-            <li key={entry.id} className="rounded-3xl border border-line bg-surface p-4">
+            <li
+              key={entry.id}
+              className={cx("rounded-3xl border bg-surface p-4", label ? "border-accent-text/50" : "border-line", linked && "relative")}
+            >
               <div className="flex items-start gap-2">
                 <div className="min-w-0 flex-1">
+                  {label ? <p className="mb-1 text-xs font-semibold tracking-[0.12em] text-accent-text uppercase">Superset {label}</p> : null}
                   <h3 className="font-semibold">{exerciseLabel(entry.exercise)}</h3>
                   <p className="text-sm text-muted">
                     {humanize(entry.exercise.primary_muscle)} · {humanize(entry.exercise.equipment)}
@@ -192,6 +205,17 @@ export function TemplateBuilder({
               <div className="mt-2 -mb-1 flex flex-wrap gap-1">
                 <Button size="sm" variant="quiet" onClick={() => setEditing(entry)}><IconEdit size={15} /> Targets & notes</Button>
                 <Button size="sm" variant="quiet" onClick={() => setPicker({ replace: entry.id })}><IconSwap size={15} /> Replace</Button>
+                {i < entries.length - 1 ? (
+                  <Button
+                    size="sm"
+                    variant="quiet"
+                    className={linked ? "text-accent-text" : undefined}
+                    aria-pressed={linked}
+                    onClick={() => update(entry.id, { superset_next: !linked })}
+                  >
+                    <IconLink size={15} /> {linked ? "In a superset with next" : "Superset with next"}
+                  </Button>
+                ) : null}
                 <Button size="sm" variant="quiet" className="text-danger hover:text-danger" onClick={() => remove(entry.id)}><IconTrash size={15} /> Remove</Button>
               </div>
             </li>
