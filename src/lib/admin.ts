@@ -299,8 +299,9 @@ export const CLICK_LABELS: Record<string, string> = {
   final_try: "Try a workout (bottom)",
   log_last_session: "Log my last session",
   setup_help: "Send my programme",
+  share_workout: "Share workout",
 };
 
 export function pageLabel(path: string): string {
-  return path === "/" ? "Home page" : path === "/add-weight" ? "Ad page (/add-weight)" : path === "/train" ? "Train (new accounts)" : path;
+  return path === "/" ? "Home page" : path === "/add-weight" ? "Ad page (/add-weight)" : path === "/train" ? "Train (new accounts)" : path === "/sessions" ? "Workout summary" : path;
 }
