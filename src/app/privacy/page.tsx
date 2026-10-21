@@ -43,6 +43,10 @@ export default function PrivacyPage() {
             Privacy Control or Do Not Track are not counted.
           </li>
           <li>
+            <strong>Support messages and feedback:</strong> what you send us from Help &amp; support or Send feedback, with our replies, the
+            screen you were last on, the app version and your device type. We email you when we reply to a support message.
+          </li>
+          <li>
             <strong>Errors:</strong> technical reports when something breaks (the error, the page and the browser). They never include your email,
             account, IP address or training data, and secret links (such as invite links) are blanked out.
           </li>
@@ -65,7 +69,7 @@ export default function PrivacyPage() {
           <li><strong>Supabase</strong> hosts the database and sign-in, in the EU (Ireland).</li>
           <li><strong>Vercel</strong> hosts the app; requests are handled in the EU (Dublin).</li>
           <li><strong>Apple</strong> and <strong>Google</strong> confirm who you are if you choose to sign in with them; they learn that you use NotchLift.</li>
-          <li><strong>Resend</strong> sends account emails (confirming your address and resetting your password).</li>
+          <li><strong>Resend</strong> sends our emails (confirming your address, resetting your password, reminders and support replies).</li>
           <li><strong>Sentry</strong> receives the technical error reports described above, stored in the EU.</li>
           <li><strong>Meta</strong> (Facebook and Instagram) receives the ad-measurement events described under Cookies, only if you accept them.</li>
           <li><strong>Stripe</strong> processes payments for memberships. Your card details go to Stripe directly and never reach us; we keep only whether you are a member, your plan and renewal date, and amounts paid.</li>

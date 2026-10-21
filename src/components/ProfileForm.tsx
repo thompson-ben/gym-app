@@ -46,6 +46,7 @@ export function ProfileForm({
   isAdmin = false,
   reminderEmails = null,
   trainingDays,
+  support,
 }: {
   userId: string;
   email: string | null;
@@ -57,6 +58,8 @@ export function ProfileForm({
   reminderEmails?: boolean | null;
   /** Undefined until migration 26: the row is hidden. Null: not chosen yet. */
   trainingDays?: number[] | null;
+  /** Undefined until migration 30: Help & support links to email instead. */
+  support?: { unread: number; adminOpen: number | null };
 }) {
   const router = useRouter();
   const [displayName, setDisplayName] = useState(profile.display_name ?? "");
@@ -278,6 +281,24 @@ export function ProfileForm({
               <IconChevronRight className="shrink-0 text-faint" />
             </Link>
           ) : null}
+          {isAdmin && support?.adminOpen != null ? (
+            <Link href="/admin/support" className="flex min-h-13 items-center gap-3 px-4 py-3 hover:bg-surface-2/50">
+              <span className="min-w-0 flex-1">
+                <span className="block font-medium">Support inbox</span>
+                <span className="block text-sm text-muted">{support.adminOpen ? `${support.adminOpen} waiting for a reply` : "Nothing waiting for a reply"}</span>
+              </span>
+              {support.adminOpen ? <span className="shrink-0 rounded-full bg-accent px-2 py-0.5 text-xs font-semibold text-accent-ink tabular">{support.adminOpen}</span> : null}
+              <IconChevronRight className="shrink-0 text-faint" />
+            </Link>
+          ) : null}
+          <Link href="/profile/support" className="flex min-h-13 items-center gap-3 px-4 py-3 hover:bg-surface-2/50">
+            <span className="min-w-0 flex-1">
+              <span className="block font-medium">Help & support</span>
+              <span className="block text-sm text-muted">{support?.unread ? <span className="font-medium text-accent-text">{support.unread === 1 ? "You have a new reply" : `${support.unread} new replies`}</span> : "Common questions, or message us"}</span>
+            </span>
+            {support?.unread ? <span aria-hidden="true" className="h-2.5 w-2.5 shrink-0 rounded-full bg-accent" /> : null}
+            <IconChevronRight className="shrink-0 text-faint" />
+          </Link>
           <InstallRow />
           <FeedbackRow />
           <ShowTipsAgainRow />

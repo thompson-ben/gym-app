@@ -68,7 +68,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const days = RANGES.find((d) => String(d) === params.days) ?? 30;
   const include = parseInclude(params.include);
   const { supabase } = await requireUser();
-  const [dashRes, overviewRes, freeList, activationRes, surveyRes, spendRes, refundRes, glanceRes, nudgeRes, stepsRes, daysRes, demoRes, engageRes] = await Promise.all([
+  const [dashRes, overviewRes, freeList, activationRes, surveyRes, spendRes, refundRes, glanceRes, nudgeRes, stepsRes, daysRes, demoRes, engageRes, supportRes] = await Promise.all([
     supabase.rpc("admin_dashboard", { p_days: days, p_include: include }),
     supabase.rpc("admin_overview", { p_days: days }),
     supabase.rpc("admin_free_access_list"),
@@ -82,10 +82,13 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
     supabase.rpc("admin_training_days", { p_days: days }),
     supabase.rpc("admin_demo", { p_days: days }),
     supabase.rpc("admin_engagement", { p_days: days, p_include: include }),
+    supabase.rpc("admin_support_threads", { p_status: "open" }),
   ]);
   // Not an admin (or migration 13 not applied): the page does not exist for them.
   if (overviewRes.error || !overviewRes.data) notFound();
   const o = overviewRes.data as AdminOverview;
+  // Missing until migration 30: the link is hidden.
+  const supportOpen = (supportRes.data as { counts?: { open: number } } | null)?.counts?.open ?? null;
   // Missing until migration 24 runs: the page asks for it rather than showing mismatched figures.
   const d = dashRes.data as AdminDashboard | null;
   const act = activationRes.data as AdminActivation | null;
@@ -109,6 +112,13 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
       <p className="-mt-3 mb-6 hidden text-sm text-muted print:block">
         NotchLift · {days === 1 ? "Today" : `Last ${days} days`} · {countingText(include)} · generated {generatedAt()}
       </p>
+
+      {supportOpen !== null ? (
+        <Link href="/admin/support" className="-mt-2 mb-4 flex min-h-12 items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-2.5 hover:bg-surface-2/50 print:hidden">
+          <span className="min-w-0 flex-1 font-medium">Support inbox</span>
+          <span className={cx("text-sm", supportOpen ? "font-semibold text-accent-text" : "text-muted")}>{supportOpen ? `${supportOpen} waiting for a reply` : "Nothing waiting"}</span>
+        </Link>
+      ) : null}
 
       <div className="-mt-2 mb-6 space-y-3 print:hidden">
         <nav aria-label="Date range" className="flex gap-2">

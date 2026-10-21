@@ -99,6 +99,11 @@ export async function GET(request: Request) {
       .order("created_at"),
   ]);
   const failed = [profile, membership, exercises, splits].find((r) => r.error);
+  // Missing before migration 30: left out of the export.
+  const support = await supabase
+    .from("support_threads")
+    .select("topic, subject, status, created_at, support_messages(author, admin_name, body, created_at)")
+    .order("created_at");
   if (failed) return NextResponse.json({ error: "Could not export your data. Please try again." }, { status: 500 });
 
   const body = {
@@ -112,6 +117,7 @@ export async function GET(request: Request) {
     custom_exercises: exercises.data,
     splits: splits.data,
     workouts: sessions,
+    ...(support.error ? {} : { support_messages: support.data }),
     notes: "Weights are stored and exported here in kilograms (weight_kg, progression_increment_kg), whatever display unit is chosen. Catalogue exercises are referenced by id; workout and exercise names are as they were when logged.",
   };
   return new NextResponse(JSON.stringify(body, null, 2), { headers: headers("application/json; charset=utf-8", "json") });
