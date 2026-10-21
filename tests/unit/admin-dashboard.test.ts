@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { adminHref, decodeCampaign, mergeSources, parseInclude, toggleInclude } from "@/lib/admin";
+import { adminHref, busiestWindow, decodeCampaign, hourLabel, mergeSources, parseInclude, toggleInclude } from "@/lib/admin";
 import { readTouch } from "@/lib/attribution";
 
 describe("admin dashboard helpers", () => {
@@ -34,5 +34,26 @@ describe("admin dashboard helpers", () => {
   it("stores double-encoded ad tags decoded", () => {
     const url = new URL("https://notchlift.com/?utm_source=facebook&utm_campaign=NL%2B%25E2%2580%2593%2BSign-ups");
     expect(readTouch(url, "", "notchlift.com", new Date())?.utm_campaign).toBe("NL – Sign-ups");
+  });
+});
+
+describe("time of day (migration 31)", () => {
+  it("labels hours on a 12-hour clock", () => {
+    expect([0, 1, 11, 12, 13, 23, 24].map(hourLabel)).toEqual(["12am", "1am", "11am", "12pm", "1pm", "11pm", "12am"]);
+  });
+
+  it("finds the busiest three hours, wrapping past midnight", () => {
+    const evening = Array(24).fill(0);
+    evening[18] = 3;
+    evening[19] = 5;
+    evening[20] = 2;
+    evening[8] = 4;
+    expect(busiestWindow(evening)).toEqual({ label: "6pm–9pm", count: 10, share: 10 / 14 });
+    const late = Array(24).fill(0);
+    late[23] = 2;
+    late[0] = 2;
+    late[1] = 1;
+    expect(busiestWindow(late)?.label).toBe("11pm–2am");
+    expect(busiestWindow(Array(24).fill(0))).toBeNull();
   });
 });
