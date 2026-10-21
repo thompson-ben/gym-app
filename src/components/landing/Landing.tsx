@@ -82,6 +82,15 @@ const FEATURES: { id?: string; eyebrow: string; title: string; body: string; poi
     alt: "A NotchLift progress chart showing the heaviest bench press set rising from 60 kg to 67.5 kg over twelve weeks",
   },
   {
+    id: "supersets",
+    eyebrow: "Supersets",
+    title: "Supersets, logged properly.",
+    body: "Link two or three exercises and NotchLift runs them as rounds: a set of each, back to back, then rest. Each lift still keeps its own history, last time and targets.",
+    points: ["Pair any exercises in your split in one tap", "The rest timer waits until the round is done", "A1 and A2 labels so you always know what’s next"],
+    src: "/landing/superset.png",
+    alt: "A NotchLift superset mid-workout: bench press A1 and barbell row A2 grouped together, with last session's sets beside today's",
+  },
+  {
     eyebrow: "Your plan",
     title: "Always know what’s next.",
     body: "Open the app and your next workout is waiting: whichever one in your split you did longest ago. Start it in one tap, or log a quick one-off session.",
@@ -134,6 +143,10 @@ const FAQ: { q: string; a: ReactNode }[] = [
   {
     q: "How do targets work?",
     a: "Targets use double progression. If every working set reached the top of your rep range last time, your target adds your chosen increment. If not, it keeps the weight and aims for more reps. They’re suggestions: nothing counts until you confirm a set.",
+  },
+  {
+    q: "Can I log supersets?",
+    a: "Yes. In the workout editor, tap “Superset with next” to pair an exercise with the one after it (link a third for a tri-set). During the workout they’re grouped as A1, A2, and the rest timer only starts once you’ve done a set of each. History, records and targets stay per exercise.",
   },
   {
     q: "Can I train with a friend?",
