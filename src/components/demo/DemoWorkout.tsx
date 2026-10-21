@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { DEMO_COOKIE, DEMO_STARTER, DEMO_STORAGE_KEY, buildDemo, demoStarter, parseSavedDemo } from "@/lib/demo";
 import { addSet, completeSet, removeSet, summarize, uncompleteSet, updateSet } from "@/lib/session/doc";
+import { pixelStep } from "@/lib/pixel";
 import { trackDemo, trackDetail } from "@/lib/track";
 import type { PreviousMap, SessionDoc } from "@/lib/types";
 import { ExerciseCard } from "../logger/ExerciseCard";
@@ -39,6 +40,7 @@ export function DemoWorkout({ cta }: { cta: string }) {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setState({ doc: saved ?? fresh.doc, previous: fresh.previous });
     trackDemo("demo_start");
+    pixelStep("demo_start");
   }, []);
 
   function edit(fn: (d: SessionDoc) => SessionDoc) {

@@ -32,7 +32,9 @@ type TemplateRow = {
 
 type WorkoutSummary = { id: string; name: string; position: number; exerciseCount: number; workingSets: number; lastPerformed: string | null };
 
-export default async function TrainPage() {
+export default async function TrainPage({ searchParams }: { searchParams: Promise<{ ready?: string }> }) {
+  // Set when a workout was put aside from the logger (“Save it for the gym”).
+  const ready = (await searchParams).ready?.slice(0, 60);
   const { supabase, userId, metadata } = await requireUser();
   const tz = await viewerTimeZone();
 
@@ -130,6 +132,11 @@ export default async function TrainPage() {
         <Wordmark />
         {split && !open && startable.length ? <LogPastWorkoutButton workouts={startable} size="sm" label="Log past workout" /> : null}
       </div>
+      {ready && !open ? (
+        <p role="status" className="mb-4 rounded-2xl bg-accent-soft px-4 py-3 text-sm">
+          <span className="font-medium">{ready}</span> is saved for the gym. Open NotchLift when you get there and tap Start.
+        </p>
+      ) : null}
       <MembershipBanner state={membershipNow} invite={invite} />
       {survey && !open ? <SurveyCard question={survey} className="mt-3" /> : null}
       {!open ? <InstallCard /> : null}

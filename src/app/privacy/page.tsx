@@ -80,8 +80,8 @@ export default function PrivacyPage() {
         <h2>Cookies and ad measurement</h2>
         <p>
           We advertise on Instagram and Facebook. If you click <strong>Accept</strong> on the cookie banner, our website loads the Meta Pixel,
-          which sets Meta cookies and tells Meta when you visit our public pages (home, the demo workout, sign-in, privacy and terms), create an account or start
-          a paid membership (with the plan price). Meta uses this to show us which ads work and may use it under its own privacy policy. Nothing
+          which sets Meta cookies and tells Meta when you visit our public pages (home, the demo workout, sign-in, privacy and terms), start the demo
+          workout, start filling in the sign-up form (never what you type), create an account or start a paid membership (with the plan price). Meta uses this to show us which ads work and may use it under its own privacy policy. Nothing
           about your training is ever sent, and the Pixel does not run inside the app’s screens.
         </p>
         <p>
