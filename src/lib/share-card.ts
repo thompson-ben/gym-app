@@ -68,7 +68,12 @@ export function shareCard(
     .join(" · ");
   const prs = records
     .filter((r) => r.kind !== "first")
-    .map((r) => `${r.exercise}: ${r.label.replace(/ record$/i, "").toLowerCase()} ${r.detail.replace(/\s*\(.*\)\s*$/, "")}`);
+    .map((r) => {
+      // "Estimated 1RM record" + "88.7 kg estimated (previous …)" → "estimated 1RM 88.7 kg".
+      const label = r.label.replace(/ record$/i, "");
+      const detail = r.detail.replace(/\s*\(.*\)\s*$/, "").replace(/ estimated$/, "");
+      return `${r.exercise}: ${label.charAt(0).toLowerCase()}${label.slice(1)} ${detail}`;
+    });
   return {
     title: doc.template_name,
     eyebrow: [doc.split_name, opts.date].filter(Boolean).join(" · "),
