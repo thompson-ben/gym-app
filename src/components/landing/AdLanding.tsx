@@ -3,6 +3,7 @@ import { IconCheck, IconCloudOff, IconDumbbell, IconHistory } from "../icons";
 import { buttonClass } from "../styles";
 import { Wordmark } from "../Wordmark";
 import { COMPANY_LINE, CONTACT_EMAIL } from "@/lib/company";
+import { Founder } from "./Founder";
 import { Phone, STEPS } from "./Landing";
 import { ScrollDepth, TrackedLink } from "./Tracked";
 
@@ -88,6 +89,8 @@ export function AdLanding({ paidPlans = false }: { paidPlans?: boolean }) {
             </ul>
           </div>
         </section>
+
+        <Founder className="border-t border-line" />
 
         <section className="border-t border-line">
           <div className="mx-auto max-w-3xl px-5 py-14 text-center">

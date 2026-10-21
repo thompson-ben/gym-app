@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { Founder } from "./Founder";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { IconChart, IconCheck, IconCloudOff, IconDumbbell, IconHistory, IconLayers, IconShare, IconTimer, IconArrowUpRight } from "../icons";
@@ -163,6 +164,8 @@ const FAQ: { q: string; a: ReactNode }[] = [
   },
 ];
 
+const HERO_BODY = "NotchLift plans your split, puts last session beside every set, and tells you when it’s time to add weight. Fast enough for the gym floor, and it works without signal.";
+
 const COST_FREE = "NotchLift is free during early access, with no card needed. If pricing ever changes, you’ll hear from us first, and nothing is ever charged automatically.";
 const COST_PAID = `Every account starts with a 14-day free trial, no card needed. After that it’s ${PLANS.monthly.price} a month or ${PLANS.yearly.price} a year (${YEARLY_PER_MONTH} a month). Prices include VAT. Cancel any time. Nothing you’ve logged is ever deleted for not paying, and you can always export it.`;
 
@@ -199,19 +202,22 @@ export function Landing({ paidPlans = false }: { paidPlans?: boolean }) {
                 Know exactly what to lift next.
               </h1>
               <p className="mt-4 text-xl font-semibold tracking-tight text-accent-text sm:text-2xl">Stop guessing. Start progressing.</p>
-              <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-muted text-pretty lg:mx-0 lg:text-xl">
-                NotchLift plans your split, puts last session beside every set, and tells you when it’s time to add weight. Fast enough for the gym floor, and it works without signal.
-              </p>
-              <div className="mt-9 flex flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-start">
+              <p className="mx-auto mt-6 hidden max-w-xl text-lg leading-relaxed text-muted text-pretty lg:mx-0 lg:block lg:text-xl">{HERO_BODY}</p>
+              <div className="mt-7 flex lg:mt-9 flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-start">
                 <Cta track="hero_start" className="w-full sm:w-auto" label="Start training free" />
                 <TrackedLink track="hero_try" href="/try" className={buttonClass("secondary", "lg", "w-full px-7 sm:w-auto")}>Try a workout, no sign-up</TrackedLink>
               </div>
               <p className="mt-5 text-sm text-faint">{paidPlans ? "14-day free trial" : "Free during early access"} · No card needed</p>
-              <p className="mt-1.5 text-sm text-faint">Works in your phone’s browser, no app store needed. Add it to your home screen.</p>
+              <p className="mt-1.5 hidden text-sm text-faint lg:block">Works in your phone’s browser, no app store needed. Add it to your home screen.</p>
             </div>
-            <div className="relative mx-auto h-[31rem] w-full max-w-[22rem] sm:h-[36rem] sm:max-w-[26rem]">
+            <div className="relative mx-auto -mt-4 h-[31rem] w-full max-w-[22rem] sm:h-[36rem] sm:max-w-[26rem] lg:mt-0">
               <Phone src="/landing/target-hit.png" alt="" className="absolute top-12 right-0 w-[56%] rotate-[4deg]" />
               <Phone src="/landing/logger.png" alt="The NotchLift workout logger showing a bench press target of 70 kg for 6 reps" priority className="absolute top-0 left-0 z-10 w-[60%] -rotate-[3deg]" />
+            </div>
+            {/* On phones the product shows first; the detail follows it. */}
+            <div className="-mt-6 text-center lg:hidden">
+              <p className="mx-auto max-w-xl text-lg leading-relaxed text-muted text-pretty">{HERO_BODY}</p>
+              <p className="mt-3 text-sm text-faint">Works in your phone’s browser, no app store needed. Add it to your home screen.</p>
             </div>
           </div>
         </section>
@@ -305,6 +311,8 @@ export function Landing({ paidPlans = false }: { paidPlans?: boolean }) {
             </ul>
           </div>
         </section>
+
+        <Founder className="border-t border-line" />
 
         {/* Pricing */}
         <section id="pricing" className="scroll-mt-20 border-t border-line bg-surface/40">

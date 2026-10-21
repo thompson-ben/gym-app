@@ -66,9 +66,29 @@ function load(): boolean {
   return true;
 }
 
+type PixelEventName = "PageView" | "CompleteRegistration" | "Subscribe" | "ViewContent" | "Lead";
+
 /** Sends a standard event, only with consent. */
-export function pixelEvent(name: "PageView" | "CompleteRegistration" | "Subscribe", params?: Record<string, unknown>) {
+export function pixelEvent(name: PixelEventName, params?: Record<string, unknown>) {
   if (readConsent() !== "granted" || !load()) return;
   if (params) window.fbq!("track", name, params);
   else window.fbq!("track", name);
+}
+
+/**
+ * Earlier steps than a sign-up, so Meta has more to learn from while sign-ups are few: started
+ * the "Try a workout" demo (ViewContent) and started filling in the sign-up form (Lead). Once
+ * per browser tab, only with consent.
+ */
+export function pixelStep(step: "demo_start" | "signup_started") {
+  if (readConsent() !== "granted") return;
+  try {
+    const key = `nl_px_${step}`;
+    if (window.sessionStorage.getItem(key)) return;
+    window.sessionStorage.setItem(key, "1");
+  } catch {
+    /* storage unavailable: send it anyway */
+  }
+  if (step === "demo_start") pixelEvent("ViewContent", { content_name: "try_a_workout" });
+  else pixelEvent("Lead", { content_name: "sign_up_form" });
 }

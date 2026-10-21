@@ -8,7 +8,7 @@ import { Button, ErrorNote, Field, Input } from "@/components/ui";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { DEMO_COOKIE } from "@/lib/demo";
 import { IN_APP_NAME, PROVIDER_LABEL, signupErrorMessage, signupErrorReason, type InApp, type OAuthProvider, type SignupErrorReason } from "@/lib/auth-providers";
-import { pixelEvent } from "@/lib/pixel";
+import { pixelEvent, pixelStep } from "@/lib/pixel";
 import { trackSignupStep, trackSignupView } from "@/lib/track";
 
 type Mode = "sign-in" | "sign-up";
@@ -178,7 +178,11 @@ export function AuthForm({
     <form
       onSubmit={submit}
       // First tap into the create-account form (nothing typed is recorded).
-      onFocusCapture={() => mode === "sign-up" && trackSignupStep("signup_started")}
+      onFocusCapture={() => {
+        if (mode !== "sign-up") return;
+        trackSignupStep("signup_started");
+        pixelStep("signup_started");
+      }}
       className="space-y-5"
       noValidate={false}
     >

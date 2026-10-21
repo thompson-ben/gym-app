@@ -300,10 +300,11 @@ export const CLICK_LABELS: Record<string, string> = {
   log_last_session: "Log my last session",
   setup_help: "Send my programme",
   share_workout: "Share workout",
+  save_for_gym: "Save it for the gym (not there yet)",
 };
 
 export function pageLabel(path: string): string {
-  return path === "/" ? "Home page" : path === "/add-weight" ? "Ad page (/add-weight)" : path === "/train" ? "Train (new accounts)" : path === "/sessions" ? "Workout summary" : path;
+  return path === "/" ? "Home page" : path === "/add-weight" ? "Ad page (/add-weight)" : path === "/train" ? "Train (new accounts)" : path === "/sessions" ? "Workout summary" : path === "/workout" ? "Workout logger" : path;
 }
 
 /** admin_time_of_day (migration 31): counts per hour (0–23) and weekday (Monday first), UK time. */

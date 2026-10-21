@@ -39,6 +39,7 @@ import { TargetSettingsSheet } from "./TargetSettingsSheet";
 import { SyncBadge } from "./SyncBadge";
 import { useSessionRecord } from "./useSessionRecord";
 import { endsRound, nextInSuperset, supersetLabels, supersetRanges } from "@/lib/supersets";
+import { trackDetail } from "@/lib/track";
 
 type Picker = { mode: "add" } | { mode: "substitute"; entryId: string } | null;
 type SetMenu = { entryId: string; set: SessionSet; ordinal: string } | null;
@@ -60,6 +61,7 @@ export default function Logger({ userId, initial, timeZone }: { userId: string; 
   const [renameOpen, setRenameOpen] = useState(false);
   const [finishOpen, setFinishOpen] = useState(false);
   const [discardOpen, setDiscardOpen] = useState(false);
+  const [notAtGymDismissed, setNotAtGymDismissed] = useState(false);
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -263,7 +265,8 @@ export default function Logger({ userId, initial, timeZone }: { userId: string; 
     }
   }
 
-  async function discard() {
+  /** Discards the workout. savedForGym: an empty workout put aside until they're at the gym. */
+  async function discard(savedForGym = false) {
     setBusy(true);
     setActionError(null);
     if (!(await ownerSignedIn())) {
@@ -278,7 +281,7 @@ export default function Logger({ userId, initial, timeZone }: { userId: string; 
     }
     engine.current?.stop();
     removeRecord(window.localStorage, userId, doc.id);
-    router.replace("/train");
+    router.replace(savedForGym ? `/train?ready=${encodeURIComponent(doc.template_name)}` : "/train");
     router.refresh();
   }
 
@@ -366,6 +369,28 @@ export default function Logger({ userId, initial, timeZone }: { userId: string; 
           </div>
         ) : null}
         {notice ? <Banner tone="muted" onDismiss={() => setNotice(null)}>{notice}</Banner> : null}
+        {!closed && doc.status === "in_progress" && !doc.is_backdated && doc.exercises.length > 0 && summary.completedSets === 0 && !notAtGymDismissed ? (
+          <aside aria-label="Not at the gym yet?" className="rounded-3xl border border-line bg-surface p-4">
+            <p className="font-medium">Not at the gym yet?</p>
+            <p className="mt-1 text-sm text-muted">
+              No problem. Save it for later and {doc.template_name} will be waiting on Train, ready to start when you get there. At the gym? Tick ✓ after each set.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Button
+                size="sm"
+                variant="secondary"
+                busy={busy}
+                onClick={() => {
+                  trackDetail("cta_click", "save_for_gym", "/workout");
+                  void discard(true);
+                }}
+              >
+                Save it for the gym
+              </Button>
+              <Button size="sm" variant="quiet" onClick={() => setNotAtGymDismissed(true)}>I’m at the gym</Button>
+            </div>
+          </aside>
+        ) : null}
 
         <PageTip id="workout" title="Logging a set">
           <p>Previous shows what you did last time. Weights are filled in; type your reps and tick ✓ to record the set. Nothing counts until it’s ticked.</p>
@@ -603,7 +628,7 @@ export default function Logger({ userId, initial, timeZone }: { userId: string; 
         footer={
           <div className="flex gap-2">
             <Button variant="ghost" size="lg" className="flex-1" onClick={() => setDiscardOpen(false)}>Cancel</Button>
-            <Button variant="danger" size="lg" className="flex-1" busy={busy} onClick={discard}>Discard workout</Button>
+            <Button variant="danger" size="lg" className="flex-1" busy={busy} onClick={() => void discard()}>Discard workout</Button>
           </div>
         }
       >
