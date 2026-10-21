@@ -24,6 +24,7 @@ describe("share card", () => {
       ]),
       [
         { kind: "heaviest", label: "Heaviest load", detail: "62.5 kg (previous 60 kg)", exercise: "Bench press" },
+        { kind: "e1rm", label: "Estimated 1RM record", detail: "79.2 kg estimated (previous 80 kg estimated)", exercise: "Bench press" },
         { kind: "first", label: "First recorded performance", detail: "Your baseline for this exercise is set.", exercise: "Plank" },
       ],
       { unit: "kg", date: "Tue 20 Oct", durationMinutes: 58, previous: { "Bench press": [{ set_type: "working", weight_kg: 60, reps: 10 }, { set_type: "warmup", weight_kg: 80, reps: 3 }] } },
@@ -37,7 +38,7 @@ describe("share card", () => {
       { name: "Weighted dips", best: "+10 kg × 8", previous: null },
       { name: "Plank", best: "60 s", previous: null },
     ]);
-    expect(card.records).toEqual(["Bench press: heaviest load 62.5 kg"]);
+    expect(card.records).toEqual(["Bench press: heaviest load 62.5 kg", "Bench press: estimated 1RM 79.2 kg"]);
     expect(card.more).toBe(0);
   });
 
