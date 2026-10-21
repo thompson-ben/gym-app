@@ -305,3 +305,33 @@ export const CLICK_LABELS: Record<string, string> = {
 export function pageLabel(path: string): string {
   return path === "/" ? "Home page" : path === "/add-weight" ? "Ad page (/add-weight)" : path === "/train" ? "Train (new accounts)" : path === "/sessions" ? "Workout summary" : path;
 }
+
+/** admin_time_of_day (migration 31): counts per hour (0–23) and weekday (Monday first), UK time. */
+export type TimeSeries = { by_hour: number[]; by_weekday: number[] };
+export type AdminTimeOfDay = { visits: TimeSeries; signups: TimeSeries; workouts: TimeSeries };
+
+/** 18 → "6pm", 0 → "12am", 12 → "12pm". */
+export function hourLabel(h: number): string {
+  const hour = ((h % 24) + 24) % 24;
+  return `${hour % 12 === 0 ? 12 : hour % 12}${hour < 12 ? "am" : "pm"}`;
+}
+
+/**
+ * The busiest run of `width` hours (wrapping past midnight), e.g. "6pm–9pm", with its share of
+ * the day. Null when there's nothing to show. Ties go to the earliest start.
+ */
+export function busiestWindow(byHour: number[], width = 3): { label: string; count: number; share: number } | null {
+  const total = byHour.reduce((n, x) => n + x, 0);
+  if (!total || byHour.length !== 24) return null;
+  let best = 0;
+  let bestStart = 0;
+  for (let start = 0; start < 24; start++) {
+    let n = 0;
+    for (let i = 0; i < width; i++) n += byHour[(start + i) % 24];
+    if (n > best) {
+      best = n;
+      bestStart = start;
+    }
+  }
+  return { label: `${hourLabel(bestStart)}–${hourLabel(bestStart + width)}`, count: best, share: best / total };
+}
