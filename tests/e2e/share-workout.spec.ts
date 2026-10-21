@@ -1,18 +1,22 @@
 import { expect, test } from "@playwright/test";
 import { db, logSet, newUser, seedSplit, signIn } from "./helpers";
 
-test("a finished workout can be shared as a story-sized image", async ({ page }) => {
+test("a finished workout can be shared as a story-sized image, with last time's best set", async ({ page }) => {
   const user = await newUser("share-workout");
   await seedSplit(user, "Push / Pull / Legs", "Push", ["barbell-bench-press", "dip"]);
   await signIn(page, user);
-  await page.getByRole("button", { name: "Start Push" }).click();
-  await page.waitForURL("**/workout/**");
-  await logSet(page, "Barbell Bench Press", 1, 8, 60);
-  await logSet(page, "Dip", 1, 12);
-  await expect(page.getByRole("status").filter({ hasText: "Saved" })).toBeVisible({ timeout: 10_000 });
-  await page.getByRole("button", { name: "Finish workout" }).click();
-  await page.getByRole("button", { name: "Finish & save" }).click();
-  await page.waitForURL("**/sessions/**");
+  // Two sessions, so the second image shows last time's best set too.
+  for (const [weight, reps] of [[60, 10], [62.5, 8]]) {
+    await page.goto("/train");
+    await page.getByRole("button", { name: "Start Push" }).click();
+    await page.waitForURL("**/workout/**");
+    await logSet(page, "Barbell Bench Press", 1, reps, weight);
+    await logSet(page, "Dip", 1, 12);
+    await expect(page.getByRole("status").filter({ hasText: "Saved" })).toBeVisible({ timeout: 10_000 });
+    await page.getByRole("button", { name: "Finish workout" }).click();
+    await page.getByRole("button", { name: "Finish & save" }).click();
+    await page.waitForURL("**/sessions/**");
+  }
 
   // Browsers without file sharing get a download instead of the share sheet.
   const download = page.waitForEvent("download");

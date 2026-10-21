@@ -26,16 +26,16 @@ describe("share card", () => {
         { kind: "heaviest", label: "Heaviest load", detail: "62.5 kg (previous 60 kg)", exercise: "Bench press" },
         { kind: "first", label: "First recorded performance", detail: "Your baseline for this exercise is set.", exercise: "Plank" },
       ],
-      { unit: "kg", date: "Tue 20 Oct", durationMinutes: 58 },
+      { unit: "kg", date: "Tue 20 Oct", durationMinutes: 58, previous: { "Bench press": [{ set_type: "working", weight_kg: 60, reps: 10 }, { set_type: "warmup", weight_kg: 80, reps: 3 }] } },
     );
     expect(card.title).toBe("Push");
     expect(card.eyebrow).toBe("Push / Pull / Legs · Tue 20 Oct");
     expect(card.stats).toBe("4 exercises · 8 sets · 58 min");
     expect(card.lines).toEqual([
-      { name: "Bench press", best: "62.5 kg × 8" },
-      { name: "Dips", best: "15 reps" },
-      { name: "Weighted dips", best: "+10 kg × 8" },
-      { name: "Plank", best: "60 s" },
+      { name: "Bench press", best: "62.5 kg × 8", previous: "60 kg × 10" },
+      { name: "Dips", best: "15 reps", previous: null },
+      { name: "Weighted dips", best: "+10 kg × 8", previous: null },
+      { name: "Plank", best: "60 s", previous: null },
     ]);
     expect(card.records).toEqual(["Bench press: heaviest load 62.5 kg"]);
     expect(card.more).toBe(0);

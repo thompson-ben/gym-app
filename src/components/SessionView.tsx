@@ -21,7 +21,8 @@ import { ShareWorkoutButton } from "./ShareWorkoutButton";
 import { WorkoutDateSheet } from "./WorkoutDateSheet";
 
 export type SessionInsights = {
-  byExercise: Record<string, { records: PersonalRecord[]; change: string | null } | undefined>;
+  /** previousSets: the working sets from the last time this exercise was done before this workout. */
+  byExercise: Record<string, { records: PersonalRecord[]; change: string | null; previousSets?: { set_type: string; weight_kg: number | null; reps: number }[] } | undefined>;
   nextTargets: TargetMap;
   firstWorkout: boolean;
   durationMinutes: number | null;
@@ -202,6 +203,7 @@ export function SessionView({
             unit,
             date: doc.completed_at ? formatDate(doc.completed_at, timeZone, { weekday: "short", year: undefined }) : "",
             durationMinutes: insights.durationMinutes,
+            previous: Object.fromEntries(Object.entries(insights.byExercise).map(([id, x]) => [id, x?.previousSets])),
           })}
           fileName={`notchlift-${doc.template_name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "workout"}`}
         />

@@ -89,6 +89,7 @@ async function insightsFor(supabase: Awaited<ReturnType<typeof requireUser>>["su
     byExercise[e.exercise_id] = {
       records: recordsFor(e.tracking_mode, current, history, unit),
       change: compareWithPrevious(e.tracking_mode, current.sets, previous?.sets, unit),
+      previousSets: previous?.sets,
     };
   });
   // Next targets are shown only where this workout is the performance they build on.

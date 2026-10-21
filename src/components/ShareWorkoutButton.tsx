@@ -51,7 +51,8 @@ export function drawShareCard(canvas: HTMLCanvasElement, card: ShareCard, font: 
   ctx.fillText(".", PAD + ctx.measureText("notchlift").width, 220);
 
   // Centre the content between the wordmark and the footer, so short workouts don't leave a gap.
-  const rowH = 104;
+  // Taller rows when there's a "last time" line under today's best set.
+  const rowH = card.lines.some((l) => l.previous) ? 128 : 104;
   const boxH = card.lines.length * rowH + (card.more ? 60 : 0) + 40;
   ctx.font = f(700, 104);
   const titleLines = ctx.measureText(card.title).width > W - 2 * PAD ? 2 : 1;
@@ -79,14 +80,22 @@ export function drawShareCard(canvas: HTMLCanvasElement, card: ShareCard, font: 
   ctx.stroke();
   let ry = y + 20 + rowH / 2 + 14;
   for (const [i, l] of card.lines.entries()) {
+    const lift = l.previous ? -14 : 0;
     ctx.font = f(700, 44);
-    const best = l.best;
-    const bw = ctx.measureText(best).width;
+    const bw = ctx.measureText(l.best).width;
     ctx.fillStyle = C.accent;
-    ctx.fillText(best, W - PAD - bw, ry);
+    ctx.fillText(l.best, W - PAD - bw, ry + lift);
+    let pw = 0;
+    if (l.previous) {
+      ctx.font = f(400, 30);
+      const prev = `last time ${l.previous}`;
+      pw = ctx.measureText(prev).width;
+      ctx.fillStyle = C.faint;
+      ctx.fillText(prev, W - PAD - pw, ry + 30);
+    }
     ctx.font = f(500, 42);
     ctx.fillStyle = C.text;
-    ctx.fillText(fit(ctx, l.name, W - 2 * PAD - bw - 40), PAD, ry);
+    ctx.fillText(fit(ctx, l.name, W - 2 * PAD - Math.max(bw, pw) - 40), PAD, ry + lift);
     if (i < card.lines.length - 1) {
       ctx.fillStyle = C.line;
       ctx.fillRect(PAD, ry + rowH / 2 - 10, W - 2 * PAD, 2);
