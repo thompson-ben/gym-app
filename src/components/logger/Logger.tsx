@@ -38,6 +38,7 @@ import { RestTimerBar } from "./RestTimer";
 import { TargetSettingsSheet } from "./TargetSettingsSheet";
 import { SyncBadge } from "./SyncBadge";
 import { useSessionRecord } from "./useSessionRecord";
+import { endsRound, nextInSuperset, supersetLabels, supersetRanges } from "@/lib/supersets";
 
 type Picker = { mode: "add" } | { mode: "substitute"; entryId: string } | null;
 type SetMenu = { entryId: string; set: SessionSet; ordinal: string } | null;
@@ -146,9 +147,54 @@ export default function Logger({ userId, initial, timeZone }: { userId: string; 
       const r = completeSet(d, entryId, setId, new Date());
       return "doc" in r ? r.doc : d;
     });
+    const after = recordRef.current.doc;
     const rest = entry?.rest_seconds ?? record.settings.defaultRestSeconds;
     setLastRest(rest);
-    if (record.settings.autoStartRest) startRest(rest);
+    // In a superset, rest only after the round, and go straight to the next exercise's set.
+    if (record.settings.autoStartRest && endsRound(after, entryId)) startRest(rest);
+    const next = nextInSuperset(after, entryId);
+    if (next && next.entryId !== entryId) {
+      setTimeout(() => document.querySelector(`[data-set-id="${next.setId}"]`)?.scrollIntoView({ behavior: "smooth", block: "center" }), 50);
+    }
+  }
+
+  const labels = supersetLabels(doc.exercises);
+  const groups: ({ kind: "single"; index: number } | { kind: "superset"; from: number; to: number; letter: string })[] = [];
+  const ranges = supersetRanges(doc.exercises);
+  for (let i = 0; i < doc.exercises.length; i++) {
+    const r = ranges.find(([a]) => a === i);
+    if (r) {
+      groups.push({ kind: "superset", from: r[0], to: r[1], letter: labels[i]!.slice(0, 1) });
+      i = r[1];
+    } else groups.push({ kind: "single", index: i });
+  }
+
+  function renderCard(i: number) {
+    const entry = doc.exercises[i];
+    return (
+      <ExerciseCard
+        key={entry.id}
+        supersetLabel={labels[i]}
+        entry={entry}
+        previous={record.previous[entry.exercise_id]}
+        timeZone={timeZone}
+        onSetChange={(setId, p) => edit((d) => updateSet(d, entry.id, setId, p))}
+        onComplete={(setId) => complete(entry.id, setId)}
+        onUncomplete={(setId) => edit((d) => uncompleteSet(d, entry.id, setId))}
+        onAddSet={(type) => edit((d) => addSet(d, entry.id, type, recordRef.current.previous, newId))}
+        onRemoveSet={(setId) => edit((d) => removeSet(d, entry.id, setId))}
+        onOpenMenu={() => setExerciseMenu(entry.id)}
+        onOpenSetMenu={(set, ordinal) => setSetMenu({ entryId: entry.id, set, ordinal })}
+        onUnskip={() => edit((d) => addSet(setSkipped(d, entry.id, false), entry.id, "working", recordRef.current.previous, newId))}
+        target={record.targets?.[entry.id]}
+        targetHidden={record.hiddenTargets?.includes(entry.id)}
+        onHideTarget={() => patch({ hiddenTargets: [...(recordRef.current.hiddenTargets ?? []), entry.id] })}
+        onUseTarget={(kg) => edit((d) => applyTargetWeight(d, entry.id, kg))}
+        onSwap={() => setPicker({ mode: "substitute", entryId: entry.id })}
+        unit={unit}
+        onSetupTargets={entry.template_exercise_id && entry.tracking_mode === "weight_reps" ? () => setTargetsFor(entry.id) : undefined}
+      />
+    );
   }
 
   async function setAutoRest(value: boolean) {
@@ -325,29 +371,16 @@ export default function Logger({ userId, initial, timeZone }: { userId: string; 
           <p>Previous shows what you did last time. Weights are filled in; type your reps and tick ✓ to record the set. Nothing counts until it’s ticked.</p>
           <p>Use ⋯ on an exercise for warm-ups, swaps, notes and next-session targets. Tap a set number to remove that set or mark it as a warm-up. Everything saves as you go, even offline.</p>
         </PageTip>
-        {doc.exercises.map((entry) => (
-          <ExerciseCard
-            key={entry.id}
-            entry={entry}
-            previous={record.previous[entry.exercise_id]}
-            timeZone={timeZone}
-            onSetChange={(setId, p) => edit((d) => updateSet(d, entry.id, setId, p))}
-            onComplete={(setId) => complete(entry.id, setId)}
-            onUncomplete={(setId) => edit((d) => uncompleteSet(d, entry.id, setId))}
-            onAddSet={(type) => edit((d) => addSet(d, entry.id, type, recordRef.current.previous, newId))}
-            onRemoveSet={(setId) => edit((d) => removeSet(d, entry.id, setId))}
-            onOpenMenu={() => setExerciseMenu(entry.id)}
-            onOpenSetMenu={(set, ordinal) => setSetMenu({ entryId: entry.id, set, ordinal })}
-            onUnskip={() => edit((d) => addSet(setSkipped(d, entry.id, false), entry.id, "working", recordRef.current.previous, newId))}
-            target={record.targets?.[entry.id]}
-            targetHidden={record.hiddenTargets?.includes(entry.id)}
-            onHideTarget={() => patch({ hiddenTargets: [...(recordRef.current.hiddenTargets ?? []), entry.id] })}
-            onUseTarget={(kg) => edit((d) => applyTargetWeight(d, entry.id, kg))}
-            onSwap={() => setPicker({ mode: "substitute", entryId: entry.id })}
-            unit={unit}
-            onSetupTargets={entry.template_exercise_id && entry.tracking_mode === "weight_reps" ? () => setTargetsFor(entry.id) : undefined}
-          />
-        ))}
+        {groups.map((g) =>
+          g.kind === "single" ? (
+            renderCard(g.index)
+          ) : (
+            <section key={`superset-${g.from}`} aria-label={`Superset ${g.letter}`} className="space-y-3 rounded-[2rem] border-2 border-dashed border-accent-text/40 p-1.5">
+              <p className="px-3 pt-2 text-xs font-semibold tracking-[0.12em] text-accent-text uppercase">Superset {g.letter} · back to back, rest after each round</p>
+              {Array.from({ length: g.to - g.from + 1 }, (_, k) => renderCard(g.from + k))}
+            </section>
+          ),
+        )}
 
         {doc.exercises.length === 0 ? (
           <div className="rounded-3xl border border-dashed border-line px-6 py-10 text-center text-muted">No exercises yet. Add the ones you are doing today.</div>

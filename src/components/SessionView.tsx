@@ -8,6 +8,7 @@ import { formatDate, formatMinutes, formatSet, formatTarget, repUnit, weightLabe
 import { formatTargetSets } from "@/lib/progression";
 import type { PersonalRecord } from "@/lib/records";
 import { shareCard } from "@/lib/share-card";
+import { supersetLabels } from "@/lib/supersets";
 import type { TargetMap } from "@/lib/targets";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { friendlyError } from "@/lib/supabase/errors";
@@ -53,6 +54,7 @@ export function SessionView({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dateOpen, setDateOpen] = useState(false);
+  const supersets = supersetLabels(doc.exercises);
   const workingSets = doc.exercises.reduce((n, e) => n + e.sets.filter((s) => s.set_type === "working").length, 0);
   const performed = doc.exercises.filter((e) => e.sets.some((s) => s.set_type === "working"));
   const stats = [
@@ -221,12 +223,13 @@ export function SessionView({
       {doc.notes ? <p className="mb-4 rounded-2xl bg-surface-2 px-4 py-3 text-sm text-muted">{doc.notes}</p> : null}
 
       <div className="space-y-3">
-        {doc.exercises.map((ex) => {
+        {doc.exercises.map((ex, i) => {
           let n = 0;
           return (
             <section key={ex.id} className="rounded-3xl border border-line bg-surface p-4" aria-label={ex.exercise_name}>
               <div className="flex items-baseline justify-between gap-3">
                 <h2 className="font-semibold">
+                  {supersets[i] ? <span className="mr-2 text-sm text-accent-text"><span className="sr-only">Superset </span>{supersets[i]}</span> : null}
                   <Link href={`/progress/${ex.exercise_id}`} className="hover:underline underline-offset-4">{ex.exercise_name}</Link>
                 </h2>
                 <span className="shrink-0 text-sm text-muted">{formatTarget(ex.target_sets, ex.rep_min, ex.rep_max, ex.tracking_mode)}</span>

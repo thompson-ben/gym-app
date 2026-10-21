@@ -38,6 +38,8 @@ export type SessionExercise = {
   template_notes: string | null;
   notes: string | null;
   skipped: boolean;
+  /** Done back to back with the next exercise (a superset); migration 29. */
+  superset_next?: boolean;
   sets: SessionSet[];
 };
 

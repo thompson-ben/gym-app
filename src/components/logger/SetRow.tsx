@@ -83,6 +83,7 @@ export const SetRow = forwardRef<SetRowHandle, Props>(function SetRow(
         done ? "border-transparent bg-accent-soft" : state === "current" ? "border-line bg-surface-2/60" : "border-transparent",
       )}
       role="group"
+      data-set-id={set.id}
       aria-label={`${setName}${done ? ", completed" : state === "current" ? ", next to do" : ""}`}
       aria-current={state === "current" ? "step" : undefined}
     >
