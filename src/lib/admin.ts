@@ -336,3 +336,20 @@ export function busiestWindow(byHour: number[], width = 3): { label: string; cou
   }
   return { label: `${hourLabel(bestStart)}–${hourLabel(bestStart + width)}`, count: best, share: best / total };
 }
+
+/** admin_trials_ending (migration 32): running trials by the UK day they end. */
+export type AdminTrialsEnding = {
+  running: number;
+  trained: number;
+  by_day: { day: string; ending: number; trained: number }[];
+  /** Ending more than 30 days from now (e.g. extended by referrals). */
+  later: number;
+};
+
+/** "Today", "Tomorrow" or "Thu 29 Oct", for a YYYY-MM-DD day relative to today's YYYY-MM-DD. */
+export function endDayLabel(day: string, today: string): string {
+  const diff = Math.round((Date.parse(`${day}T12:00:00Z`) - Date.parse(`${today}T12:00:00Z`)) / 86_400_000);
+  if (diff === 0) return "Today";
+  if (diff === 1) return "Tomorrow";
+  return new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(`${day}T12:00:00Z`)).replace(",", "").replace("Sept", "Sep");
+}
