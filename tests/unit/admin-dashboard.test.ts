@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { adminHref, busiestWindow, decodeCampaign, hourLabel, mergeSources, parseInclude, toggleInclude } from "@/lib/admin";
+import { adminHref, busiestWindow, decodeCampaign, endDayLabel, hourLabel, mergeSources, parseInclude, toggleInclude } from "@/lib/admin";
 import { readTouch } from "@/lib/attribution";
 
 describe("admin dashboard helpers", () => {
@@ -55,5 +55,14 @@ describe("time of day (migration 31)", () => {
     late[1] = 1;
     expect(busiestWindow(late)?.label).toBe("11pm–2am");
     expect(busiestWindow(Array(24).fill(0))).toBeNull();
+  });
+});
+
+describe("trials ending (migration 32)", () => {
+  it("labels end days relative to today", () => {
+    expect(endDayLabel("2026-10-22", "2026-10-22")).toBe("Today");
+    expect(endDayLabel("2026-10-23", "2026-10-22")).toBe("Tomorrow");
+    expect(endDayLabel("2026-10-29", "2026-10-22")).toBe("Thu 29 Oct");
+    expect(endDayLabel("2026-11-02", "2026-10-31")).toBe("Mon 2 Nov");
   });
 });

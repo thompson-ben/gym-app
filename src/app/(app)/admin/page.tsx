@@ -14,6 +14,7 @@ import { SignupSteps } from "@/components/admin/SignupSteps";
 import { Surveys } from "@/components/admin/Surveys";
 import { TestAccounts } from "@/components/admin/TestAccounts";
 import { TimeOfDay } from "@/components/admin/TimeOfDay";
+import { TrialsEnding } from "@/components/admin/TrialsEnding";
 import { cx } from "@/components/styles";
 import { PageHeader, SectionTitle } from "@/components/ui";
 import {
@@ -39,6 +40,7 @@ import {
   type AdminDemo,
   type AdminEngagement,
   type AdminTimeOfDay,
+  type AdminTrialsEnding,
   type AdminTrainingDays,
   type IncludeKey,
 } from "@/lib/admin";
@@ -70,7 +72,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const days = RANGES.find((d) => String(d) === params.days) ?? 30;
   const include = parseInclude(params.include);
   const { supabase } = await requireUser();
-  const [dashRes, overviewRes, freeList, activationRes, surveyRes, spendRes, refundRes, glanceRes, nudgeRes, stepsRes, daysRes, demoRes, engageRes, supportRes, timeRes] = await Promise.all([
+  const [dashRes, overviewRes, freeList, activationRes, surveyRes, spendRes, refundRes, glanceRes, nudgeRes, stepsRes, daysRes, demoRes, engageRes, supportRes, timeRes, endingRes] = await Promise.all([
     supabase.rpc("admin_dashboard", { p_days: days, p_include: include }),
     supabase.rpc("admin_overview", { p_days: days }),
     supabase.rpc("admin_free_access_list"),
@@ -86,6 +88,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
     supabase.rpc("admin_engagement", { p_days: days, p_include: include }),
     supabase.rpc("admin_support_threads", { p_status: "open" }),
     supabase.rpc("admin_time_of_day", { p_days: days, p_include: include }),
+    supabase.rpc("admin_trials_ending", { p_include: include }),
   ]);
   // Not an admin (or migration 13 not applied): the page does not exist for them.
   if (overviewRes.error || !overviewRes.data) notFound();
@@ -109,6 +112,9 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const engagement = engageRes.data as AdminEngagement | null;
   // Missing until migration 31: the section is hidden.
   const timeOfDay = timeRes.data as AdminTimeOfDay | null;
+  // Missing until migration 32: the list is hidden.
+  const trialsEnding = endingRes.data as AdminTrialsEnding | null;
+  const todayUk = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/London" }).format(new Date());
   const free = freeList.data as FreeAccessList | null;
 
   return (
@@ -243,6 +249,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
               All time: {d.trials.ended_all} trials ended, {d.trials.converted_all} became members ({pct(d.trials.converted_all, d.trials.ended_all)}).
               {d.trials.paid_early ? ` ${d.trials.paid_early} paid before their trial ended.` : ""}
             </p>
+            {trialsEnding ? <TrialsEnding t={trialsEnding} today={todayUk} /> : null}
             {d.trials.recent.length ? (
               <ul aria-label="Recently ended trials" className="mt-3 divide-y divide-line rounded-3xl border border-line bg-surface px-4 text-sm">
                 {d.trials.recent.map((t) => (
