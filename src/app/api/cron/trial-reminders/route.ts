@@ -5,6 +5,7 @@ import { firstWorkoutEmail } from "@/lib/emails/first-workout";
 import { referralRewardEmail } from "@/lib/emails/referral-reward";
 import { trialEndedEmail } from "@/lib/emails/trial-ended";
 import { trialEndingEmail } from "@/lib/emails/trial-ending";
+import { trialExtendedEmail } from "@/lib/emails/trial-extended";
 import { trainingDayEmail } from "@/lib/emails/training-day";
 import { emailConfigured, sendEmail } from "@/lib/emails/send";
 import { unsubscribeOneClickUrl, unsubscribePageUrl } from "@/lib/emails/unsubscribe";
@@ -18,7 +19,8 @@ export const dynamic = "force-dynamic";
 type Due = { user_id: string; email: string; display_name: string | null; trial_ends_at: string; weight_unit: string; workouts: number; working_sets: number; volume_kg: number | string };
 
 /**
- * Daily: emails everyone whose trial ends within 3 days (once each), anyone who earned
+ * Daily: first gives 7 more days (once) to trials about to end without a workout, with a note from
+ * the founder. Then emails everyone whose trial ends within 3 days (once each), anyone who earned
  * referral days since the last run, asks once why a trial ended without a plan, and nudges
  * new accounts that haven't logged a first workout by the next morning. Until that first workout,
  * people who chose training days get a short reminder on those mornings, and a week after
@@ -35,8 +37,6 @@ export async function POST(request: Request) {
   if (!secret || !emailConfigured()) return NextResponse.json({ error: "not configured" }, { status: 503 });
 
   const db = supabaseAnon();
-  const { data, error } = await db.rpc("trial_reminders_due", { p_secret: secret });
-  if (error) return NextResponse.json({ error: "query failed" }, { status: 500 });
 
   // People who turned reminder emails off (migration 25; before it nobody has). Their reminders
   // are marked as handled without sending, so they aren't picked up again tomorrow.
@@ -49,6 +49,29 @@ export async function POST(request: Request) {
   let sent = 0;
   let failed = 0;
   let skipped = 0;
+
+  // Trials about to end without a workout get 7 more days, before the reminders below are picked
+  // (migration 35; before it this is skipped). The extension stands even if the note fails to send.
+  let extended = 0;
+  const { data: extendedRows, error: extendError } = await db.rpc("extend_untrained_trials", { p_secret: secret });
+  if (!extendError) {
+    for (const row of (extendedRows ?? []) as { user_id: string; email: string; display_name: string | null; trial_ends_at: string; split_name: string | null; workout_name: string | null }[]) {
+      extended++;
+      if (optedOut.has(row.user_id)) {
+        skipped++;
+        continue;
+      }
+      const msg = trialExtendedEmail({ displayName: row.display_name, trialEndsAt: row.trial_ends_at, splitName: row.split_name, workoutName: row.workout_name, siteUrl: SITE_URL });
+      if (await sendEmail(row.email, msg, links(row.user_id), { fromName: `${FOUNDER_NAME} from NotchLift` })) {
+        emailed.add(row.user_id);
+      } else {
+        failed++;
+      }
+    }
+  }
+
+  const { data, error } = await db.rpc("trial_reminders_due", { p_secret: secret });
+  if (error) return NextResponse.json({ error: "query failed" }, { status: 500 });
   for (const row of (data ?? []) as Due[]) {
     if (optedOut.has(row.user_id)) {
       await db.rpc("mark_trial_reminded", { p_secret: secret, p_user: row.user_id });
@@ -163,5 +186,5 @@ export async function POST(request: Request) {
       }
     }
   }
-  return NextResponse.json({ sent, rewards, exits, nudges, checkins, trainingDays, skipped, failed });
+  return NextResponse.json({ extended, sent, rewards, exits, nudges, checkins, trainingDays, skipped, failed });
 }

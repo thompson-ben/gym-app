@@ -40,7 +40,7 @@ export function trialEndingEmail(d: TrialEndingData, now = new Date()) {
     after:
       `<p style="margin:16px 0 0;text-align:center;font-size:14px;line-height:21px;"><a href="${esc(d.siteUrl)}/upgrade?plan=monthly" target="_blank" style="color:#45700f;">Or ${PLANS.monthly.price} a month</a></p>` +
       `<p style="margin:20px 0 0;padding-top:20px;border-top:1px solid #e0e3df;font-size:13px;line-height:20px;color:#6b7176;">If you don’t upgrade, nothing is deleted. Your history and progress stay in your account and you can export them any time; only starting new workouts is paused.</p>`,
-    footer: "You’re receiving this because your NotchLift free trial is ending. It’s the only reminder we send.",
+    footer: "You’re receiving this because your NotchLift free trial is ending.",
   });
   const text = [
     `${hi.replace(/<[^>]+>/g, "")}`,

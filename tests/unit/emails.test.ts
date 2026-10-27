@@ -71,6 +71,22 @@ describe("referral reward email", () => {
   });
 });
 
+describe("trial extended email", () => {
+  it("says the trial got 7 more days, until when, and what to do at the gym", async () => {
+    const { trialExtendedEmail } = await import("@/lib/emails/trial-extended");
+    const ready = trialExtendedEmail({ displayName: "Sam <b> Smith", trialEndsAt: "2026-11-05T12:00:00Z", splitName: "Push / Pull / Legs", workoutName: "Push", siteUrl: "https://notchlift.com" });
+    expect(ready.subject).toBe("I’ve added a week to your NotchLift trial");
+    expect(ready.html).toContain("Hi Sam,");
+    expect(ready.html).toContain("Thursday 5 November");
+    expect(ready.html).toContain("start Push");
+    expect(ready.html).not.toContain("£");
+    expect(ready.text).toContain("https://notchlift.com/train");
+    const blank = trialExtendedEmail({ displayName: "<b>", trialEndsAt: "2026-11-05T12:00:00Z", splitName: null, workoutName: null, siteUrl: "https://notchlift.com" });
+    expect(blank.html).toContain("Hi &lt;b&gt;,");
+    expect(blank.text).toContain("Pick one of the starter splits");
+  });
+});
+
 describe("first workout email", () => {
   it("points to the waiting workout, or to picking a split", async () => {
     const { firstWorkoutEmail } = await import("@/lib/emails/first-workout");
