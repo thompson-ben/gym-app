@@ -41,6 +41,7 @@ import {
   type AdminEngagement,
   type AdminTimeOfDay,
   type AdminTrialsEnding,
+  type AdminBillingMix,
   type AdminTrainingDays,
   type IncludeKey,
 } from "@/lib/admin";
@@ -72,7 +73,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const days = RANGES.find((d) => String(d) === params.days) ?? 30;
   const include = parseInclude(params.include);
   const { supabase } = await requireUser();
-  const [dashRes, overviewRes, freeList, activationRes, surveyRes, spendRes, refundRes, glanceRes, nudgeRes, stepsRes, daysRes, demoRes, engageRes, supportRes, timeRes, endingRes] = await Promise.all([
+  const [dashRes, overviewRes, freeList, activationRes, surveyRes, spendRes, refundRes, glanceRes, nudgeRes, stepsRes, daysRes, demoRes, engageRes, supportRes, timeRes, endingRes, mixRes] = await Promise.all([
     supabase.rpc("admin_dashboard", { p_days: days, p_include: include }),
     supabase.rpc("admin_overview", { p_days: days }),
     supabase.rpc("admin_free_access_list"),
@@ -89,6 +90,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
     supabase.rpc("admin_support_threads", { p_status: "open" }),
     supabase.rpc("admin_time_of_day", { p_days: days, p_include: include }),
     supabase.rpc("admin_trials_ending", { p_include: include }),
+    supabase.rpc("admin_billing_mix", { p_include: include }),
   ]);
   // Not an admin (or migration 13 not applied): the page does not exist for them.
   if (overviewRes.error || !overviewRes.data) notFound();
@@ -114,6 +116,8 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const timeOfDay = timeRes.data as AdminTimeOfDay | null;
   // Missing until migration 32: the list is hidden.
   const trialsEnding = endingRes.data as AdminTrialsEnding | null;
+  // Missing until migration 33: falls back to the overview's counts, which include test accounts.
+  const billing = (mixRes.data as AdminBillingMix | null) ?? o.billing ?? null;
   const todayUk = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/London" }).format(new Date());
   const free = freeList.data as FreeAccessList | null;
 
@@ -319,11 +323,11 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
 
           <Section id="money" title="Money">
             <div className="grid grid-cols-2 gap-3">
-              <StatTile label="Paying members" value={d.overview.paying} hint={o.billing ? `${o.billing.monthly} monthly · ${o.billing.yearly} yearly` : undefined} />
+              <StatTile label="Paying members" value={d.overview.paying} hint={billing ? `${billing.monthly} monthly · ${billing.yearly} yearly` : undefined} />
               <TextTile label="Monthly recurring" value={pounds(d.overview.mrr_pence)} hint="Yearly plans counted as ÷12" />
               <TextTile label="Collected" value={pounds(d.period.revenue_pence)} hint={days === 1 ? "Today" : `In the last ${days} days`} />
-              {o.billing ? (
-                <StatTile label="Cancelling" value={o.billing.canceling} hint={o.billing.billing_issue ? `${o.billing.billing_issue} with a failed payment` : "At the end of their period"} />
+              {billing ? (
+                <StatTile label="Cancelling" value={billing.canceling} hint={billing.billing_issue ? `${billing.billing_issue} with a failed payment` : "At the end of their period"} />
               ) : null}
             </div>
             {refunds ? (

@@ -346,6 +346,9 @@ export type AdminTrialsEnding = {
   later: number;
 };
 
+/** admin_billing_mix (migration 33): paying members by plan, with the dashboard's exclusions. */
+export type AdminBillingMix = { monthly: number; yearly: number; canceling: number; billing_issue: number };
+
 /** "Today", "Tomorrow" or "Thu 29 Oct", for a YYYY-MM-DD day relative to today's YYYY-MM-DD. */
 export function endDayLabel(day: string, today: string): string {
   const diff = Math.round((Date.parse(`${day}T12:00:00Z`) - Date.parse(`${today}T12:00:00Z`)) / 86_400_000);
