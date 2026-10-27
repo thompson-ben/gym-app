@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { REFERRAL_DAYS, inviteLink, inviteMessage, type ReferralStatus } from "@/lib/referral";
+import { supabaseBrowser } from "@/lib/supabase/client";
 import { buttonClass } from "../styles";
 
 /** Trial members: invite a training partner to earn 14 more free days (once). */
@@ -17,11 +18,14 @@ export function InviteCard({ status }: { status: ReferralStatus }) {
   }
   if (!status.code) return null;
   const link = inviteLink(status.code);
+  // Counted for the admin dashboard (migration 36; before it the call fails quietly).
+  const noteShared = (method: "share" | "copy") => void supabaseBrowser().rpc("note_invite_shared", { p_method: method }).then(() => undefined, () => undefined);
   async function share() {
     const text = inviteMessage(status.code!);
     try {
       if (navigator.share) {
         await navigator.share({ title: "NotchLift", text });
+        noteShared("share");
         return;
       }
     } catch {
@@ -29,6 +33,7 @@ export function InviteCard({ status }: { status: ReferralStatus }) {
     }
     try {
       await navigator.clipboard.writeText(text);
+      noteShared("copy");
       setCopied(true);
       setTimeout(() => setCopied(false), 2500);
     } catch {
