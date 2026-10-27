@@ -42,6 +42,7 @@ import {
   type AdminTimeOfDay,
   type AdminTrialsEnding,
   type AdminBillingMix,
+  type AdminInviteShares,
   type AdminTrainingDays,
   type IncludeKey,
 } from "@/lib/admin";
@@ -73,7 +74,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const days = RANGES.find((d) => String(d) === params.days) ?? 30;
   const include = parseInclude(params.include);
   const { supabase } = await requireUser();
-  const [dashRes, overviewRes, freeList, activationRes, surveyRes, spendRes, refundRes, glanceRes, nudgeRes, stepsRes, daysRes, demoRes, engageRes, supportRes, timeRes, endingRes, mixRes] = await Promise.all([
+  const [dashRes, overviewRes, freeList, activationRes, surveyRes, spendRes, refundRes, glanceRes, nudgeRes, stepsRes, daysRes, demoRes, engageRes, supportRes, timeRes, endingRes, mixRes, invitesRes] = await Promise.all([
     supabase.rpc("admin_dashboard", { p_days: days, p_include: include }),
     supabase.rpc("admin_overview", { p_days: days }),
     supabase.rpc("admin_free_access_list"),
@@ -91,6 +92,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
     supabase.rpc("admin_time_of_day", { p_days: days, p_include: include }),
     supabase.rpc("admin_trials_ending", { p_include: include }),
     supabase.rpc("admin_billing_mix", { p_include: include }),
+    supabase.rpc("admin_invite_shares", { p_days: days, p_include: include }),
   ]);
   // Not an admin (or migration 13 not applied): the page does not exist for them.
   if (overviewRes.error || !overviewRes.data) notFound();
@@ -118,6 +120,8 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const trialsEnding = endingRes.data as AdminTrialsEnding | null;
   // Missing until migration 33: falls back to the overview's counts, which include test accounts.
   const billing = (mixRes.data as AdminBillingMix | null) ?? o.billing ?? null;
+  // Missing until migration 36: invite shares aren't known, so the tile counts split and group links only.
+  const inviteShares = invitesRes.data as AdminInviteShares | null;
   const todayUk = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/London" }).format(new Date());
   const free = freeList.data as FreeAccessList | null;
 
@@ -312,9 +316,17 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
             </div>
           </Section>
 
-          <Section id="sharing" title="Sharing" note={`Links members created and what they brought, ${rangeText(days)}.`}>
+          <Section
+            id="sharing"
+            title="Sharing"
+            note={`What members shared and what it brought, ${rangeText(days)}. ${d.shares.invite_links} trial ${d.shares.invite_links === 1 ? "member" : "members"} got an invite link on Profile${inviteShares ? `; ${inviteShares.people} shared it` : ""}.`}
+          >
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <StatTile label="Links created" value={d.shares.invite_links + d.shares.split_links + d.shares.group_invites} hint={`${d.shares.invite_links} invite · ${d.shares.split_links} split · ${d.shares.group_invites} group`} />
+              <StatTile
+                label="Shared"
+                value={(inviteShares?.shares ?? 0) + d.shares.split_links + d.shares.group_invites}
+                hint={`${inviteShares ? `${inviteShares.shares} invite · ` : ""}${d.shares.split_links} split · ${d.shares.group_invites} group`}
+              />
               <StatTile label="Visits from shares" value={d.shares.visits.link + d.shares.visits.split + d.shares.visits.group} hint={`${d.shares.visits.link} invite · ${d.shares.visits.split} split · ${d.shares.visits.group} group`} />
               <StatTile label="Signed up via a share" value={d.shares.signups} hint={`${d.shares.trained} trained · ${d.shares.paid} paid`} />
               <StatTile label="Trials extended" value={d.shares.rewards} hint="+14 days for a friend who trained" />

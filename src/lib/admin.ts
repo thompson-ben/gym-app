@@ -346,6 +346,9 @@ export type AdminTrialsEnding = {
   later: number;
 };
 
+/** admin_invite_shares (migration 36): people who shared their invite in the range, and how many times. */
+export type AdminInviteShares = { people: number; shares: number };
+
 /** admin_billing_mix (migration 33): paying members by plan, with the dashboard's exclusions. */
 export type AdminBillingMix = { monthly: number; yearly: number; canceling: number; billing_issue: number };
 
