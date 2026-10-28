@@ -410,6 +410,25 @@ Train together from one shared plan (`/together`, invite links at `/join/<token>
 
 Every weight is stored in kilograms with 4 decimal places. Profile → Weight unit (kg or lb) only changes how weights are entered and shown (`src/lib/units.ts`): a pound value typed to 0.01 lb converts to kg and back exactly, so switching units never changes logged data. Targets, records, charts and the CSV export (`weight_kg` or `weight_lb` column) follow the chosen unit; the JSON export stays in kg.
 
+## iOS app (Capacitor)
+
+The iOS app is a native shell around the live site (`capacitor.config.ts`): it opens `https://www.notchlift.com` (signed-in people land on Train, everyone else on sign-up), so web deploys update the app without a new App Store build. Native features are added through Capacitor plugins and called from the site when it runs inside the app; the site recognises the app by `NotchLiftApp/1` in the user agent (`src/lib/native.ts`). Bundle ID `com.notchlift.app`, iPhone only, portrait.
+
+- `native-shell/` holds only `offline.html`, shown when the site can't be reached on first launch.
+- `WKAppBoundDomains` (Info.plist) plus `limitsNavigationsToAppBoundDomains` let the site's service worker run inside the app, so offline logging works as on the web. Links to other domains open in Safari.
+- Inside the app, sign-in is email only for now: web Apple/Google redirects can't return to an embedded web view.
+- App icon and launch splash are rendered by `npm run icons` (into `ios/App/App/Assets.xcassets`).
+
+Building needs a Mac with Xcode (the project uses Swift Package Manager; no CocoaPods):
+
+```bash
+npm ci
+npx cap sync ios       # copies native-shell/ and the config into the Xcode project
+npx cap open ios       # opens Xcode
+```
+
+In Xcode: select the **App** target → **Signing & Capabilities** → choose your team (automatic signing registers the bundle ID), then run on a simulator or a connected iPhone. For TestFlight: **Product → Archive → Distribute App → App Store Connect**.
+
 ## Known limitations (V1)
 
 - Email + password sign-in only (no social or magic-link sign-in).
