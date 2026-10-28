@@ -14,6 +14,7 @@ import { LogPastWorkoutButton, StartWorkoutButton } from "@/components/StartWork
 import { MembershipBanner } from "@/components/billing/MembershipBanner";
 import { GroupWorkoutsSection, type UpcomingGroup } from "@/components/together/GroupWorkoutsSection";
 import { MEMBERSHIP_COLUMNS, membershipState, type MembershipRow } from "@/lib/billing/membership";
+import { isNativeRequest } from "@/lib/native-server";
 import { Wordmark } from "@/components/Wordmark";
 import { formatDate, formatElapsed, formatShortDate } from "@/lib/format";
 import { suggestNextWorkout, type NextWorkout } from "@/lib/next-workout";
@@ -137,7 +138,7 @@ export default async function TrainPage({ searchParams }: { searchParams: Promis
           <span className="font-medium">{ready}</span> is saved for the gym. Open NotchLift when you get there and tap Start.
         </p>
       ) : null}
-      <MembershipBanner state={membershipNow} invite={invite} />
+      <MembershipBanner state={membershipNow} invite={invite} source={(membership.data as MembershipRow)?.billing_source ?? null} native={await isNativeRequest()} />
       {survey && !open ? <SurveyCard question={survey} className="mt-3" /> : null}
       {!open ? <InstallCard /> : null}
 
