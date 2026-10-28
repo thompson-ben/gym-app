@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { Wordmark } from "@/components/Wordmark";
 import { inAppBrowser, parseProviders } from "@/lib/auth-providers";
+import { isNativeAppUserAgent } from "@/lib/native";
 import { getOptionalUser } from "@/lib/supabase/server";
 import { safeNext } from "@/lib/safe-next";
 import { AuthForm } from "./AuthForm";
@@ -16,8 +17,11 @@ export default async function SignInPage({ searchParams }: { searchParams: Promi
   if (userId) redirect(next);
   // Trial after launch, free during early access: the reassurance line on the form says which.
   const { data: paidPlans } = await supabase.rpc("paid_plans_live");
-  const providers = parseProviders(process.env.AUTH_PROVIDERS);
-  const inApp = inAppBrowser((await headers()).get("user-agent") ?? "");
+  const ua = (await headers()).get("user-agent") ?? "";
+  // In the iOS app the web sign-in redirects can't come back (Google refuses embedded browsers,
+  // and leaving notchlift.com opens Safari), so it offers email only until native sign-in.
+  const providers = isNativeAppUserAgent(ua) ? [] : parseProviders(process.env.AUTH_PROVIDERS);
+  const inApp = inAppBrowser(ua);
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col px-6 pt-safe pb-safe">

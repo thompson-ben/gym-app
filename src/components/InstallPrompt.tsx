@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useSyncExternalStore } from "react";
+import { isNativeApp } from "@/lib/native";
 import { IconChevronRight, IconX } from "./icons";
 import { Button, IconButton, Sheet } from "./ui";
 
@@ -31,7 +32,8 @@ const subscribe = (l: () => void) => {
 
 function detect(): string {
   const nav = navigator as Navigator & { standalone?: boolean };
-  const standalone = window.matchMedia("(display-mode: standalone)").matches || nav.standalone === true;
+  // The iOS app is already installed, so it never offers "Add to Home Screen".
+  const standalone = window.matchMedia("(display-mode: standalone)").matches || nav.standalone === true || isNativeApp();
   const ua = navigator.userAgent;
   const ios = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   const platform: Platform = ios ? "ios" : /Android/.test(ua) ? "android" : "other";
