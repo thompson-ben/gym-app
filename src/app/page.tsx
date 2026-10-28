@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { Landing } from "@/components/landing/Landing";
+import { isNativeAppUserAgent } from "@/lib/native";
 import { getOptionalUser } from "@/lib/supabase/server";
 
 const DESCRIPTION = "Plan your split, log every set with last session beside it, and know when to add weight. Works offline, in kg or lb.";
@@ -19,6 +21,8 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function Home() {
   const { supabase, userId } = await getOptionalUser();
   if (userId) redirect("/train");
+  // The iOS app opens here: skip the marketing page and go straight to creating an account.
+  if (isNativeAppUserAgent((await headers()).get("user-agent"))) redirect("/sign-in?mode=sign-up");
   // Before migration 14 the function is missing: show free early access.
   const { data: paidPlans } = await supabase.rpc("paid_plans_live");
   return <Landing paidPlans={paidPlans === true} />;

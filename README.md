@@ -412,7 +412,7 @@ Every weight is stored in kilograms with 4 decimal places. Profile → Weight un
 
 ## iOS app (Capacitor)
 
-The iOS app is a native shell around the live site (`capacitor.config.ts`): it opens `https://www.notchlift.com/train`, so web deploys update the app without a new App Store build. Native features are added through Capacitor plugins and called from the site when it runs inside the app; the site recognises the app by `NotchLiftApp/1` in the user agent (`src/lib/native.ts`). Bundle ID `com.notchlift.app`, iPhone only, portrait.
+The iOS app is a native shell around the live site (`capacitor.config.ts`): it opens `https://www.notchlift.com` (signed-in people land on Train, everyone else on sign-up), so web deploys update the app without a new App Store build. Native features are added through Capacitor plugins and called from the site when it runs inside the app; the site recognises the app by `NotchLiftApp/1` in the user agent (`src/lib/native.ts`). Bundle ID `com.notchlift.app`, iPhone only, portrait.
 
 - `native-shell/` holds only `offline.html`, shown when the site can't be reached on first launch.
 - `WKAppBoundDomains` (Info.plist) plus `limitsNavigationsToAppBoundDomains` let the site's service worker run inside the app, so offline logging works as on the web. Links to other domains open in Safari.

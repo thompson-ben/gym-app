@@ -15,7 +15,11 @@ const config: CapacitorConfig = {
   appendUserAgent: "NotchLiftApp/1",
   backgroundColor: "#131416",
   server: {
-    url: "https://www.notchlift.com/train",
+    // The site's root, not a page: Capacitor keeps a navigation in the app only if its address
+    // starts with this, so "/train" sent the sign-in redirect out to Safari. "/" sends signed-in
+    // people to Train and, in the app, everyone else to sign-in (src/app/page.tsx).
+    url: "https://www.notchlift.com",
+    allowNavigation: ["www.notchlift.com", "notchlift.com"],
     errorPath: "offline.html",
   },
   ios: {
