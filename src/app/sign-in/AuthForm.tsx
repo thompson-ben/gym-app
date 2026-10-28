@@ -8,6 +8,8 @@ import { Button, ErrorNote, Field, Input } from "@/components/ui";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { DEMO_COOKIE } from "@/lib/demo";
 import { IN_APP_NAME, PROVIDER_LABEL, signupErrorMessage, signupErrorReason, type InApp, type OAuthProvider, type SignupErrorReason } from "@/lib/auth-providers";
+import { isNativeApp } from "@/lib/native";
+import { nativeAppleSignIn } from "@/lib/native-apple";
 import { pixelEvent, pixelStep } from "@/lib/pixel";
 import { trackSignupStep, trackSignupView } from "@/lib/track";
 
@@ -78,6 +80,14 @@ export function AuthForm({
   async function continueWith(provider: OAuthProvider) {
     setMessage(null);
     if (mode === "sign-up") trackSignupStep("oauth_start", provider);
+    // In the iOS app: Apple's own sheet, signed in on the spot (no redirect to come back from).
+    if (provider === "apple" && isNativeApp()) {
+      const result = await nativeAppleSignIn(supabaseBrowser());
+      if (!result.ok) return failSignup(result.reason === "cancelled" ? "oauth_cancelled" : "oauth_failed");
+      router.replace(next);
+      router.refresh();
+      return;
+    }
     rememberNext();
     try {
       const { error } = await supabaseBrowser().auth.signInWithOAuth({

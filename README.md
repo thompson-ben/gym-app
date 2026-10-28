@@ -112,6 +112,7 @@ The sign-in screen shows **Continue with Apple** and **Continue with Google** ab
 
 - Both return to `/auth/confirm` (the same redirect URL as email confirmation), which continues to where the person started. Cancelling on Apple's or Google's screen comes back to sign-in with a message.
 - New accounts get the same trial or free access as email sign-ups, keep their ad / referral attribution, and start with the name the provider shares. Signing in with Apple or Google using the same verified email as an existing account opens that account.
+- **In the iOS app** Apple uses its native sheet (`src/lib/native-apple.ts`): Apple's identity token is exchanged with `signInWithIdToken` (nonce hashed for Apple, raw for Supabase), so nothing redirects. It needs the app's bundle ID in the Apple provider's Client IDs and the **Sign in with Apple** capability on the Xcode target. Google isn't offered in the app.
 - **Google refuses to sign in inside the Facebook / Instagram app's browser** (`disallowed_useragent`). There, the Google button is replaced by a note on opening the page in Safari or Chrome; Apple and email still work.
 
 **Apple** (needs an Apple Developer account):
@@ -119,7 +120,7 @@ The sign-in screen shows **Continue with Apple** and **Continue with Google** ab
 2. **Identifiers** → + → **Services ID** (e.g. `com.notchlift.web`; this is the *client ID*). Tick **Sign in with Apple** → Configure: primary App ID from step 1; Domains `<project-ref>.supabase.co`; Return URL `https://<project-ref>.supabase.co/auth/v1/callback`.
 3. **Keys** → + → tick **Sign in with Apple** (configure with the App ID) → download the `.p8` file (only once; keep it safe, never commit or share it). Note the Key ID and your Team ID (top right).
 4. Make the client secret from the Team ID, Key ID, Services ID and `.p8` with the generator in Supabase's "Login with Apple" guide. **It expires after 6 months**: set a reminder to make a new one and paste it in.
-5. Supabase → Authentication → Sign In / Providers → **Apple**: enable; Client IDs = the Services ID; Secret Key = the generated secret.
+5. Supabase → Authentication → Sign In / Providers → **Apple**: enable; Client IDs = the Services ID **and** the iOS bundle ID, comma-separated (`com.notchlift.web,com.notchlift.app`); Secret Key = the generated secret.
 6. Private relay ("Hide My Email"): Apple Developer → Services → **Sign in with Apple for Email Communication** → add `notchlift.com` and the address emails are sent from, so trial and reminder emails reach people who hid their address.
 
 **Google**:
@@ -416,7 +417,7 @@ The iOS app is a native shell around the live site (`capacitor.config.ts`): it o
 
 - `native-shell/` holds only `offline.html`, shown when the site can't be reached on first launch.
 - `WKAppBoundDomains` (Info.plist) plus `limitsNavigationsToAppBoundDomains` let the site's service worker run inside the app, so offline logging works as on the web. Links to other domains open in Safari.
-- Inside the app, sign-in is email only for now: web Apple/Google redirects can't return to an embedded web view.
+- Inside the app, sign-in is email or native Sign in with Apple (when `apple` is in `AUTH_PROVIDERS`); Google isn't offered, as its web redirect can't return to an embedded web view.
 - App icon and launch splash are rendered by `npm run icons` (into `ios/App/App/Assets.xcassets`).
 
 Building needs a Mac with Xcode (the project uses Swift Package Manager; no CocoaPods):
