@@ -7,6 +7,8 @@ export type MembershipRow = {
   cancel_at_period_end?: boolean | null;
   billing_issue?: boolean | null;
   stripe_customer_id?: string | null;
+  /** Migration 37: paid on the website (Stripe) or in the iOS app (Apple). */
+  billing_source?: "stripe" | "apple" | null;
   /** Migration 15: free for good (given free access). Founders without it are early access. */
   free_access?: boolean | null;
 } | null;
@@ -38,4 +40,4 @@ export function membershipState(m: MembershipRow, now: Date = new Date()): Membe
 
 export const canStartWorkouts = (s: MembershipState) => s.kind === "free" || s.kind === "trial" || s.kind === "paid";
 
-export const MEMBERSHIP_COLUMNS = "status, trial_ends_at, plan, current_period_end, cancel_at_period_end, billing_issue, stripe_customer_id, free_access";
+export const MEMBERSHIP_COLUMNS = "status, trial_ends_at, plan, current_period_end, cancel_at_period_end, billing_issue, stripe_customer_id, free_access, billing_source";

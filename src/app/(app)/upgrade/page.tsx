@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { AppStorePlanPicker } from "@/components/billing/AppStorePlanPicker";
+import { ManageSubscription } from "@/components/billing/ManageSubscription";
 import { PlanPicker } from "@/components/billing/PlanPicker";
-import { ManageBillingButton } from "@/components/billing/ManageBillingButton";
 import { IconCheck } from "@/components/icons";
 import { buttonClass } from "@/components/styles";
 import { SurveyCard } from "@/components/SurveyCard";
@@ -9,6 +10,7 @@ import { PageHeader } from "@/components/ui";
 import { MEMBERSHIP_COLUMNS, membershipState, type MembershipRow } from "@/lib/billing/membership";
 import { isPlanId } from "@/lib/billing/plans";
 import { paymentsConfigured } from "@/lib/billing/server";
+import { isNativeRequest } from "@/lib/native-server";
 import { surveyFor } from "@/lib/surveys";
 import { requireUser } from "@/lib/supabase/server";
 
@@ -24,9 +26,12 @@ const INCLUDED = [
 
 export default async function UpgradePage({ searchParams }: { searchParams: Promise<{ plan?: string; reason?: string }> }) {
   const { plan, reason } = await searchParams;
-  const { supabase } = await requireUser();
+  const { supabase, userId } = await requireUser();
   const { data } = await supabase.from("memberships").select(MEMBERSHIP_COLUMNS).maybeSingle();
   const state = membershipState(data as MembershipRow);
+  const source = (data as MembershipRow)?.billing_source ?? null;
+  // In the iOS app plans are bought with Apple (App Store rules); on the website, with Stripe.
+  const native = await isNativeRequest();
 
   if (state.kind === "free" || state.kind === "paid") {
     return (
@@ -38,8 +43,12 @@ export default async function UpgradePage({ searchParams }: { searchParams: Prom
               ? state.early
                 ? "NotchLift is free for you for now. When paid membership launches you’ll get a 14-day free trial first."
                 : "There’s nothing to pay. Enjoy NotchLift."
-              : "Change plan, update your card or cancel from Stripe’s billing page."}</p>
-          {state.kind === "paid" ? <div className="mt-4"><ManageBillingButton /></div> : <Link href="/train" className={buttonClass("primary", "md", "mt-4")}>Go to Train</Link>}
+              : source === "apple"
+                ? "Change plan or cancel in your App Store account."
+                : native
+                  ? "Thanks for supporting NotchLift."
+                  : "Change plan, update your card or cancel from Stripe’s billing page."}</p>
+          {state.kind === "paid" ? <div className="mt-4"><ManageSubscription source={source} native={native} /></div> : <Link href="/train" className={buttonClass("primary", "md", "mt-4")}>Go to Train</Link>}
         </div>
       </>
     );
@@ -63,7 +72,11 @@ export default async function UpgradePage({ searchParams }: { searchParams: Prom
       ) : (
         <p className="-mt-2 mb-5 text-muted">Pick a plan now and keep going without a break when your trial ends.</p>
       )}
-      <PlanPicker initial={isPlanId(plan) ? plan : "yearly"} available={paymentsConfigured()} />
+      {native ? (
+        <AppStorePlanPicker userId={userId} initial={isPlanId(plan) ? plan : "yearly"} />
+      ) : (
+        <PlanPicker initial={isPlanId(plan) ? plan : "yearly"} available={paymentsConfigured()} />
+      )}
       <ul className="mt-8 space-y-2.5">
         {INCLUDED.map((x) => (
           <li key={x} className="flex gap-3">
@@ -73,10 +86,12 @@ export default async function UpgradePage({ searchParams }: { searchParams: Prom
         ))}
       </ul>
       {survey ? <SurveyCard question={survey} className="mt-8" /> : null}
-      <p className="mt-8 mb-4 text-sm text-faint">
-        Subscriptions renew automatically until cancelled. Cancel any time from Profile; you keep access until the end of the period you’ve paid for.
-        See the <Link href="/terms" className="underline underline-offset-4">terms</Link>.
-      </p>
+      {native ? null : (
+        <p className="mt-8 mb-4 text-sm text-faint">
+          Subscriptions renew automatically until cancelled. Cancel any time from Profile; you keep access until the end of the period you’ve paid for.
+          See the <Link href="/terms" className="underline underline-offset-4">terms</Link>.
+        </p>
+      )}
     </>
   );
 }

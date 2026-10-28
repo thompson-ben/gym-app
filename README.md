@@ -399,6 +399,23 @@ Migrations are additive and versioned; never reset a deployed database.
    - Repeat step 3 in Stripe live mode, and swap the live keys into Vercel.
    - Then **Admin → Launch**, typing `LAUNCH`. New sign-ups start the trial, and every early-access member starts a 14-day trial that day and gets a short email. Anyone with free access is untouched. The landing page's pricing switches with it (`paid_plans_live()`).
 
+### App Store subscriptions (iOS app)
+
+Inside the iOS app, plans are bought with Apple's in-app purchase (App Store rules), through RevenueCat. On the website they stay Stripe. Either way the membership becomes `paid`; `memberships.billing_source` (migration 37) says which, so each is managed in the right place: Apple subscribers in their App Store account, Stripe subscribers on Stripe's billing page (inside the app only described, never linked).
+
+- The app shows the App Store's own products and local prices (`AppStorePlanPicker`), with Restore purchases and the renewal, terms and privacy lines Apple requires. RevenueCat's app user ID is the NotchLift user ID, so a subscription follows the account.
+- After a purchase or restore the app calls `/api/billing/apple-sync`, and RevenueCat calls `/api/revenuecat/webhook`. Both re-read the subscriber from RevenueCat's API and apply it (`apple_apply_subscription`), so nothing the app sends can grant access. Real (not sandbox) payments are recorded in `payments` (`apple_transaction_id`) and refunds marked, so dashboard revenue includes both.
+- An App Store member is never lapsed by an old Stripe subscription, and a Stripe member never by the app. Deleting an account doesn't cancel an App Store subscription (only Apple can): the delete sheet says so and links to it.
+- The Meta pixel never loads inside the app (it would need App Tracking Transparency).
+
+**Setup:**
+1. App Store Connect → **Business**: accept the **Paid Apps** agreement and add bank and tax details (Apple won't sell subscriptions until it's active).
+2. App Store Connect → your app → **Subscriptions**: a group **NotchLift** with two auto-renewable subscriptions, product IDs `notchlift_monthly` (1 month) and `notchlift_yearly` (1 year), priced to match the website as closely as Apple's price points allow. Add a display name and review screenshot for each.
+3. RevenueCat (app.revenuecat.com): new project, add the **App Store** app (bundle ID `com.notchlift.app`) with an In-App Purchase key from App Store Connect (Users and Access → Integrations → In-App Purchase). Import both products, create an entitlement **`pro`** with both attached.
+4. RevenueCat → **Integrations → Webhooks**: URL `https://www.notchlift.com/api/revenuecat/webhook`, Authorization header `Bearer <REVENUECAT_WEBHOOK_AUTH>` (a random 32+ character secret).
+5. Vercel → Environment Variables (Production): `NEXT_PUBLIC_REVENUECAT_IOS_KEY` (RevenueCat → API keys → the Apple public key, `appl_…`), `REVENUECAT_SECRET_KEY` (a v1 secret key, `sk_…`) and `REVENUECAT_WEBHOOK_AUTH`. Redeploy.
+6. Xcode: **+ Capability → In-App Purchase**. Test with a sandbox account (Settings → App Store → Sandbox Account on the iPhone); sandbox purchases unlock the app but aren't recorded as revenue.
+
 **Free access vs early access:** both have status `founder`; `memberships.free_access` marks people who stay free for good.
 - Admin → Free access: an existing account becomes free immediately. Anyone else is emailed an invite and gets free access when they sign up with that address (`free_access_invites`).
 - The Early access list shows everyone else who signed up before launch. Each can be given free access with one tap.
