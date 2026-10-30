@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { Compare } from "./Compare";
 import { Founder } from "./Founder";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -132,6 +133,10 @@ const FAQ: { q: string; a: ReactNode }[] = [
   {
     q: "What happens when my trial ends?",
     a: "After 14 days, choose a plan to keep logging new workouts. If you don’t, nothing is deleted: your history, progress and records stay viewable, and you can export everything at any time.",
+  },
+  {
+    q: "Can I bring my history from another app?",
+    a: "Yes, from Strong or Hevy. Export your workouts as a CSV file in that app, then choose it in Setmodo under Profile → Your data. Each exercise is matched to Setmodo’s list, so your last sets, records and charts carry straight on. Importing the same file twice never duplicates anything.",
   },
   {
     q: "Does it work without signal?",
@@ -311,6 +316,8 @@ export function Landing({ paidPlans = false }: { paidPlans?: boolean }) {
             </ul>
           </div>
         </section>
+
+        <Compare className="border-t border-line bg-surface/40" />
 
         <Founder className="border-t border-line" />
 
