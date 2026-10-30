@@ -19,8 +19,8 @@ export const metadata: Metadata = {
   appleWebApp: { capable: true, title: "Setmodo", statusBarStyle: "black-translucent" },
   icons: { icon: [{ url: "/icons/favicon-32.png", sizes: "32x32" }, { url: "/icons/icon-192.png", sizes: "192x192" }], apple: "/icons/apple-touch-icon.png" },
   formatDetection: { telephone: false },
-  // Proves to Meta that the domain belongs to our business (Business Settings → Domains). This code
-  // was issued for notchlift.com; setmodo.com gets its own from the same page.
+  // Proves to Meta that notchlift.com belongs to our business (Business Settings → Domains).
+  // setmodo.com is verified with a DNS TXT record instead, so it needs nothing here.
   verification: { other: { "facebook-domain-verification": "r367upxkorg64phwguyrfz5ijpiv67" } },
 };
 
