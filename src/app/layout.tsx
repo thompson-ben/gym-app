@@ -11,15 +11,16 @@ const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"]
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: { default: "NotchLift", template: "%s · NotchLift" },
+  title: { default: "Setmodo", template: "%s · Setmodo" },
   description: "Workout planner & tracker: plan your split, log every set, and know when to add weight.",
-  openGraph: { type: "website", siteName: "NotchLift", url: "/", locale: "en_GB" },
+  openGraph: { type: "website", siteName: "Setmodo", url: "/", locale: "en_GB" },
   twitter: { card: "summary_large_image" },
-  applicationName: "NotchLift",
-  appleWebApp: { capable: true, title: "NotchLift", statusBarStyle: "black-translucent" },
+  applicationName: "Setmodo",
+  appleWebApp: { capable: true, title: "Setmodo", statusBarStyle: "black-translucent" },
   icons: { icon: [{ url: "/icons/favicon-32.png", sizes: "32x32" }, { url: "/icons/icon-192.png", sizes: "192x192" }], apple: "/icons/apple-touch-icon.png" },
   formatDetection: { telephone: false },
-  // Proves to Meta that notchlift.com belongs to our business (Business Settings → Domains).
+  // Proves to Meta that the domain belongs to our business (Business Settings → Domains). This code
+  // was issued for notchlift.com; setmodo.com gets its own from the same page.
   verification: { other: { "facebook-domain-verification": "r367upxkorg64phwguyrfz5ijpiv67" } },
 };
 

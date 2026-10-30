@@ -60,7 +60,7 @@ export async function GET(request: Request) {
   const stamp = new Date().toISOString().slice(0, 10);
   const headers = (type: string, ext: string) => ({
     "Content-Type": type,
-    "Content-Disposition": `attachment; filename="notchlift-${stamp}.${ext}"`,
+    "Content-Disposition": `attachment; filename="setmodo-${stamp}.${ext}"`,
     "Cache-Control": "private, no-store",
   });
 

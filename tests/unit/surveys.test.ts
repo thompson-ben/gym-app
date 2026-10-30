@@ -57,11 +57,11 @@ describe("Stripe cancellation reason", () => {
 describe("trial ended email", () => {
   it("reassures, asks one question and links to it", async () => {
     const { trialEndedEmail } = await import("@/lib/emails/trial-ended");
-    const m = trialEndedEmail({ displayName: "Sam <b>", workouts: 3, siteUrl: "https://notchlift.com" });
-    expect(m.subject).toBe("Your NotchLift trial has ended: one quick question");
+    const m = trialEndedEmail({ displayName: "Sam <b>", workouts: 3, siteUrl: "https://setmodo.com" });
+    expect(m.subject).toBe("Your Setmodo trial has ended: one quick question");
     expect(m.html).toContain("Sam &lt;b&gt;");
     expect(m.html).toContain("the 3 workouts you logged are still there");
-    expect(m.text).toContain("https://notchlift.com/upgrade?reason=trial_ended#why");
+    expect(m.text).toContain("https://setmodo.com/upgrade?reason=trial_ended#why");
     expect(trialEndedEmail({ displayName: null, workouts: 0, siteUrl: "x" }).text).toContain("your splits are still there");
   });
 });

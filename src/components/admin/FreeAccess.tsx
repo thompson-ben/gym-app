@@ -40,7 +40,7 @@ export function FreeAccess({ list, emailReady }: { list: FreeAccessList; emailRe
           ? `${json.email} already has free access.`
           : json.emailed
             ? `Invite emailed to ${json.email}. They’ll get free access when they sign up with that address.`
-            : `${json.email} will get free access when they sign up with that address. The invite email couldn’t be sent${emailReady ? "" : " (email isn’t set up yet)"}, so send them a link to notchlift.com yourself.`,
+            : `${json.email} will get free access when they sign up with that address. The invite email couldn’t be sent${emailReady ? "" : " (email isn’t set up yet)"}, so send them a link to setmodo.com yourself.`,
     );
     setEmail("");
     setNote("");
@@ -66,7 +66,7 @@ export function FreeAccess({ list, emailReady }: { list: FreeAccessList; emailRe
     <div className="space-y-4">
       <form onSubmit={submit} className="space-y-3 rounded-3xl border border-line bg-surface p-4">
         <p className="text-sm text-muted">
-          Friends and family get NotchLift free, with no trial and no payment. If they already have an account, it switches now. If not, they’re emailed an
+          Friends and family get Setmodo free, with no trial and no payment. If they already have an account, it switches now. If not, they’re emailed an
           invite and get free access when they sign up with that address.
         </p>
         <Field label="Email address">

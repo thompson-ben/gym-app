@@ -62,7 +62,7 @@ export async function POST(request: Request) {
         continue;
       }
       const msg = trialExtendedEmail({ displayName: row.display_name, trialEndsAt: row.trial_ends_at, splitName: row.split_name, workoutName: row.workout_name, siteUrl: SITE_URL });
-      if (await sendEmail(row.email, msg, links(row.user_id), { fromName: `${FOUNDER_NAME} from NotchLift` })) {
+      if (await sendEmail(row.email, msg, links(row.user_id), { fromName: `${FOUNDER_NAME} from Setmodo` })) {
         emailed.add(row.user_id);
       } else {
         failed++;
@@ -160,7 +160,7 @@ export async function POST(request: Request) {
     for (const row of (quiet ?? []) as { user_id: string; email: string; display_name: string | null; training_days: number[] | null; has_split: boolean; split_name: string | null }[]) {
       if (emailed.has(row.user_id)) continue;
       const msg = checkinEmail({ displayName: row.display_name, trainingDays: row.training_days, hasSplit: row.has_split, splitName: row.split_name, siteUrl: SITE_URL });
-      if (await sendEmail(row.email, msg, links(row.user_id), { fromName: `${FOUNDER_NAME} from NotchLift` })) {
+      if (await sendEmail(row.email, msg, links(row.user_id), { fromName: `${FOUNDER_NAME} from Setmodo` })) {
         await db.rpc("mark_checkin_emailed", { p_secret: secret, p_user: row.user_id });
         emailed.add(row.user_id);
         checkins++;

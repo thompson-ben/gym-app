@@ -13,7 +13,7 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
       <body style={{ margin: 0, minHeight: "100dvh", display: "grid", placeItems: "center", background: "#131416", color: "#eaebed", fontFamily: "system-ui, sans-serif" }}>
         <main style={{ maxWidth: 420, padding: 24 }}>
           <h1 style={{ fontSize: 24 }}>Something went wrong</h1>
-          <p style={{ color: "#a9aeb3" }}>NotchLift couldn’t load. Your data is safe. Please try again.</p>
+          <p style={{ color: "#a9aeb3" }}>Setmodo couldn’t load. Your data is safe. Please try again.</p>
           <button
             type="button"
             onClick={reset}

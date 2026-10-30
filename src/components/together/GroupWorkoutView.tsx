@@ -217,7 +217,7 @@ function InviteCard({ token, name }: { token: string; name: string }) {
   return (
     <section aria-labelledby="invite-title" className="mt-6 rounded-3xl border border-accent-text/30 bg-accent-soft p-5">
       <h2 id="invite-title" className="font-semibold">Invite your training partners</h2>
-      <p className="mt-1 text-sm text-muted">Anyone with this link can see the plan and join (up to 10 people). New to NotchLift? They’ll create an account first.</p>
+      <p className="mt-1 text-sm text-muted">Anyone with this link can see the plan and join (up to 10 people). New to Setmodo? They’ll create an account first.</p>
       <p className="mt-3 truncate rounded-2xl bg-surface px-3 py-2.5 font-mono text-sm text-muted" aria-label="Invite link">{url}</p>
       <div className="mt-3 flex gap-2">
         {canShare ? (

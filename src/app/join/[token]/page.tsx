@@ -10,7 +10,7 @@ import { getOptionalUser, viewerTimeZone } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   title: "Join a group workout",
-  description: "You’ve been invited to train together on NotchLift.",
+  description: "You’ve been invited to train together on Setmodo.",
   robots: { index: false, follow: false },
 };
 
@@ -40,7 +40,7 @@ export default async function JoinGroupPage({ params }: { params: Promise<{ toke
         <div className="pt-10">
           <h1 className="text-2xl font-semibold">This invite isn’t available</h1>
           <p className="mt-2 text-muted">The group workout may have been deleted, or the link was mistyped. Ask whoever sent it for a new link.</p>
-          <Link href="/train" className={buttonClass("secondary", "lg", "mt-6")}>Go to NotchLift</Link>
+          <Link href="/train" className={buttonClass("secondary", "lg", "mt-6")}>Go to Setmodo</Link>
         </div>
       ) : (
         <>
@@ -73,7 +73,7 @@ export default async function JoinGroupPage({ params }: { params: Promise<{ toke
               <JoinGroupForm token={token} defaultName={defaultName} />
             ) : (
               <div className="space-y-3 rounded-3xl border border-line bg-surface p-5">
-                <p className="font-medium">Join with a free NotchLift account</p>
+                <p className="font-medium">Join with a free Setmodo account</p>
                 <p className="text-sm text-muted">Plan your training, log every set, and see your progress. It takes under a minute.</p>
                 <Link href={`/sign-in?mode=sign-up&next=${encodeURIComponent(here)}`} className={buttonClass("primary", "lg", "w-full")}>Create account and join</Link>
                 <Link href={`/sign-in?next=${encodeURIComponent(here)}`} className={buttonClass("ghost", "md", "w-full")}>I already have an account</Link>

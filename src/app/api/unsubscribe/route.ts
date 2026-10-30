@@ -30,5 +30,5 @@ export async function POST(request: Request) {
   if (error) {
     return oneClick ? new NextResponse("Couldn't unsubscribe just now. Please try again.", { status: 500 }) : NextResponse.redirect(new URL("/unsubscribe?error=1", url), 303);
   }
-  return oneClick ? new NextResponse("You're unsubscribed from NotchLift reminder emails.", { status: 200 }) : NextResponse.redirect(new URL("/unsubscribe?done=1", url), 303);
+  return oneClick ? new NextResponse("You're unsubscribed from Setmodo reminder emails.", { status: 200 }) : NextResponse.redirect(new URL("/unsubscribe?done=1", url), 303);
 }

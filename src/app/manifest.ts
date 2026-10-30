@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "NotchLift: Workout Planner & Tracker",
-    short_name: "NotchLift",
+    name: "Setmodo: Workout Planner & Tracker",
+    short_name: "Setmodo",
     description: "Plan training splits and log workouts with your previous sets in view.",
     start_url: "/train",
     scope: "/",

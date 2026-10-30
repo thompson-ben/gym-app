@@ -12,7 +12,7 @@ export function InviteCard({ status }: { status: ReferralStatus }) {
     return (
       <div id="invite" className="mt-3 scroll-mt-6 rounded-3xl border border-accent-text/40 bg-accent-soft p-4">
         <p className="font-semibold">You earned {REFERRAL_DAYS} extra days</p>
-        <p className="mt-1 text-sm text-muted">A friend you invited started training. Thanks for sharing NotchLift.</p>
+        <p className="mt-1 text-sm text-muted">A friend you invited started training. Thanks for sharing Setmodo.</p>
       </div>
     );
   }
@@ -24,7 +24,7 @@ export function InviteCard({ status }: { status: ReferralStatus }) {
     const text = inviteMessage(status.code!);
     try {
       if (navigator.share) {
-        await navigator.share({ title: "NotchLift", text });
+        await navigator.share({ title: "Setmodo", text });
         noteShared("share");
         return;
       }

@@ -207,7 +207,7 @@ export function SessionView({
             durationMinutes: insights.durationMinutes,
             previous: Object.fromEntries(Object.entries(insights.byExercise).map(([id, x]) => [id, x?.previousSets])),
           })}
-          fileName={`notchlift-${doc.template_name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "workout"}`}
+          fileName={`setmodo-${doc.template_name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "workout"}`}
         />
       ) : null}
       {editing ? (

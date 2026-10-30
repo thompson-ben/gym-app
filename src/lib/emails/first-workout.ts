@@ -23,21 +23,21 @@ export function firstWorkoutEmail(d: FirstWorkoutData, now = new Date()) {
 
   const subject = ready ? `Your ${d.workoutName} workout is ready` : "Ready to train? Pick a split in 2 minutes";
   const step = ready
-    ? `Your <strong>${esc(d.workoutName!)}</strong> workout from ${esc(d.splitName!)} is ready. Next time you're at the gym, open NotchLift and tap <strong>Start</strong>.`
+    ? `Your <strong>${esc(d.workoutName!)}</strong> workout from ${esc(d.splitName!)} is ready. Next time you're at the gym, open Setmodo and tap <strong>Start</strong>.`
     : `Pick a ready-made split (Full Body, Upper / Lower or Push / Pull / Legs), or build your own, and you're ready to train in about 2 minutes.`;
-  const why = "After your first session, last time's numbers sit beside every set, so you always know what to beat. That's when NotchLift starts to earn its place.";
+  const why = "After your first session, last time's numbers sit beside every set, so you always know what to beat. That's when Setmodo starts to earn its place.";
   const stepText = ready
-    ? `Your ${d.workoutName} workout from ${d.splitName} is ready. Next time you're at the gym, open NotchLift and tap Start.`
+    ? `Your ${d.workoutName} workout from ${d.splitName} is ready. Next time you're at the gym, open Setmodo and tap Start.`
     : "Pick a ready-made split (Full Body, Upper / Lower or Push / Pull / Legs), or build your own, and you're ready to train in about 2 minutes.";
   const link = `${d.siteUrl}/train`;
 
   const html = emailLayout({
     title: subject,
-    preheader: ready ? "Open NotchLift at the gym and tap Start." : "Choose a ready-made split and you're set.",
+    preheader: ready ? "Open Setmodo at the gym and tap Start." : "Choose a ready-made split and you're set.",
     heading: ready ? "Your first workout is waiting" : "Let's get your first workout in",
     body: p(hi) + p(step) + p(why + trial),
     button: { label: ready ? `Open ${d.workoutName}` : "Pick a split", href: link },
-    footer: "You're receiving this once because you signed up for NotchLift. We won't send another reminder like it.",
+    footer: "You're receiving this once because you signed up for Setmodo. We won't send another reminder like it.",
   });
   const text = `${d.displayName ? `Hi ${d.displayName},` : "Hi,"}\n\n${stepText}\n\n${why}${trialText}\n\n${link}\n\nWe won't send another reminder like this.`;
   return { subject, html, text };

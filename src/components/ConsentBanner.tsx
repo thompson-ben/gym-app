@@ -40,7 +40,7 @@ export function ConsentBanner() {
   return (
     <div role="dialog" aria-label="Cookie choice" className="fixed inset-x-3 bottom-3 z-50 mx-auto max-w-lg rounded-3xl border border-line bg-surface p-4 shadow-2xl pb-[calc(1rem+env(safe-area-inset-bottom))]">
       <p className="text-sm leading-relaxed text-muted">
-        Can we use a cookie from Meta to see which of our ads bring people to NotchLift? It counts visits, sign-ups and purchases, never what you do in the app.{" "}
+        Can we use a cookie from Meta to see which of our ads bring people to Setmodo? It counts visits, sign-ups and purchases, never what you do in the app.{" "}
         <Link href="/privacy#cookies" className="text-accent-text underline underline-offset-4">Privacy</Link>
       </p>
       <div className="mt-3 flex gap-2">

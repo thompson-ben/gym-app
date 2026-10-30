@@ -45,7 +45,7 @@ async function withSecret<T>(fn: () => Promise<T>) {
 }
 
 describe("one-question surveys (migration 19)", () => {
-  it("asks new accounts where they heard about NotchLift, once, and accepts only known answers", async () => {
+  it("asks new accounts where they heard about Setmodo, once, and accepts only known answers", async () => {
     const sam = await newUser("srv-new");
     await trialEnds(sam, 14);
     expect(await prompts(sam)).toEqual(["heard_from"]);

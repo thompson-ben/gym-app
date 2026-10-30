@@ -50,7 +50,7 @@ const FACTS = [
 export const STEPS = [
   { title: "Pick your split", body: "Start from Push / Pull / Legs, Upper / Lower or Full Body, or build your own workouts with sets, rep ranges and rest times." },
   { title: "Log every set", body: "Last session sits beside every set, weights are filled in, and one tap records it. The rest timer starts itself if you want it to." },
-  { title: "Get told when to go up", body: "Hit the top of your rep range on every set and NotchLift gives you your next weight. Miss it, and it tells you how many reps to chase." },
+  { title: "Get told when to go up", body: "Hit the top of your rep range on every set and Setmodo gives you your next weight. Miss it, and it tells you how many reps to chase." },
 ];
 
 /** The first three are the core benefits (BENEFITS links to them); the rest support them. */
@@ -62,13 +62,13 @@ const FEATURES: { id?: string; eyebrow: string; title: string; body: string; poi
     body: "No scrolling back through notes or guessing what you did last week. Every set shows what you lifted last time, so you always know the number to beat.",
     points: ["Weights carried over from last time", "One tap to confirm a set, one tap to undo", "Warm-ups kept separate from working sets"],
     src: "/landing/logger.png",
-    alt: "The NotchLift workout logger: barbell bench press with last session's sets beside today's and a target of 70 kg for 6 reps",
+    alt: "The Setmodo workout logger: barbell bench press with last session's sets beside today's and a target of 70 kg for 6 reps",
   },
   {
     id: "go-heavier",
     eyebrow: "Progressive overload",
     title: "Know when to go heavier.",
-    body: "Switch on targets for an exercise and NotchLift applies double progression for you: more reps until you own the range, then more weight. When you hit it, you’ll know.",
+    body: "Switch on targets for an exercise and Setmodo applies double progression for you: more reps until you own the range, then more weight. When you hit it, you’ll know.",
     points: ["Your increment: 2.5 kg plates, 2 kg dumbbells or 5 lb jumps", "Only compares like with like, so targets stay honest", "Suggestions only; nothing is logged until you confirm it"],
     src: "/landing/target-hit.png",
     alt: "A completed bench press with the message Target hit, every set at 70 kg for 6 or better",
@@ -80,16 +80,16 @@ const FEATURES: { id?: string; eyebrow: string; title: string; body: string; poi
     body: "Charts for estimated 1RM, volume and heaviest set on every exercise, plus your records. History follows the exercise, so changing your split never resets your progress.",
     points: ["Estimated 1RM, volume and heaviest set", "Records recalculated whenever you edit a workout", "Filter by split or training block"],
     src: "/landing/progress.png",
-    alt: "A NotchLift progress chart showing the heaviest bench press set rising from 60 kg to 67.5 kg over twelve weeks",
+    alt: "A Setmodo progress chart showing the heaviest bench press set rising from 60 kg to 67.5 kg over twelve weeks",
   },
   {
     id: "supersets",
     eyebrow: "Supersets",
     title: "Supersets, logged properly.",
-    body: "Link two or three exercises and NotchLift runs them as rounds: a set of each, back to back, then rest. Each lift still keeps its own history, last time and targets.",
+    body: "Link two or three exercises and Setmodo runs them as rounds: a set of each, back to back, then rest. Each lift still keeps its own history, last time and targets.",
     points: ["Pair any exercises in your split in one tap", "The rest timer waits until the round is done", "A1 and A2 labels so you always know what’s next"],
     src: "/landing/superset.png",
-    alt: "A NotchLift superset mid-workout: bench press A1 and barbell row A2 grouped together, with last session's sets beside today's",
+    alt: "A Setmodo superset mid-workout: bench press A1 and barbell row A2 grouped together, with last session's sets beside today's",
   },
   {
     eyebrow: "Your plan",
@@ -97,7 +97,7 @@ const FEATURES: { id?: string; eyebrow: string; title: string; body: string; poi
     body: "Open the app and your next workout is waiting: whichever one in your split you did longest ago. Start it in one tap, or log a quick one-off session.",
     points: ["Next workout suggested from your active split", "Log workouts afterwards with the right date", "Share a split with a friend; your numbers stay private"],
     src: "/landing/train.png",
-    alt: "The NotchLift home screen suggesting Push as the next workout in a Push / Pull / Legs split",
+    alt: "The Setmodo home screen suggesting Push as the next workout in a Push / Pull / Legs split",
   },
   {
     eyebrow: "Train together",
@@ -105,7 +105,7 @@ const FEATURES: { id?: string; eyebrow: string; title: string; body: string; poi
     body: "Plan a group workout, send the link, and everyone trains from the same plan on their own phone. Each person logs their own sets and keeps their own history and targets.",
     points: ["Share a link on WhatsApp; friends join in a tap", "See who’s training and who’s finished", "Your weights and reps stay private to you"],
     src: "/landing/together.png",
-    alt: "A NotchLift group workout: an invite link, and three people training together with Sam finished and Jordan training",
+    alt: "A Setmodo group workout: an invite link, and three people training together with Sam finished and Jordan training",
   },
 ];
 
@@ -127,7 +127,7 @@ const GRID = [
 const FAQ: { q: string; a: ReactNode }[] = [
   {
     q: "Is there an app to download?",
-    a: "NotchLift runs in your phone’s browser, so there’s nothing to install from an app store. Add it to your home screen and it opens full screen with its own icon, just like any other app. It works on iPhone and Android.",
+    a: "Setmodo runs in your phone’s browser, so there’s nothing to install from an app store. Add it to your home screen and it opens full screen with its own icon, just like any other app. It works on iPhone and Android.",
   },
   {
     q: "What happens when my trial ends?",
@@ -164,9 +164,9 @@ const FAQ: { q: string; a: ReactNode }[] = [
   },
 ];
 
-const HERO_BODY = "NotchLift plans your split, puts last session beside every set, and tells you when it’s time to add weight. Fast enough for the gym floor, and it works without signal.";
+const HERO_BODY = "Setmodo plans your split, puts last session beside every set, and tells you when it’s time to add weight. Fast enough for the gym floor, and it works without signal.";
 
-const COST_FREE = "NotchLift is free during early access, with no card needed. If pricing ever changes, you’ll hear from us first, and nothing is ever charged automatically.";
+const COST_FREE = "Setmodo is free during early access, with no card needed. If pricing ever changes, you’ll hear from us first, and nothing is ever charged automatically.";
 const COST_PAID = `Every account starts with a 14-day free trial, no card needed. After that it’s ${PLANS.monthly.price} a month or ${PLANS.yearly.price} a year (${YEARLY_PER_MONTH} a month). Prices include VAT. Cancel any time. Nothing you’ve logged is ever deleted for not paying, and you can always export it.`;
 
 /** paidPlans: new sign-ups get a 14-day trial then a paid plan (otherwise: free early access). */
@@ -177,7 +177,7 @@ export function Landing({ paidPlans = false }: { paidPlans?: boolean }) {
       {/* Navigation */}
       <header className="sticky top-0 z-30 border-b border-line/60 bg-bg/80 pt-safe backdrop-blur-xl">
         <nav aria-label="Main" className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-5">
-          <Link href="/" aria-label="NotchLift home"><Wordmark size="md" /></Link>
+          <Link href="/" aria-label="Setmodo home"><Wordmark size="md" /></Link>
           <div className="hidden items-center gap-8 text-sm text-muted md:flex">
             <a href="#features" className="hover:text-fg">Features</a>
             <a href="#how-it-works" className="hover:text-fg">How it works</a>
@@ -212,7 +212,7 @@ export function Landing({ paidPlans = false }: { paidPlans?: boolean }) {
             </div>
             <div className="relative mx-auto -mt-4 h-[31rem] w-full max-w-[22rem] sm:h-[36rem] sm:max-w-[26rem] lg:mt-0">
               <Phone src="/landing/target-hit.png" alt="" className="absolute top-12 right-0 w-[56%] rotate-[4deg]" />
-              <Phone src="/landing/logger.png" alt="The NotchLift workout logger showing a bench press target of 70 kg for 6 reps" priority className="absolute top-0 left-0 z-10 w-[60%] -rotate-[3deg]" />
+              <Phone src="/landing/logger.png" alt="The Setmodo workout logger showing a bench press target of 70 kg for 6 reps" priority className="absolute top-0 left-0 z-10 w-[60%] -rotate-[3deg]" />
             </div>
             {/* On phones the product shows first; the detail follows it. */}
             <div className="-mt-6 text-center lg:hidden">
@@ -223,7 +223,7 @@ export function Landing({ paidPlans = false }: { paidPlans?: boolean }) {
         </section>
 
         {/* Core benefits */}
-        <section aria-label="Why NotchLift" className="mx-auto max-w-6xl px-5 pb-16">
+        <section aria-label="Why Setmodo" className="mx-auto max-w-6xl px-5 pb-16">
           <ul className="grid gap-4 md:grid-cols-3">
             {BENEFITS.map(({ icon: Icon, ...b }) => (
               <li key={b.href}>
@@ -338,7 +338,7 @@ export function Landing({ paidPlans = false }: { paidPlans?: boolean }) {
             ) : (
               <div className="mx-auto mt-12 max-w-md rounded-[2rem] border border-accent-text/40 bg-surface p-8 shadow-[0_0_0_6px_rgb(195_237_137/0.06)]">
                 <div className="flex items-baseline justify-between gap-4">
-                  <h3 className="text-xl font-semibold">NotchLift</h3>
+                  <h3 className="text-xl font-semibold">Setmodo</h3>
                   <span className="rounded-full bg-accent-soft px-3 py-1 text-xs font-semibold text-accent-text">Early access</span>
                 </div>
                 <p className="mt-4"><span className="text-5xl font-bold tracking-tight">Free</span></p>
