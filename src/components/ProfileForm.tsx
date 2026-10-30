@@ -12,6 +12,7 @@ import { supabaseBrowser } from "@/lib/supabase/client";
 import { friendlyError } from "@/lib/supabase/errors";
 import { isWeightUnit, type WeightUnit } from "@/lib/units";
 import { ExportLink } from "./ExportLink";
+import { ImportHistoryRow } from "./ImportHistory";
 import { ManageBillingButton } from "./billing/ManageBillingButton";
 import { InviteCard } from "./billing/InviteCard";
 import { FeedbackRow } from "./FeedbackButton";
@@ -323,6 +324,7 @@ export function ProfileForm({
             </span>
             <IconChevronRight className="shrink-0 text-faint" />
           </ExportLink>
+          <ImportHistoryRow unit={unit} />
           <button
             type="button"
             onClick={() => {
