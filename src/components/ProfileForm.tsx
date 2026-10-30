@@ -11,6 +11,7 @@ import { clearUser, hasUnsyncedChanges, listRecords } from "@/lib/session/store"
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { friendlyError } from "@/lib/supabase/errors";
 import { isWeightUnit, type WeightUnit } from "@/lib/units";
+import { ExportLink } from "./ExportLink";
 import { ManageBillingButton } from "./billing/ManageBillingButton";
 import { InviteCard } from "./billing/InviteCard";
 import { FeedbackRow } from "./FeedbackButton";
@@ -308,20 +309,20 @@ export function ProfileForm({
       <section>
         <SectionTitle>Your data</SectionTitle>
         <div className="divide-y divide-line overflow-hidden rounded-3xl border border-line bg-surface">
-          <a href="/api/export?format=csv" download className="flex min-h-13 items-center gap-3 px-4 py-3 hover:bg-surface-2/50">
+          <ExportLink href="/api/export?format=csv" fallbackName="setmodo-export.csv" className="flex min-h-13 items-center gap-3 px-4 py-3 hover:bg-surface-2/50">
             <span className="min-w-0 flex-1">
               <span className="block font-medium">Export as spreadsheet</span>
               <span className="block text-sm text-muted">Every completed set as a CSV file. Opens in Excel or Google Sheets.</span>
             </span>
             <IconChevronRight className="shrink-0 text-faint" />
-          </a>
-          <a href="/api/export?format=json" download className="flex min-h-13 items-center gap-3 px-4 py-3 hover:bg-surface-2/50">
+          </ExportLink>
+          <ExportLink href="/api/export?format=json" fallbackName="setmodo-export.json" className="flex min-h-13 items-center gap-3 px-4 py-3 hover:bg-surface-2/50">
             <span className="min-w-0 flex-1">
               <span className="block font-medium">Export everything</span>
               <span className="block text-sm text-muted">Splits, workouts, history and settings as a JSON file.</span>
             </span>
             <IconChevronRight className="shrink-0 text-faint" />
-          </a>
+          </ExportLink>
           <button
             type="button"
             onClick={() => {
@@ -369,7 +370,7 @@ export function ProfileForm({
           </p>
           <p className="text-sm text-muted">
             Want a copy first?{" "}
-            <a href="/api/export?format=csv" download className="text-accent-text underline underline-offset-4">Export as spreadsheet</a>
+            <ExportLink href="/api/export?format=csv" fallbackName="setmodo-export.csv" className="text-accent-text underline underline-offset-4">Export as spreadsheet</ExportLink>
           </p>
           <Field label="Type DELETE to confirm">
             {(id) => <Input id={id} value={deleteText} onChange={(e) => setDeleteText(e.target.value)} autoComplete="off" autoCapitalize="characters" />}

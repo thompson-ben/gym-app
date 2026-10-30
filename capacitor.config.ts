@@ -33,7 +33,10 @@ const config: CapacitorConfig = {
   },
   plugins: {
     SplashScreen: {
-      launchShowDuration: 600,
+      // The site hides the splash itself once its launch intro is on screen (LaunchIntro); this
+      // is only the fallback if the page is slow or can't load.
+      launchShowDuration: 2500,
+      launchFadeOutDuration: 200,
       backgroundColor: "#131416",
       showSpinner: false,
     },
