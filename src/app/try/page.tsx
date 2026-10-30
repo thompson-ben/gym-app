@@ -5,7 +5,7 @@ import { getOptionalUser } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   title: "Try a workout",
-  description: "Log a workout in NotchLift right now, no account needed: last time beside every set, and a nudge when it’s time to go heavier.",
+  description: "Log a workout in Setmodo right now, no account needed: last time beside every set, and a nudge when it’s time to go heavier.",
   alternates: { canonical: "/try" },
 };
 

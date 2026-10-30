@@ -32,7 +32,7 @@ test("profile shows founding membership and exports only the user's own data", a
   await expect(page.getByText("Founding member")).toBeVisible();
 
   const [csvDownload] = await Promise.all([page.waitForEvent("download"), page.getByRole("link", { name: /Export as spreadsheet/ }).click()]);
-  expect(csvDownload.suggestedFilename()).toMatch(/^notchlift-\d{4}-\d{2}-\d{2}\.csv$/);
+  expect(csvDownload.suggestedFilename()).toMatch(/^setmodo-\d{4}-\d{2}-\d{2}\.csv$/);
   const csv = (await (await csvDownload.createReadStream()).toArray()).join("");
   const rows = csv.replace("﻿", "").trim().split("\r\n");
   expect(rows).toHaveLength(3);

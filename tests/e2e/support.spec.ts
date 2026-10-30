@@ -40,7 +40,7 @@ test("a member messages support from Profile, an admin replies from the inbox, a
   await a.getByRole("link", { name: new RegExp(subject) }).click();
   await expect(a.getByText(member.email)).toBeVisible();
   await expect(a.getByText("I ticked my last set at the gym and it disappeared.")).toBeVisible();
-  await a.getByLabel("Reply as NotchLift").fill("Sorry about that. Open the app once with signal and it will sync.");
+  await a.getByLabel("Reply as Setmodo").fill("Sorry about that. Open the app once with signal and it will sync.");
   await a.getByRole("button", { name: "Send", exact: true }).click();
   await expect(a.getByRole("list", { name: "Messages" }).getByText("Sorry about that. Open the app once with signal and it will sync.")).toBeVisible();
   await expect(a.getByText(/Answered/).first()).toBeVisible();
@@ -55,7 +55,7 @@ test("a member messages support from Profile, an admin replies from the inbox, a
   await m.goto("/profile/support");
   await expect(m.getByRole("link", { name: new RegExp(subject) })).toContainText("New reply");
   await m.getByRole("link", { name: new RegExp(subject) }).click();
-  await expect(m.getByText("Ben from NotchLift", { exact: false })).toBeVisible();
+  await expect(m.getByText("Ben from Setmodo", { exact: false })).toBeVisible();
   await expect(m.getByText("Sorry about that. Open the app once with signal and it will sync.")).toBeVisible();
   await m.getByLabel("Your reply").fill("That worked, thanks!");
   await m.getByRole("button", { name: "Send" }).click();

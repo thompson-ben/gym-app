@@ -129,7 +129,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
     <>
       <PageHeader title="Admin" back={{ href: "/profile", label: "Profile" }} action={<PrintButton />} />
       <p className="-mt-3 mb-6 hidden text-sm text-muted print:block">
-        NotchLift · {days === 1 ? "Today" : `Last ${days} days`} · {countingText(include)} · generated {generatedAt()}
+        Setmodo · {days === 1 ? "Today" : `Last ${days} days`} · {countingText(include)} · generated {generatedAt()}
       </p>
 
       {supportOpen !== null ? (
@@ -565,7 +565,7 @@ function SourcesTable({ rows }: { rows: AdminOverview["sources"] }) {
       </table>
       <p className="border-t border-line px-4 py-2.5 text-xs text-faint">
         Tag links with <code>utm_source</code>, <code>utm_medium</code> and <code>utm_campaign</code> so they’re credited, e.g.{" "}
-        <code className="break-all">notchlift.com/?utm_source=instagram&amp;utm_medium=story&amp;utm_campaign=train-together</code>.
+        <code className="break-all">setmodo.com/?utm_source=instagram&amp;utm_medium=story&amp;utm_campaign=train-together</code>.
       </p>
     </div>
   );

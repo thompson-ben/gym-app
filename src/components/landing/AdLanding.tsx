@@ -11,7 +11,7 @@ const SIGN_UP = "/sign-in?mode=sign-up";
 
 const POINTS = [
   { icon: IconHistory, title: "Last session beside every set", body: "No more scrolling back through notes. The number to beat is right there." },
-  { icon: IconDumbbell, title: "Told when to add weight", body: "Hit the top of your rep range on every set and NotchLift says it’s time to go heavier." },
+  { icon: IconDumbbell, title: "Told when to add weight", body: "Hit the top of your rep range on every set and Setmodo says it’s time to go heavier." },
   { icon: IconCloudOff, title: "Fast on the gym floor", body: "Weights filled in, one tap per set, and it works with no signal." },
 ];
 
@@ -26,7 +26,7 @@ export function AdLanding({ paidPlans = false }: { paidPlans?: boolean }) {
     <div className="min-h-dvh overflow-x-clip bg-bg text-fg">
       <header className="pt-safe">
         <nav aria-label="Main" className="mx-auto flex h-16 max-w-3xl items-center justify-between gap-4 px-5">
-          <Link href="/" aria-label="NotchLift home"><Wordmark size="md" /></Link>
+          <Link href="/" aria-label="Setmodo home"><Wordmark size="md" /></Link>
           <TrackedLink track="nav_signin" href="/sign-in" className={buttonClass("ghost", "md", "px-4")}>Sign in</TrackedLink>
         </nav>
       </header>
@@ -50,7 +50,7 @@ export function AdLanding({ paidPlans = false }: { paidPlans?: boolean }) {
           </div>
           <div className="relative mx-auto h-[28rem] w-full max-w-[22rem] sm:h-[34rem] sm:max-w-[26rem]">
             <Phone src="/landing/target-hit.png" alt="" className="absolute top-12 right-0 w-[56%] rotate-[4deg]" />
-            <Phone src="/landing/logger.png" alt="The NotchLift workout logger showing a bench press target of 70 kg for 6 reps" priority className="absolute top-0 left-0 z-10 w-[60%] -rotate-[3deg]" />
+            <Phone src="/landing/logger.png" alt="The Setmodo workout logger showing a bench press target of 70 kg for 6 reps" priority className="absolute top-0 left-0 z-10 w-[60%] -rotate-[3deg]" />
           </div>
         </section>
 
@@ -108,7 +108,7 @@ export function AdLanding({ paidPlans = false }: { paidPlans?: boolean }) {
       <ScrollDepth />
       <footer className="border-t border-line pb-safe">
         <nav aria-label="Footer" className="mx-auto flex max-w-3xl flex-wrap gap-x-6 gap-y-2 px-5 pt-8 text-sm text-muted">
-          <Link href="/" className="hover:text-fg">More about NotchLift</Link>
+          <Link href="/" className="hover:text-fg">More about Setmodo</Link>
           <Link href="/privacy" className="hover:text-fg">Privacy</Link>
           <Link href="/terms" className="hover:text-fg">Terms</Link>
           <a href={`mailto:${CONTACT_EMAIL}`} className="hover:text-fg">Contact</a>

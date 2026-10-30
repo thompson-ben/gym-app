@@ -134,7 +134,7 @@ export default async function TrainPage({ searchParams }: { searchParams: Promis
       </div>
       {ready && !open ? (
         <p role="status" className="mb-4 rounded-2xl bg-accent-soft px-4 py-3 text-sm">
-          <span className="font-medium">{ready}</span> is saved for the gym. Open NotchLift when you get there and tap Start.
+          <span className="font-medium">{ready}</span> is saved for the gym. Open Setmodo when you get there and tap Start.
         </p>
       ) : null}
       <MembershipBanner state={membershipNow} invite={invite} />
@@ -270,7 +270,7 @@ export default async function TrainPage({ searchParams }: { searchParams: Promis
           </section>
         ) : (
           <section className="pt-6" aria-labelledby="welcome-title">
-            <h1 id="welcome-title" className="text-[32px] leading-tight font-semibold tracking-tight">Welcome to NotchLift</h1>
+            <h1 id="welcome-title" className="text-[32px] leading-tight font-semibold tracking-tight">Welcome to Setmodo</h1>
             <p className="mt-2 text-muted">
               Plan your split, log every set with last time’s numbers beside it, and keep your progress whenever you change splits.
             </p>

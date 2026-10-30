@@ -24,7 +24,7 @@ test("sign-up requires email confirmation and continues to the original destinat
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page.getByText("Please confirm your email first")).toBeVisible();
 
-  const link = await emailLink(email, /Confirm your NotchLift account/);
+  const link = await emailLink(email, /Confirm your Setmodo account/);
   expect(link).toContain("/auth/confirm?token_hash=");
   await page.goto(link);
   await page.waitForURL(`**/s/${share.token}`);
@@ -46,7 +46,7 @@ test("an unconfirmed account can resend its email, and a link that falls back to
   await page.getByLabel("Password").fill("correct-horse-battery");
   await page.getByRole("button", { name: "Create account" }).click();
   await expect(page.getByRole("heading", { name: "Check your email" })).toBeVisible();
-  await emailLink(email, /Confirm your NotchLift account/);
+  await emailLink(email, /Confirm your Setmodo account/);
 
   await page.getByRole("button", { name: "Back to sign in" }).click();
   await page.getByLabel("Email").fill(email);
@@ -60,12 +60,12 @@ test("an unconfirmed account can resend its email, and a link that falls back to
 
   // Simulate Supabase falling back to the Site URL when a redirect address isn't allow-listed:
   // the token lands on the home page and must still confirm the account.
-  const link = await emailLink(email, /Confirm your NotchLift account/);
+  const link = await emailLink(email, /Confirm your Setmodo account/);
   const fallback = new URL(link);
   fallback.pathname = "/";
   await page.goto(fallback.toString());
   await page.waitForURL("**/train");
-  await expect(page.getByRole("heading", { name: "Welcome to NotchLift" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Welcome to Setmodo" })).toBeVisible();
 });
 
 test("password reset: neutral request, email link, new password, invalid and reused links", async ({ page }) => {
@@ -86,7 +86,7 @@ test("password reset: neutral request, email link, new password, invalid and reu
   await page.getByRole("button", { name: "Send reset link" }).click();
   await expect(page.getByText(`If an account exists for ${nobody}, we have sent a link`)).toBeVisible();
 
-  const link = await emailLink(user.email, /Reset your NotchLift password/);
+  const link = await emailLink(user.email, /Reset your Setmodo password/);
   expect(link).toContain("/auth/reset?token_hash=");
   expect(await emailCount(nobody)).toBe(0);
 
@@ -196,7 +196,7 @@ test("the app is installable: manifest, icons and an active service worker", asy
   // app-side criterion (manifest, icons, service worker, HTTPS/localhost) must pass.
   expect(installabilityErrors.filter((e) => e.errorId !== "in-incognito")).toEqual([]);
   const manifest = await (await page.request.get("/manifest.webmanifest")).json();
-  expect(manifest).toMatchObject({ name: "NotchLift: Workout Planner & Tracker", display: "standalone", start_url: "/train" });
+  expect(manifest).toMatchObject({ name: "Setmodo: Workout Planner & Tracker", display: "standalone", start_url: "/train" });
 });
 
 test("profile works for an account whose profile row is missing (signed up before the schema)", async ({ page }) => {

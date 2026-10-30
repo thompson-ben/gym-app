@@ -36,7 +36,7 @@ export function emailLayout(opts: {
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:480px;">
         <tr>
           <td style="background-color:#131416;border-radius:20px 20px 0 0;padding:28px 32px;">
-            <span style="font-family:${FONT};font-size:26px;font-weight:700;letter-spacing:-1px;color:#eaebed;">notchlift<span style="color:#c3ed89;">.</span></span>
+            <span style="font-family:${FONT};font-size:26px;font-weight:700;letter-spacing:-1px;color:#eaebed;">setmodo<span style="color:#c3ed89;">.</span></span>
           </td>
         </tr>
         <tr>
@@ -57,7 +57,7 @@ export function emailLayout(opts: {
           <td align="center" style="padding:24px 16px 0;font-family:${FONT};font-size:12px;line-height:18px;color:#8a9095;">
             ${footer}<br><br>
             Questions? Reply to this email or write to <a href="mailto:${esc(CONTACT_EMAIL)}" style="color:#8a9095;text-decoration:underline;">${esc(CONTACT_EMAIL)}</a>.<br><br>
-            <a href="https://notchlift.com" target="_blank" style="color:#8a9095;text-decoration:underline;">notchlift.com</a> &middot; Workout planner &amp; tracker<br>
+            <a href="https://setmodo.com" target="_blank" style="color:#8a9095;text-decoration:underline;">setmodo.com</a> &middot; Workout planner &amp; tracker<br>
             ${esc(COMPANY_LINE)}
           </td>
         </tr>

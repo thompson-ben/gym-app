@@ -1,4 +1,4 @@
-// Renders the NotchLift app icons with the bundled Chromium: `node scripts/generate-icons.mjs`.
+// Renders the Setmodo app icons with the bundled Chromium: `node scripts/generate-icons.mjs`.
 // Also writes the iOS app icon and launch splash into ios/ (square and opaque, as the App Store requires).
 import { chromium } from "@playwright/test";
 
@@ -6,7 +6,7 @@ const OUT = new URL("../public/icons/", import.meta.url).pathname;
 const icon = (size, { maskable = false } = {}) => `<!doctype html><html><body style="margin:0">
 <div style="width:${size}px;height:${size}px;background:#131416;display:flex;align-items:center;justify-content:center;
   border-radius:${maskable ? 0 : size * 0.22}px;font-family:Geist,Inter,Helvetica,Arial,sans-serif;">
-  <span style="color:#eaebed;font-weight:700;font-size:${size * (maskable ? 0.46 : 0.58)}px;letter-spacing:-0.04em;line-height:1;transform:translateY(-${size * 0.03}px)">n<span style="color:#c3ed89">.</span></span>
+  <span style="color:#eaebed;font-weight:700;font-size:${size * (maskable ? 0.46 : 0.58)}px;letter-spacing:-0.04em;line-height:1;transform:translateY(-${size * 0.03}px)">s<span style="color:#c3ed89">.</span></span>
 </div></body></html>`;
 
 const browser = await chromium.launch({ executablePath: process.env.CHROME || undefined });
@@ -31,7 +31,7 @@ await page.screenshot({ path: IOS + "AppIcon.appiconset/AppIcon-512@2x.png", omi
 // Launch splash: the app background with a small mark, shown for a moment while the site loads.
 await page.setViewportSize({ width: 2732, height: 2732 });
 await page.setContent(`<!doctype html><html><body style="margin:0;width:2732px;height:2732px;background:#131416;display:flex;align-items:center;justify-content:center;font-family:Geist,Inter,Helvetica,Arial,sans-serif">
-<span style="color:#eaebed;font-weight:700;font-size:260px;letter-spacing:-0.045em">notchlift<span style="color:#c3ed89">.</span></span></body></html>`);
+<span style="color:#eaebed;font-weight:700;font-size:260px;letter-spacing:-0.045em">setmodo<span style="color:#c3ed89">.</span></span></body></html>`);
 for (const name of ["splash-2732x2732.png", "splash-2732x2732-1.png", "splash-2732x2732-2.png"]) {
   await page.screenshot({ path: IOS + "Splash.imageset/" + name, omitBackground: false });
 }

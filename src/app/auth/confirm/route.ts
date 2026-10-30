@@ -6,7 +6,7 @@ import { supabaseServer } from "@/lib/supabase/server";
 
 /**
  * Email-confirmation and Apple / Google sign-in callback. Accepts the `token_hash` links produced
- * by NotchLift's email templates (work on any device) and PKCE `code` links: Supabase's default
+ * by Setmodo's email templates (work on any device) and PKCE `code` links: Supabase's default
  * email template and the return from Apple or Google (both finish in the browser that started).
  * Failed, cancelled or expired attempts go back to sign-in with a message.
  */

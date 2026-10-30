@@ -174,7 +174,7 @@ export function AuthForm({
         </p>
         <p className="rounded-2xl border border-accent-text/50 bg-accent-soft px-4 py-3 text-sm">
           <span className="font-medium">Not in your inbox?</span>{" "}
-          <span className="text-muted">Check your Junk or Spam folder for “Confirm your NotchLift account”, and mark it “Not junk” so your workout reminders arrive too.</span>
+          <span className="text-muted">Check your Junk or Spam folder for “Confirm your Setmodo account”, and mark it “Not junk” so your workout reminders arrive too.</span>
         </p>
         <ResendLine state={resend} onResend={resendConfirmation} />
         <Button variant="secondary" onClick={() => { setCheckEmail(false); setMode("sign-in"); }}>
@@ -248,7 +248,7 @@ export function AuthForm({
         {mode === "sign-in" ? "Sign in" : "Create account"}
       </Button>
       <p className="text-center text-sm text-muted">
-        {mode === "sign-in" ? "New to NotchLift?" : "Already have an account?"}{" "}
+        {mode === "sign-in" ? "New to Setmodo?" : "Already have an account?"}{" "}
         <button
           type="button"
           className="font-medium text-accent-text underline-offset-4 hover:underline"
