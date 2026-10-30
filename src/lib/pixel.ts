@@ -1,6 +1,7 @@
 "use client";
 
 import { CONSENT_KEY, parseConsent, serializeConsent, type Consent } from "./consent";
+import { isNativeApp } from "./native";
 import { trackingAllowed } from "./track";
 
 /** Meta Pixel ID (public). Unset: no pixel and no banner. */
@@ -15,7 +16,8 @@ declare global {
 }
 
 export function readConsent(): Consent | null {
-  if (!trackingAllowed()) return "denied";
+  // Never in the iOS app: Apple counts the Pixel as tracking, which would need its own permission prompt.
+  if (!trackingAllowed() || isNativeApp()) return "denied";
   try {
     return parseConsent(window.localStorage.getItem(CONSENT_KEY), Date.now());
   } catch {

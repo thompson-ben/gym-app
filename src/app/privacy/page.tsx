@@ -29,7 +29,7 @@ export default function PrivacyPage() {
           </li>
           <li><strong>Profile:</strong> an optional display name and app preferences such as default rest time.</li>
           <li><strong>Training data:</strong> the splits, workouts, exercises, sets, notes and dates you enter.</li>
-          <li><strong>Membership:</strong> whether you are a founding member, on a trial or subscribed, your plan, renewal date and payments (amounts and dates). If you haven’t logged a workout by the morning after signing up, we send one email to help you get started. If you tell us which days you usually train, we keep those days and, until your first workout, send a short reminder on those mornings (at most four). If a week passes without a workout, our founder sends one email asking what got in the way. Near the end of a free trial we send one reminder email, and if a trial ends without a plan, one email asking why. You can turn these reminder emails off in Profile or with the unsubscribe link in any of them.</li>
+          <li><strong>Membership:</strong> whether you are a founding member, on a trial or subscribed, your plan, renewal date and payments (amounts and dates), and whether you pay on the website or through the App Store. If you haven’t logged a workout by the morning after signing up, we send one email to help you get started. If you tell us which days you usually train, we keep those days and, until your first workout, send a short reminder on those mornings (at most four). If a week passes without a workout, our founder sends one email asking what got in the way. Near the end of a free trial we send one reminder email, and if a trial ends without a plan, one email asking why. You can turn these reminder emails off in Profile or with the unsubscribe link in any of them.</li>
           <li>
             <strong>Your answers to our short questions</strong> (each asked once, and you can skip it): how you heard about Setmodo, how
             your trial is going, why you didn’t choose a plan, and the reason you give Stripe if you cancel. We use them, together with where
@@ -72,7 +72,9 @@ export default function PrivacyPage() {
           <li><strong>Resend</strong> sends our emails (confirming your address, resetting your password, reminders and support replies).</li>
           <li><strong>Sentry</strong> receives the technical error reports described above, stored in the EU.</li>
           <li><strong>Meta</strong> (Facebook and Instagram) receives the ad-measurement events described under Cookies, only if you accept them.</li>
-          <li><strong>Stripe</strong> processes payments for memberships. Your card details go to Stripe directly and never reach us; we keep only whether you are a member, your plan and renewal date, and amounts paid.</li>
+          <li><strong>Stripe</strong> processes payments for memberships on the website. Your card details go to Stripe directly and never reach us; we keep only whether you are a member, your plan and renewal date, and amounts paid.</li>
+          <li><strong>Apple</strong> processes payments for memberships bought in the iOS app, under your Apple ID; we never see your payment details.</li>
+          <li><strong>RevenueCat</strong> checks App Store purchases for us. It receives your Setmodo account ID (not your name or email) and your App Store purchase records.</li>
         </ul>
         <p>Except for Meta (see Cookies), these providers process data on our behalf and do not use it for their own purposes.</p>
       </section>
@@ -82,7 +84,7 @@ export default function PrivacyPage() {
           We advertise on Instagram and Facebook. If you click <strong>Accept</strong> on the cookie banner, our website loads the Meta Pixel,
           which sets Meta cookies and tells Meta when you visit our public pages (home, the demo workout, sign-in, privacy and terms), start the demo
           workout, start filling in the sign-up form (never what you type), create an account or start a paid membership (with the plan price). Meta uses this to show us which ads work and may use it under its own privacy policy. Nothing
-          about your training is ever sent, and the Pixel does not run inside the app’s screens.
+          about your training is ever sent, and the Pixel does not run inside the app’s screens, or anywhere in the iOS app.
         </p>
         <p>
           If you choose <strong>No thanks</strong>, or your browser sends Global Privacy Control or Do Not Track, the Pixel never loads. Your choice
