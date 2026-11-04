@@ -1,6 +1,7 @@
 "use client";
 
 import { CONSENT_KEY, parseConsent, serializeConsent, type Consent } from "./consent";
+import { isNativeApp } from "./native";
 import { trackingAllowed } from "./track";
 
 /** Meta Pixel ID (public). Unset: no pixel and no banner. */
@@ -15,7 +16,9 @@ declare global {
 }
 
 export function readConsent(): Consent | null {
-  if (!trackingAllowed()) return "denied";
+  // In the iOS app the ad pixel would be cross-app tracking (Apple's App Tracking Transparency),
+  // so it never loads there, and there's no cookie banner to answer.
+  if (!trackingAllowed() || isNativeApp()) return "denied";
   try {
     return parseConsent(window.localStorage.getItem(CONSENT_KEY), Date.now());
   } catch {
