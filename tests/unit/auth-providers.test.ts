@@ -51,3 +51,14 @@ describe("sign in with Apple / Google", () => {
     expect(isNewOAuthAccount(null, now)).toBe(false);
   });
 });
+
+describe("Hide My Email addresses", () => {
+  it("recognises Apple's private relay, and nothing else", async () => {
+    const { isAppleRelayEmail } = await import("@/lib/auth-providers");
+    expect(isAppleRelayEmail("rknvwkydkg@privaterelay.appleid.com")).toBe(true);
+    expect(isAppleRelayEmail(" X@PrivateRelay.AppleID.com ")).toBe(true);
+    expect(isAppleRelayEmail("ben@setmodo.com")).toBe(false);
+    expect(isAppleRelayEmail("privaterelay.appleid.com@gmail.com")).toBe(false);
+    expect(isAppleRelayEmail(null)).toBe(false);
+  });
+});
