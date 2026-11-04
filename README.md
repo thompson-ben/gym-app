@@ -122,6 +122,7 @@ The sign-in screen shows **Continue with Apple** and **Continue with Google** ab
 4. Make the client secret from the Team ID, Key ID, Services ID and `.p8` with the generator in Supabase's "Login with Apple" guide. **It expires after 6 months**: set a reminder to make a new one and paste it in.
 5. Supabase → Authentication → Sign In / Providers → **Apple**: enable; Client IDs = the Services ID **and** the iOS bundle ID, comma-separated (`com.notchlift.web,com.notchlift.app`); Secret Key = the generated secret.
 6. Private relay ("Hide My Email"): Apple Developer → Services → **Sign in with Apple for Email Communication** → add `setmodo.com` and the address emails are sent from, so trial and reminder emails reach people who hid their address.
+7. Account deletion in the iOS app also revokes Sign in with Apple (App Store guideline 5.1.1(v)): the delete sheet shows Apple's sheet for a fresh authorization code, and `/api/account/apple-revoke` exchanges and revokes it (`src/lib/apple-revoke.ts`). Vercel needs `APPLE_TEAM_ID`, `APPLE_KEY_ID` and `APPLE_PRIVATE_KEY` (the whole `.p8` text from step 3, the same key Supabase uses). Without them the account is still deleted, but not revoked.
 
 **Google**:
 1. Google Cloud Console → new project → **Google Auth Platform**: Branding (app name Setmodo, support email, home page, privacy and terms links, authorised domains `setmodo.com` and `<project-ref>.supabase.co`), Audience **External**, then **Publish**. Only the basic scopes (email, profile) are used.

@@ -57,3 +57,22 @@ export async function nativeAppleSignIn(supabase: SupabaseClient): Promise<Nativ
   if (name) await supabase.from("profiles").update({ display_name: name }).eq("id", data.user.id).is("display_name", null);
   return { ok: true };
 }
+
+/**
+ * Deleting an account in the app: Apple's sheet again, for a fresh authorization code the
+ * server can revoke. "cancelled" if the person closes the sheet, null if it fails otherwise.
+ */
+export async function appleAuthorizationCode(): Promise<string | "cancelled" | null> {
+  try {
+    const { SignInWithApple } = await import("@capacitor-community/apple-sign-in");
+    const { response } = await SignInWithApple.authorize({
+      clientId: APP_BUNDLE_ID,
+      redirectURI: window.location.origin,
+      scopes: "",
+      nonce: await sha256Hex(randomNonce()),
+    });
+    return response.authorizationCode || null;
+  } catch (error) {
+    return isAppleCancel(error) ? "cancelled" : null;
+  }
+}

@@ -128,7 +128,7 @@ const GRID = [
 const FAQ: { q: string; a: ReactNode }[] = [
   {
     q: "Is there an app to download?",
-    a: "Setmodo runs in your phone’s browser, so there’s nothing to install from an app store. Add it to your home screen and it opens full screen with its own icon, just like any other app. It works on iPhone and Android.",
+    a: "Our iPhone app is coming to the App Store very soon. Until then, and on Android or a computer, Setmodo runs in your browser: add it to your home screen and it opens full screen with its own icon, just like any other app. Your account and history are the same everywhere.",
   },
   {
     q: "What happens when my trial ends?",
@@ -213,7 +213,7 @@ export function Landing({ paidPlans = false }: { paidPlans?: boolean }) {
                 <TrackedLink track="hero_try" href="/try" className={buttonClass("secondary", "lg", "w-full px-7 sm:w-auto")}>Try a workout, no sign-up</TrackedLink>
               </div>
               <p className="mt-5 text-sm text-faint">{paidPlans ? "14-day free trial" : "Free during early access"} · No card needed</p>
-              <p className="mt-1.5 hidden text-sm text-faint lg:block">Works in your phone’s browser, no app store needed. Add it to your home screen.</p>
+              <p className="mt-1.5 hidden text-sm text-faint lg:block">Works in your phone’s browser today. iPhone app coming soon to the App Store.</p>
             </div>
             <div className="relative mx-auto -mt-4 h-[31rem] w-full max-w-[22rem] sm:h-[36rem] sm:max-w-[26rem] lg:mt-0">
               <Phone src="/landing/target-hit.png" alt="" className="absolute top-12 right-0 w-[56%] rotate-[4deg]" />
@@ -222,7 +222,7 @@ export function Landing({ paidPlans = false }: { paidPlans?: boolean }) {
             {/* On phones the product shows first; the detail follows it. */}
             <div className="-mt-6 text-center lg:hidden">
               <p className="mx-auto max-w-xl text-lg leading-relaxed text-muted text-pretty">{HERO_BODY}</p>
-              <p className="mt-3 text-sm text-faint">Works in your phone’s browser, no app store needed. Add it to your home screen.</p>
+              <p className="mt-3 text-sm text-faint">Works in your phone’s browser today. iPhone app coming soon to the App Store.</p>
             </div>
           </div>
         </section>
