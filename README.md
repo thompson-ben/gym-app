@@ -412,7 +412,7 @@ Inside the iOS app, plans are bought with Apple's in-app purchase (App Store rul
 1. App Store Connect → **Business**: accept the **Paid Apps** agreement and add bank and tax details (Apple won't sell subscriptions until it's active).
 2. App Store Connect → your app → **Subscriptions**: a group **Setmodo Pro** with two auto-renewable subscriptions, product IDs `notchlift_monthly` (1 month) and `notchlift_yearly` (1 year), priced to match the website as closely as Apple's price points allow. Add a display name and review screenshot for each.
 3. RevenueCat (app.revenuecat.com): new project, add the **App Store** app (bundle ID `com.notchlift.app`) with an In-App Purchase key from App Store Connect (Users and Access → Integrations → In-App Purchase). Import both products, create an entitlement **`pro`** with both attached.
-4. RevenueCat → **Integrations → Webhooks**: URL `https://www.notchlift.com/api/revenuecat/webhook`, Authorization header `Bearer <REVENUECAT_WEBHOOK_AUTH>` (a random 32+ character secret).
+4. RevenueCat → **Integrations → Webhooks**: URL `https://www.setmodo.com/api/revenuecat/webhook`, Authorization header `Bearer <REVENUECAT_WEBHOOK_AUTH>` (a random 32+ character secret).
 5. Vercel → Environment Variables (Production): `NEXT_PUBLIC_REVENUECAT_IOS_KEY` (RevenueCat → API keys → the Apple public key, `appl_…`), `REVENUECAT_SECRET_KEY` (a v1 secret key, `sk_…`) and `REVENUECAT_WEBHOOK_AUTH`. Redeploy.
 6. Xcode: **+ Capability → In-App Purchase**. Test with a sandbox account (Settings → App Store → Sandbox Account on the iPhone); sandbox purchases unlock the app but aren't recorded as revenue.
 
