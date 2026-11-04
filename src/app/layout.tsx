@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image" },
   applicationName: "Setmodo",
   appleWebApp: { capable: true, title: "Setmodo", statusBarStyle: "black-translucent" },
-  icons: { icon: [{ url: "/icons/favicon-32.png", sizes: "32x32" }, { url: "/icons/icon-192.png", sizes: "192x192" }], apple: "/icons/apple-touch-icon.png" },
+  icons: { icon: [{ url: "/icons/favicon-32.png?v=s", sizes: "32x32" }, { url: "/icons/icon-192.png?v=s", sizes: "192x192" }], apple: "/icons/apple-touch-icon.png?v=s" },
   formatDetection: { telephone: false },
   // Proves to Meta that notchlift.com belongs to our business (Business Settings → Domains).
   // setmodo.com is verified with a DNS TXT record instead, so it needs nothing here.
