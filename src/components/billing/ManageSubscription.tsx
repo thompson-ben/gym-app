@@ -34,7 +34,7 @@ export function ManageSubscription({
     );
   }
   if (native) {
-    return <p className="text-sm text-muted">You subscribed on notchlift.com, so your subscription is managed there.</p>;
+    return <p className="text-sm text-muted">You subscribed on setmodo.com, so your subscription is managed there.</p>;
   }
   return <ManageBillingButton label={label} variant={variant} size={size} />;
 }
