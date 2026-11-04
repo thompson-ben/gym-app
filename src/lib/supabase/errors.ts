@@ -33,6 +33,10 @@ const MESSAGES: Record<string, string> = {
   membership_required: "Your free trial has ended. Choose a plan to keep logging workouts; your history is safe.",
   invalid_email: "That doesn’t look like an email address.",
   group_session_completed: "You’ve already finished this group workout.",
+  import_source_unknown: "That file isn’t from Strong or Hevy.",
+  import_batch_too_large: "That file is too large to import in one go. Please contact us and we’ll help.",
+  import_workout_too_large: "One workout in this file has more exercises or sets than Setmodo allows.",
+  import_exercise_missing: "An exercise from this file couldn’t be added. Please try again.",
   catalogue_exercise_missing: "An exercise in this split is no longer in the catalogue.",
 };
 
