@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { PlanId } from "@/lib/billing/plans";
+import { reportClientError } from "@/lib/monitoring";
 import { appStorePlans, appStorePurchasesAvailable, buyAppStorePlan, restoreAppStorePurchases, type AppStorePlan } from "@/lib/native-purchases";
 import { IconCheck } from "../icons";
 import { Button, ErrorNote, Spinner, cx } from "../ui";
@@ -27,7 +28,13 @@ export function AppStorePlanPicker({ userId, initial = "yearly" }: { userId: str
 
   useEffect(() => {
     if (!appStorePurchasesAvailable()) return;
-    appStorePlans(userId).then(setPlans, () => setPlans([]));
+    // StoreKit can stay silent (for example before Apple's paid agreement is active): give up
+    // after 15 seconds rather than spinning forever.
+    const timeout = new Promise<never>((_, reject) => window.setTimeout(() => reject(new Error("app_store_timeout")), 15_000));
+    Promise.race([appStorePlans(userId), timeout]).then(setPlans, (e: unknown) => {
+      reportClientError(e);
+      setPlans([]);
+    });
   }, [userId]);
 
   async function buy() {
