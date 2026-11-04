@@ -8,6 +8,8 @@ import type { ReferralStatus } from "@/lib/referral";
 import { PLANS } from "@/lib/billing/plans";
 import { formatDate, formatDuration } from "@/lib/format";
 import { clearUser, hasUnsyncedChanges, listRecords } from "@/lib/session/store";
+import { appleAuthorizationCode } from "@/lib/native-apple";
+import { isNativeApp } from "@/lib/native";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { friendlyError } from "@/lib/supabase/errors";
 import { isWeightUnit, type WeightUnit } from "@/lib/units";
@@ -85,6 +87,22 @@ export function ProfileForm({
     if (deleteText.trim().toUpperCase() !== "DELETE") return setDeleteError("Type DELETE to confirm.");
     setDeleteBusy(true);
     setDeleteError(null);
+    const supabase = supabaseBrowser();
+    // An account made with Sign in with Apple is also disconnected from Apple (App Store rules).
+    // Apple's sheet confirms it; if that fails for another reason the account is still deleted.
+    if (isNativeApp()) {
+      const { data } = await supabase.auth.getUser();
+      if (data.user?.identities?.some((i) => i.provider === "apple")) {
+        const code = await appleAuthorizationCode();
+        if (code === "cancelled") {
+          setDeleteBusy(false);
+          return setDeleteError("Confirm with Apple to delete your account. Nothing was deleted.");
+        }
+        if (code) {
+          await fetch("/api/account/apple-revoke", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ code }) }).catch(() => undefined);
+        }
+      }
+    }
     // Stop a website (Stripe) subscription first, so nobody is charged for an account that no
     // longer exists. Only Apple can cancel an App Store one; the sheet says so.
     if (membership?.status === "paid" && membership.billing_source !== "apple") {
@@ -95,7 +113,6 @@ export function ProfileForm({
         return setDeleteError(json.error ?? "Couldn’t cancel your subscription. Nothing was deleted; please try again.");
       }
     }
-    const supabase = supabaseBrowser();
     const { error } = await supabase.rpc("delete_my_account");
     if (error) {
       setDeleteBusy(false);
