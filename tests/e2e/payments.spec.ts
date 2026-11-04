@@ -41,7 +41,7 @@ test("trial countdown, trial ended → upgrade, and a Stripe subscription turns 
   await expect(page.getByRole("heading", { name: "Your free trial has ended" })).toBeVisible();
   await page.getByRole("button", { name: "Start Push" }).click();
   await page.waitForURL("**/upgrade?reason=trial_ended");
-  await expect(page.getByRole("heading", { level: 1, name: "Keep training with NotchLift" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Keep training with Setmodo" })).toBeVisible();
   await page.goto("/history");
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 

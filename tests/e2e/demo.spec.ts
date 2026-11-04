@@ -41,7 +41,7 @@ test("an account from the demo, confirmed in another browser, starts with the de
   await expect(page.getByRole("heading", { name: "Check your email" })).toBeVisible();
 
   // The confirmation link opens in the phone's normal browser (no demo cookie there).
-  const link = await emailLink(email, /Confirm your NotchLift account/);
+  const link = await emailLink(email, /Confirm your Setmodo account/);
   const other = await browser.newContext();
   const phone = await other.newPage();
   await phone.goto(link);
@@ -59,7 +59,7 @@ test("an account from the demo, confirmed in another browser, starts with the de
 test("people who didn't come from the demo see the usual first run, and signed-in people skip the demo", async ({ page }) => {
   const user = await newUser("not-demo");
   await signIn(page, user);
-  await expect(page.getByRole("heading", { name: "Welcome to NotchLift" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Welcome to Setmodo" })).toBeVisible();
   await expect(page.getByText("From your demo")).toHaveCount(0);
   await page.goto("/try");
   await page.waitForURL("**/train");

@@ -34,7 +34,7 @@ I train __ days a week.
 
 /** "Rather I set it up?": an email to the founder with a screenshot of their current programme. */
 export function SetupHelp({ className }: { className?: string }) {
-  const href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("Set up my NotchLift split")}&body=${encodeURIComponent(SETUP_BODY)}`;
+  const href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("Set up my Setmodo split")}&body=${encodeURIComponent(SETUP_BODY)}`;
   return (
     <p className={cx("rounded-2xl border border-dashed border-line px-4 py-3 text-sm text-muted", className)}>
       <span className="font-medium text-fg">Rather I set it up?</span> Send me your programme (a screenshot of your Notes is fine) and I’ll build it

@@ -1,6 +1,6 @@
-# notchlift.
+# setmodo.
 
-> Formerly **Splitmate**. User-facing text now says NotchLift; internal identifiers (on-device storage keys such as `splitmate:v1:…`, the local Supabase `project_id`, fixture accounts) keep the old name on purpose so existing devices and data are unaffected.
+> Formerly **Splitmate**. User-facing text now says Setmodo; internal identifiers (on-device storage keys such as `splitmate:v1:…`, the local Supabase `project_id`, fixture accounts) keep the old name on purpose so existing devices and data are unaffected.
 
 **Workout Planner & Tracker.** A phone-first web app for planning training splits and logging workouts, with your previous sets beside today's inputs.
 
@@ -53,7 +53,7 @@ Emails sent by the local stack (sign-up confirmation, password reset) are caught
 
 ## Deployment (Supabase + Vercel)
 
-Use a **dedicated** Supabase project for NotchLift: the migrations create tables and functions in `public`, so never point it at another product's project. The app needs **no service-role key**; all data access runs as the signed-in user under Row Level Security.
+Use a **dedicated** Supabase project for Setmodo: the migrations create tables and functions in `public`, so never point it at another product's project. The app needs **no service-role key**; all data access runs as the signed-in user under Row Level Security.
 
 ### 1. Supabase project
 
@@ -77,8 +77,8 @@ Use a **dedicated** Supabase project for NotchLift: the migrations create tables
      ```
      The last two let Vercel preview deployments use sign-up and password reset. Links whose redirect is not on this list fall back to the Site URL and will not complete.
 5. **Authentication → Emails → Templates**: paste the two templates from this repository so links work on any device (the default templates use PKCE links that only work in the browser that asked for them; the app accepts both):
-   - *Confirm signup*: subject `Confirm your NotchLift account`, body `supabase/templates/confirmation.html`
-   - *Reset password*: subject `Reset your NotchLift password`, body `supabase/templates/recovery.html`
+   - *Confirm signup*: subject `Confirm your Setmodo account`, body `supabase/templates/confirmation.html`
+   - *Reset password*: subject `Reset your Setmodo password`, body `supabase/templates/recovery.html`
 6. **Authentication → Emails → SMTP**: configure a real SMTP provider before inviting users. Supabase's built-in sender is heavily rate-limited and meant for testing.
 7. **Project Settings → API Keys**: copy the Project URL and the **Publishable** key (`sb_publishable_…`; the legacy anon key also works).
 
@@ -121,11 +121,11 @@ The sign-in screen shows **Continue with Apple** and **Continue with Google** ab
 3. **Keys** → + → tick **Sign in with Apple** (configure with the App ID) → download the `.p8` file (only once; keep it safe, never commit or share it). Note the Key ID and your Team ID (top right).
 4. Make the client secret from the Team ID, Key ID, Services ID and `.p8` with the generator in Supabase's "Login with Apple" guide. **It expires after 6 months**: set a reminder to make a new one and paste it in.
 5. Supabase → Authentication → Sign In / Providers → **Apple**: enable; Client IDs = the Services ID **and** the iOS bundle ID, comma-separated (`com.notchlift.web,com.notchlift.app`); Secret Key = the generated secret.
-6. Private relay ("Hide My Email"): Apple Developer → Services → **Sign in with Apple for Email Communication** → add `notchlift.com` and the address emails are sent from, so trial and reminder emails reach people who hid their address.
+6. Private relay ("Hide My Email"): Apple Developer → Services → **Sign in with Apple for Email Communication** → add `setmodo.com` and the address emails are sent from, so trial and reminder emails reach people who hid their address.
 
 **Google**:
-1. Google Cloud Console → new project → **Google Auth Platform**: Branding (app name NotchLift, support email, home page, privacy and terms links, authorised domains `notchlift.com` and `<project-ref>.supabase.co`), Audience **External**, then **Publish**. Only the basic scopes (email, profile) are used.
-2. **Clients** → Create client → **Web application**: authorised JavaScript origin `https://www.notchlift.com`; authorised redirect URI `https://<project-ref>.supabase.co/auth/v1/callback`.
+1. Google Cloud Console → new project → **Google Auth Platform**: Branding (app name Setmodo, support email, home page, privacy and terms links, authorised domains `setmodo.com` and `<project-ref>.supabase.co`), Audience **External**, then **Publish**. Only the basic scopes (email, profile) are used.
+2. **Clients** → Create client → **Web application**: authorised JavaScript origin `https://www.setmodo.com`; authorised redirect URI `https://<project-ref>.supabase.co/auth/v1/callback`.
 3. Supabase → Authentication → Sign In / Providers → **Google**: enable; paste the client ID and client secret.
 
 Then add `AUTH_PROVIDERS` in Vercel (Production) and redeploy.
@@ -291,7 +291,7 @@ While `auto_founder` is on (the default), **every new sign-up is a founder autom
 
 - **Export:** Profile → Your data → *Export as spreadsheet* (`/api/export?format=csv`: one row per completed set, local date and time, UTF-8 with BOM, formula-safe) or *Export everything* (`?format=json`: profile, membership, custom exercises, splits with workouts and periods, all workouts). Both run as the user under RLS.
 - **Delete account:** Profile → Your data → Delete account (type DELETE). `delete_my_account()` removes the user's workouts, shares, splits, custom exercises, membership, profile and auth user, then the app clears local data. Friends' copies of shared splits are independent and stay.
-- **Privacy and terms:** `/privacy` and `/terms` are public and linked from sign-up and Profile. They are a plain-English starting point; have them reviewed before charging. The contact address is hello@notchlift.com (`src/lib/company.ts`; `NEXT_PUBLIC_CONTACT_EMAIL` can override it). It appears in the footer, terms, privacy and every app email, which also set it as the reply-to address.
+- **Privacy and terms:** `/privacy` and `/terms` are public and linked from sign-up and Profile. They are a plain-English starting point; have them reviewed before charging. The contact address is hello@setmodo.com (`src/lib/company.ts`; `NEXT_PUBLIC_CONTACT_EMAIL` can override it). It appears in the footer, terms, privacy and every app email, which also set it as the reply-to address.
 
 ### First run, feedback and installing
 
@@ -343,10 +343,10 @@ Migrations are additive and versioned; never reset a deployed database.
 - **Time of day (migration 31):** `admin_time_of_day(days, include)` counts visits, sign-ups and finished workouts (not backdated ones) by hour and weekday in UK time, with the same “Also count” rule as the dashboard. Admin → More detail → **Time of day** shows the bars with the busiest three hours (`busiestWindow`) and busiest weekday. Nothing new is stored.
 - **Help & support (migration 30):** Profile → App → **Help & support** has a FAQ (`lib/support.ts`) and **Message us**. Each question is a thread (`support_threads`, `support_messages`): open (needs a reply), answered or closed. Members read only their own and write through `support_start` / `support_reply` (5 new threads and 30 messages a day at most); opening a thread (`support_open_thread`) clears its unread badge (`support_unread`). Admins work from **/admin/support** (linked from Admin and Profile with the count waiting): `admin_support_threads`, `admin_support_thread`, `admin_support_reply` (optionally closing) and `admin_support_set_status`. Each member message emails the contact address a notice with a link to the thread; each admin reply emails the member the reply with a link back (`lib/emails/support.ts`, needs `RESEND_API_KEY`). Replying to those emails doesn't reach the thread. Threads are included in the JSON export and deleted with the account.
 - **Supersets (migration 29):** `template_exercises.superset_next` links an exercise to the next one; a run of links is one superset (A1, A2…, `lib/supersets.ts`). The split editor has **Superset with next**; preview, logger, summary and shared splits show the labels. Sessions snapshot the links in `start_session` (`session_exercises.superset_next`, returned by `session_document`); `sync_session` never writes them, so a started workout keeps its links and exercises added mid-workout aren't linked. In the logger, ticking a set jumps to the next exercise in the round and the auto rest timer starts only after each round. Shared, copied, duplicated and ready-made splits carry the links. Group workouts don't show supersets yet.
-- **Share a workout:** the workout summary has **Share workout**, which draws a 1080 × 1920 story image in the browser (`components/ShareWorkoutButton.tsx`, data from `lib/share-card.ts`: best working set per exercise, stats and new records, with notchlift.com) and opens the phone's share sheet, or downloads the PNG where file sharing isn't supported. Nothing is uploaded; the tap is counted as `cta_click` / `share_workout` on `/sessions`.
+- **Share a workout:** the workout summary has **Share workout**, which draws a 1080 × 1920 story image in the browser (`components/ShareWorkoutButton.tsx`, data from `lib/share-card.ts`: best working set per exercise, stats and new records, with setmodo.com) and opens the phone's share sheet, or downloads the PNG where file sharing isn't supported. Nothing is uploaded; the tap is counted as `cta_click` / `share_workout` on `/sessions`.
 - **Onboarding tracking (migration 28):** anonymous, detail-coded events, each once per tab session and page: `cta_click` (landing-page buttons via `TrackedLink`: hero_start, hero_try, nav_start, nav_signin, pricing_start, final_start, final_try), `scroll_depth` (quarter, half, three_quarters, bottom via `ScrollDepth`), `signup_started` (first focus in the create-account form), `consent` (accepted, declined) and `demo_progress` (three_sets, finished). `admin_engagement(days, include)` adds **Started a workout** and **Ticked a set** to the funnel (from the workout tables) and the **More detail → Before sign-up** section.
 - **Try a workout and the ad landing page (migration 27):** `/try` is the real set logger on example data with no account (`src/lib/demo.ts`, `components/demo/DemoWorkout.tsx`): three exercises from Full Body A with labelled example "last time" numbers, saved only in this browser's storage. "Start free" sets an `nl_demo` cookie; email sign-ups then carry `via: "demo"`, and Train's first run offers the same split as a one-tap card (which also tags Google sign-ups). Nothing from the demo enters anyone's history. `/add-weight` is the page for the hero-image ad (same promise and screens, then Try a workout / Create a free account; not indexed). Anonymous events `demo_start`, `demo_set`, `demo_signup`; Admin → From visit to paying shows the demo line (`admin_demo`).
-- **Training days and week-one check-in (migration 26):** `profiles.training_days` (ISO weekdays, 1 = Monday; null = not asked, empty = skipped). Train asks "Which days do you train?" once a split is ready and before a first workout; Profile → Account lets people change them. Until a first workout, the 9am job sends a short "your workout is ready" email on those UK days (at most 4, never on the morning of the first-workout email). 7–14 days after sign-up with no workout, it sends one plain check-in signed by the founder, from the same address with the name "Ben from NotchLift"; replies go to the contact address. Nobody gets two getting-started emails in one run; all respect the reminder-email opt-out. Admin shows how many were sent and trained after, plus which days people picked (More detail → Training days).
+- **Training days and week-one check-in (migration 26):** `profiles.training_days` (ISO weekdays, 1 = Monday; null = not asked, empty = skipped). Train asks "Which days do you train?" once a split is ready and before a first workout; Profile → Account lets people change them. Until a first workout, the 9am job sends a short "your workout is ready" email on those UK days (at most 4, never on the morning of the first-workout email). 7–14 days after sign-up with no workout, it sends one plain check-in signed by the founder, from the same address with the name "Ben from Setmodo"; replies go to the contact address. Nobody gets two getting-started emails in one run; all respect the reminder-email opt-out. Admin shows how many were sent and trained after, plus which days people picked (More detail → Training days).
 - **First-workout email (migration 22):** the 9am job emails, once, anyone who signed up 18–72 hours earlier, confirmed their email and hasn't logged a workout. It names their waiting workout ("Your Push workout is ready") or suggests a ready-made split. Admin → Activation shows how many were sent and how many trained within 3 days.
 - **Admin money views (migration 21):**
   - **Yesterday** panel at the top (UK day): visits, sign-ups, first workouts, revenue, plus trials ending in 3 days, cancellations, failed payments and new comments.
@@ -389,12 +389,12 @@ Migrations are additive and versioned; never reset a deployed database.
 2. Generate two random secrets (for example `openssl rand -hex 32`): `BILLING_SECRET` and `CRON_SECRET`. In the SQL Editor:
    `update public.app_settings set billing_secret_hash = encode(extensions.digest('<BILLING_SECRET>', 'sha256'), 'hex');`
 3. Stripe (test mode first):
-   - Create a product **NotchLift** with two recurring GBP prices: £3.99 monthly (lookup key `notchlift_monthly`) and £30 yearly (lookup key `notchlift_yearly`).
+   - Create a product **Setmodo** with two recurring GBP prices: £3.99 monthly (lookup key `notchlift_monthly`) and £30 yearly (lookup key `notchlift_yearly`).
    - Customer portal: allow cancelling, updating the payment method and switching between the two prices.
-   - Webhook endpoint: `https://www.notchlift.com/api/stripe/webhook` (the www address: notchlift.com redirects there, and Stripe doesn't follow redirects), with the events `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted` and `invoice.paid`.
+   - Webhook endpoint: `https://www.setmodo.com/api/stripe/webhook` (the www address: setmodo.com redirects there, and Stripe doesn't follow redirects), with the events `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted` and `invoice.paid`.
 4. Vercel → Environment Variables (Production): `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `BILLING_SECRET`, `CRON_SECRET`, `RESEND_API_KEY` (and optionally `EMAIL_FROM`). Then redeploy.
 5. Trial reminder email, once a day. In Supabase, enable the `pg_cron` and `pg_net` extensions, then:
-   `select cron.schedule('trial-reminders', '0 9 * * *', $$ select net.http_post(url := 'https://www.notchlift.com/api/cron/trial-reminders', headers := jsonb_build_object('Authorization', 'Bearer <CRON_SECRET>'), timeout_milliseconds := 60000) $$);`
+   `select cron.schedule('trial-reminders', '0 9 * * *', $$ select net.http_post(url := 'https://www.setmodo.com/api/cron/trial-reminders', headers := jsonb_build_object('Authorization', 'Bearer <CRON_SECRET>'), timeout_milliseconds := 60000) $$);`
 6. Go live:
    - Repeat step 3 in Stripe live mode, and swap the live keys into Vercel.
    - Then **Admin → Launch**, typing `LAUNCH`. New sign-ups start the trial, and every early-access member starts a 14-day trial that day and gets a short email. Anyone with free access is untouched. The landing page's pricing switches with it (`paid_plans_live()`).
@@ -413,7 +413,7 @@ Every weight is stored in kilograms with 4 decimal places. Profile → Weight un
 
 ## iOS app (Capacitor)
 
-The iOS app is a native shell around the live site (`capacitor.config.ts`): it opens `https://www.notchlift.com` (signed-in people land on Train, everyone else on sign-up), so web deploys update the app without a new App Store build. Native features are added through Capacitor plugins and called from the site when it runs inside the app; the site recognises the app by `NotchLiftApp/1` in the user agent (`src/lib/native.ts`). Bundle ID `com.notchlift.app`, iPhone only, portrait.
+The iOS app is a native shell around the live site (`capacitor.config.ts`): it opens `https://www.setmodo.com` (signed-in people land on Train, everyone else on sign-up), so web deploys update the app without a new App Store build. Native features are added through Capacitor plugins and called from the site when it runs inside the app; the site recognises the app by `NotchLiftApp/1` in the user agent (`src/lib/native.ts`). Bundle ID `com.notchlift.app`, iPhone only, portrait.
 
 - `native-shell/` holds only `offline.html`, shown when the site can't be reached on first launch.
 - `WKAppBoundDomains` (Info.plist) plus `limitsNavigationsToAppBoundDomains` let the site's service worker run inside the app, so offline logging works as on the web. Links to other domains open in Safari.

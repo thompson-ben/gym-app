@@ -80,14 +80,14 @@ export function DemoWorkout({ cta }: { cta: string }) {
   return (
     <div className="mx-auto min-h-dvh max-w-xl px-4 pt-safe pb-40">
       <header className="flex h-14 items-center justify-between gap-2">
-        <Link href="/" aria-label="NotchLift home"><Wordmark /></Link>
+        <Link href="/" aria-label="Setmodo home"><Wordmark /></Link>
         <span className="rounded-full border border-line px-3 py-1 text-xs font-semibold tracking-[0.14em] text-muted uppercase">Demo</span>
       </header>
 
       <p className="text-xs font-medium tracking-[0.14em] text-muted uppercase">{starter.name} · Workout</p>
       <h1 className="mt-1 text-[32px] leading-tight font-semibold tracking-[-0.02em]">{state?.doc.template_name ?? starter.workouts[0].name}</h1>
       <div className="mt-3 rounded-2xl border border-dashed border-accent-text/50 px-4 py-3 text-[15px]">
-        <p className="font-medium">Try it: this is how a workout feels in NotchLift.</p>
+        <p className="font-medium">Try it: this is how a workout feels in Setmodo.</p>
         <p className="mt-1 text-muted">
           Tap ✓ to log a set. Change the weight or reps first if you like. “Last time” shows example numbers; in your account it’s your own. Nothing is saved to an account.
         </p>
@@ -136,7 +136,7 @@ export function DemoWorkout({ cta }: { cta: string }) {
         <section aria-labelledby="demo-done" className="mt-6 rounded-3xl border border-accent-text/60 bg-surface p-5">
           <h2 id="demo-done" className="text-[22px] font-semibold tracking-[-0.01em]">Workout done 💪</h2>
           <p className="mt-2 text-muted">
-            That’s NotchLift. In your account, today’s sets become “last time” for your next session, so you always know the number to beat, and it tells you when to go heavier.
+            That’s Setmodo. In your account, today’s sets become “last time” for your next session, so you always know the number to beat, and it tells you when to go heavier.
           </p>
           <p className="mt-2 text-muted">Create an account and {starter.name} will be ready for your first real session.</p>
           <Link href={SIGN_UP} onClick={markFromDemo} className={buttonClass("primary", "lg", "mt-4 w-full")}>{cta}</Link>

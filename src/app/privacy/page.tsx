@@ -9,13 +9,13 @@ export default function PrivacyPage() {
   return (
     <LegalPage title="Privacy">
       <p>
-        NotchLift is a workout planner and tracker. This page explains, in plain English, what we store, why, and what you can do about it. There
-        are no ads in NotchLift and we never sell data.
+        Setmodo is a workout planner and tracker. This page explains, in plain English, what we store, why, and what you can do about it. There
+        are no ads in Setmodo and we never sell data.
       </p>
       <section>
         <h2>Who we are</h2>
         <p>
-          NotchLift is run by {COMPANY.name}, registered in {COMPANY.registeredIn} (company no. {COMPANY.number}), {COMPANY.office}. We are
+          Setmodo is run by {COMPANY.name}, registered in {COMPANY.registeredIn} (company no. {COMPANY.number}), {COMPANY.office}. We are
           the data controller for the information described here.
         </p>
       </section>
@@ -31,9 +31,9 @@ export default function PrivacyPage() {
           <li><strong>Training data:</strong> the splits, workouts, exercises, sets, notes and dates you enter.</li>
           <li><strong>Membership:</strong> whether you are a founding member, on a trial or subscribed, your plan, renewal date and payments (amounts and dates). If you haven’t logged a workout by the morning after signing up, we send one email to help you get started. If you tell us which days you usually train, we keep those days and, until your first workout, send a short reminder on those mornings (at most four). If a week passes without a workout, our founder sends one email asking what got in the way. Near the end of a free trial we send one reminder email, and if a trial ends without a plan, one email asking why. You can turn these reminder emails off in Profile or with the unsubscribe link in any of them.</li>
           <li>
-            <strong>Your answers to our short questions</strong> (each asked once, and you can skip it): how you heard about NotchLift, how
+            <strong>Your answers to our short questions</strong> (each asked once, and you can skip it): how you heard about Setmodo, how
             your trial is going, why you didn’t choose a plan, and the reason you give Stripe if you cancel. We use them, together with where
-            you came from, to improve NotchLift and our advertising, and we may email you to follow up on something you wrote.
+            you came from, to improve Setmodo and our advertising, and we may email you to follow up on something you wrote.
           </li>
           <li>
             <strong>Visits to our public pages</strong> (not the app itself): the page, the site that linked to it, campaign tags in the link (for
@@ -59,7 +59,7 @@ export default function PrivacyPage() {
       <section>
         <h2>Why</h2>
         <p>
-          Only to provide NotchLift to you: to sign you in, save and sync your workouts, and show your history and progress. Training logs can be
+          Only to provide Setmodo to you: to sign you in, save and sync your workouts, and show your history and progress. Training logs can be
           considered health-related information; you choose what to record, and it is used for nothing else.
         </p>
       </section>
@@ -68,7 +68,7 @@ export default function PrivacyPage() {
         <ul>
           <li><strong>Supabase</strong> hosts the database and sign-in, in the EU (Ireland).</li>
           <li><strong>Vercel</strong> hosts the app; requests are handled in the EU (Dublin).</li>
-          <li><strong>Apple</strong> and <strong>Google</strong> confirm who you are if you choose to sign in with them; they learn that you use NotchLift.</li>
+          <li><strong>Apple</strong> and <strong>Google</strong> confirm who you are if you choose to sign in with them; they learn that you use Setmodo.</li>
           <li><strong>Resend</strong> sends our emails (confirming your address, resetting your password, reminders and support replies).</li>
           <li><strong>Sentry</strong> receives the technical error reports described above, stored in the EU.</li>
           <li><strong>Meta</strong> (Facebook and Instagram) receives the ad-measurement events described under Cookies, only if you accept them.</li>

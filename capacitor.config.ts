@@ -9,7 +9,7 @@ import type { CapacitorConfig } from "@capacitor/cli";
  */
 const config: CapacitorConfig = {
   appId: "com.notchlift.app",
-  appName: "NotchLift",
+  appName: "Setmodo",
   webDir: "native-shell",
   // The site checks for this to tell it's inside the app (src/lib/native.ts).
   appendUserAgent: "NotchLiftApp/1",
@@ -18,8 +18,9 @@ const config: CapacitorConfig = {
     // The site's root, not a page: Capacitor keeps a navigation in the app only if its address
     // starts with this, so "/train" sent the sign-in redirect out to Safari. "/" sends signed-in
     // people to Train and, in the app, everyone else to sign-in (src/app/page.tsx).
-    url: "https://www.notchlift.com",
-    allowNavigation: ["www.notchlift.com", "notchlift.com"],
+    url: "https://www.setmodo.com",
+    // The old notchlift.com addresses redirect to setmodo.com; allowed so that redirect stays in the app.
+    allowNavigation: ["www.setmodo.com", "setmodo.com", "www.notchlift.com", "notchlift.com"],
     errorPath: "offline.html",
   },
   ios: {

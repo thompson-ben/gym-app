@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-        <string>NotchLift</string>
+        <string>Setmodo</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -71,6 +71,8 @@
 	<!-- Lets the site's service worker run inside the app (offline logging); see capacitor.config.ts. -->
 	<key>WKAppBoundDomains</key>
 	<array>
+		<string>www.setmodo.com</string>
+		<string>setmodo.com</string>
 		<string>www.notchlift.com</string>
 		<string>notchlift.com</string>
 	</array>

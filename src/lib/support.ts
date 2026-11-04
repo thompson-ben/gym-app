@@ -58,7 +58,7 @@ export function hasUnread(t: Pick<SupportThread, "last_support_at" | "user_seen_
 /** Who wrote a message, as the member sees it. */
 export function authorLabel(m: Pick<SupportMessage, "author" | "admin_name">, you = "You"): string {
   if (m.author === "user") return you;
-  return m.admin_name ? `${m.admin_name.trim().split(/\s+/)[0]} from NotchLift` : "NotchLift support";
+  return m.admin_name ? `${m.admin_name.trim().split(/\s+/)[0]} from Setmodo` : "Setmodo support";
 }
 
 /** A friendly message for the errors the support functions raise, or null when there isn't one. */
@@ -87,7 +87,7 @@ export const SUPPORT_FAQ: FaqGroup[] = [
   {
     title: "Getting started",
     items: [
-      { q: "How do I add NotchLift to my home screen?", a: "On iPhone, open notchlift.com in Safari, tap Share, then Add to Home Screen. On Android, open it in Chrome, tap ⋮, then Install app (or Add to Home screen). It then opens full screen like any other app." },
+      { q: "How do I add Setmodo to my home screen?", a: "On iPhone, open setmodo.com in Safari, tap Share, then Add to Home Screen. On Android, open it in Chrome, tap ⋮, then Install app (or Add to Home screen). It then opens full screen like any other app." },
       { q: "How do I start a workout?", a: "Open Train. Your next workout from your active split is at the top: tap Start. To train without a plan, use Quick workout. Already trained today? Use Log past workout, top right." },
       { q: "Can I change my split or exercises later?", a: "Yes, any time, in Splits. Changes apply to future workouts; workouts you’ve already logged keep what they were. Every exercise keeps its history when you change split." },
     ],
@@ -105,7 +105,7 @@ export const SUPPORT_FAQ: FaqGroup[] = [
   {
     title: "Account & payments",
     items: [
-      { q: "I didn’t get the confirmation or reset email.", a: "Check your junk or spam folder, and Promotions in Gmail. Emails come from hello@notchlift.com. If it still isn’t there after a few minutes, send us a message below." },
+      { q: "I didn’t get the confirmation or reset email.", a: "Check your junk or spam folder, and Promotions in Gmail. Emails come from hello@setmodo.com. If it still isn’t there after a few minutes, send us a message below." },
       { q: "What happens when my trial ends?", a: "You can keep viewing your history, progress and records, and export them, but you’ll need a plan to log new workouts. Nothing is deleted." },
       { q: "How do I cancel or change my plan?", a: "Profile → Manage subscription. Cancelling stops future payments, and you keep access until the end of the period you’ve paid for." },
       { q: "How do I export or delete my data?", a: "Profile → Your data: export everything as a spreadsheet or JSON, or delete your account. Deleting removes your workouts and history permanently." },

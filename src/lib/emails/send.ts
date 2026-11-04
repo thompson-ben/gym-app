@@ -17,7 +17,7 @@ export async function sendEmail(
 ): Promise<boolean> {
   const key = process.env.RESEND_API_KEY;
   if (!key) return false;
-  const from = process.env.EMAIL_FROM ?? "NotchLift <hello@notchlift.com>";
+  const from = process.env.EMAIL_FROM ?? "Setmodo <hello@setmodo.com>";
   try {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",

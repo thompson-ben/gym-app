@@ -7,7 +7,7 @@ import { supabaseAnon } from "@/lib/supabase/anon";
 export const dynamic = "force-dynamic";
 
 /**
- * Stripe → NotchLift. Every request is verified with the webhook signing secret. Failures
+ * Stripe → Setmodo. Every request is verified with the webhook signing secret. Failures
  * answer 500 so Stripe retries; events the app doesn't use answer 200.
  */
 export async function POST(request: Request) {

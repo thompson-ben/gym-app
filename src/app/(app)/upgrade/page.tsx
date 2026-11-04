@@ -36,8 +36,8 @@ export default async function UpgradePage({ searchParams }: { searchParams: Prom
           <p className="font-semibold">{state.kind === "free" ? (state.early ? "You’re on early access." : "You have free access.") : "You’re a member. Thank you!"}</p>
           <p className="mt-1 text-sm text-muted">{state.kind === "free"
               ? state.early
-                ? "NotchLift is free for you for now. When paid membership launches you’ll get a 14-day free trial first."
-                : "There’s nothing to pay. Enjoy NotchLift."
+                ? "Setmodo is free for you for now. When paid membership launches you’ll get a 14-day free trial first."
+                : "There’s nothing to pay. Enjoy Setmodo."
               : "Change plan, update your card or cancel from Stripe’s billing page."}</p>
           {state.kind === "paid" ? <div className="mt-4"><ManageBillingButton /></div> : <Link href="/train" className={buttonClass("primary", "md", "mt-4")}>Go to Train</Link>}
         </div>
@@ -55,7 +55,7 @@ export default async function UpgradePage({ searchParams }: { searchParams: Prom
     <>
       <PageHeader
         eyebrow={state.kind === "trial" ? `${state.daysLeft === 1 ? "Last day" : `${state.daysLeft} days left`} of your free trial` : "Membership"}
-        title={ended ? "Keep training with NotchLift" : "Choose your plan"}
+        title={ended ? "Keep training with Setmodo" : "Choose your plan"}
         back={{ href: "/train", label: "Train" }}
       />
       {ended ? (

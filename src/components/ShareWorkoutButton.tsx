@@ -46,9 +46,9 @@ export function drawShareCard(canvas: HTMLCanvasElement, card: ShareCard, font: 
 
   ctx.font = f(700, 58);
   ctx.fillStyle = C.text;
-  ctx.fillText("notchlift", PAD, 220);
+  ctx.fillText("setmodo", PAD, 220);
   ctx.fillStyle = C.accent;
-  ctx.fillText(".", PAD + ctx.measureText("notchlift").width, 220);
+  ctx.fillText(".", PAD + ctx.measureText("setmodo").width, 220);
 
   // Centre the content between the wordmark and the footer, so short workouts don't leave a gap.
   // Taller rows when there's a "last time" line under today's best set.
@@ -127,10 +127,10 @@ export function drawShareCard(canvas: HTMLCanvasElement, card: ShareCard, font: 
   ctx.font = f(500, 38);
   ctx.fillStyle = C.muted;
   // Above the reply bar Instagram puts over the bottom of a story.
-  ctx.fillText("Tracked with NotchLift", PAD, H - 360);
+  ctx.fillText("Tracked with Setmodo", PAD, H - 360);
   ctx.font = f(700, 44);
   ctx.fillStyle = C.text;
-  ctx.fillText("notchlift.com", PAD, H - 300);
+  ctx.fillText("setmodo.com", PAD, H - 300);
 }
 
 /** "Share workout": a story-sized image of this workout, shared from the phone (or downloaded). */

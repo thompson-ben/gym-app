@@ -57,7 +57,7 @@ export function PaymentConfirmation() {
           <>
             <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-accent text-accent-ink"><IconCheck size={32} /></span>
             <h1 className="mt-6 text-3xl font-semibold tracking-tight">You’re a member</h1>
-            <p className="mt-2 text-muted">Thanks for backing NotchLift. Keep lifting.</p>
+            <p className="mt-2 text-muted">Thanks for backing Setmodo. Keep lifting.</p>
             <Link href="/train" className={buttonClass("primary", "lg", "mt-8 w-full")}>Go to Train</Link>
           </>
         ) : (

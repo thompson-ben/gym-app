@@ -27,19 +27,19 @@ test("a new trial member is asked once how they heard about us, mid-trial how it
   await signIn(page, sam);
 
   // Train: one tap answers, and it isn't asked again.
-  const heard = page.getByRole("region", { name: "How did you hear about NotchLift?" });
+  const heard = page.getByRole("region", { name: "How did you hear about Setmodo?" });
   await expect(heard).toBeVisible();
   await heard.getByRole("button", { name: "Instagram" }).click();
   await expect(page.getByText("That helps us know where to find more people like you")).toBeVisible();
   expect(await answer(sam.id, "heard_from")).toEqual({ answer: "instagram", detail: null });
   await page.reload();
-  await expect(page.getByRole("region", { name: "How did you hear about NotchLift?" })).toHaveCount(0);
+  await expect(page.getByRole("region", { name: "How did you hear about Setmodo?" })).toHaveCount(0);
 
   // Day 5 of the trial, straight after finishing a workout.
   const sessionId = await finishedWorkout(sam);
   await db.query("update auth.users set created_at = now() - interval '5 days' where id = $1", [sam.id]);
   await page.goto(`/sessions/${sessionId}?finished=1`);
-  const pulse = page.getByRole("region", { name: "How’s NotchLift working for you so far?" });
+  const pulse = page.getByRole("region", { name: "How’s Setmodo working for you so far?" });
   await expect(pulse).toBeVisible();
   await pulse.getByRole("button", { name: /It’s OK/ }).click();
   await pulse.getByLabel("What one thing would make it better? (optional)").fill("A plate calculator");
@@ -48,7 +48,7 @@ test("a new trial member is asked once how they heard about us, mid-trial how it
   expect(await answer(sam.id, "trial_pulse")).toEqual({ answer: "ok", detail: "A plate calculator" });
   // Viewing the workout later doesn't ask.
   await page.goto(`/sessions/${sessionId}`);
-  await expect(page.getByText("How’s NotchLift working for you so far?")).toHaveCount(0);
+  await expect(page.getByText("How’s Setmodo working for you so far?")).toHaveCount(0);
 
   // The trial ends unpaid: the plan page asks why.
   await db.query("update public.memberships set trial_ends_at = now() - interval '1 hour' where user_id = $1", [sam.id]);
@@ -72,7 +72,7 @@ test("skipping a question means it isn't asked again; admins see answers and com
   await expect(exit).toHaveCount(0);
   expect(await answer(jo.id, "trial_exit")).toEqual({ answer: "skipped", detail: null });
   await page.reload();
-  await expect(page.getByRole("region", { name: "How did you hear about NotchLift?" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "How did you hear about Setmodo?" })).toBeVisible();
   await expect(page.getByRole("region", { name: "What stopped you from choosing a plan?" })).toHaveCount(0);
 
   const poster = `A gym poster ${jo.id.slice(0, 8)}`;
