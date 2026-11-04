@@ -205,32 +205,42 @@ input[type="number"]::-webkit-outer-spin-button {
   animation: sm-intro-out 300ms ease-in 4s forwards;
 }
 .sm-intro[hidden] { display: none; }
+/* The starting state matches the native splash (scripts/generate-icons.mjs): only the dot, centred. */
 .sm-intro-word {
+  display: flex;
+  align-items: baseline;
   font-size: calc(100vh * 260 / 2732);
   font-weight: 700;
   letter-spacing: -0.045em;
   line-height: 1;
   color: #eaebed;
 }
-.sm-intro-dot { display: inline-block; color: #c3ed89; transform-origin: 50% 85%; }
-.sm-intro.is-playing .sm-intro-letters {
-  background: linear-gradient(100deg, #eaebed 38%, #ffffff 50%, #eaebed 62%) 100% 0 / 300% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: sm-intro-sheen 650ms ease-in-out 150ms both;
+.sm-intro-letter { display: inline-block; opacity: 0; }
+.sm-intro-dot {
+  display: inline-block;
+  color: #c3ed89;
+  transform: translateX(var(--sm-intro-dx, 0px));
+  text-shadow: 0 0 0.25em rgb(195 237 137 / 0.6);
 }
-.sm-intro.is-playing .sm-intro-dot { animation: sm-intro-dot 480ms cubic-bezier(0.3, 1.5, 0.5, 1) 380ms both; }
-.sm-intro.is-leaving { animation: sm-intro-out 300ms ease-in forwards; }
-.sm-intro.is-leaving .sm-intro-word { transform: scale(1.06); transition: transform 300ms ease-in; }
-@keyframes sm-intro-sheen {
-  from { background-position: 100% 0; }
-  to { background-position: 0% 0; }
+/* The dot pulses, glides to its place, and the letters come into focus one by one behind it. */
+.sm-intro.is-playing .sm-intro-dot {
+  animation: sm-intro-pulse 500ms ease-in-out both, sm-intro-glide 550ms cubic-bezier(0.65, 0, 0.25, 1) 320ms forwards;
 }
-@keyframes sm-intro-dot {
-  0% { transform: scale(1); text-shadow: none; }
-  45% { transform: scale(1.5); text-shadow: 0 0 0.3em rgb(195 237 137 / 0.9); }
-  100% { transform: scale(1); text-shadow: 0 0 0.12em rgb(195 237 137 / 0.35); }
+.sm-intro.is-playing .sm-intro-letter {
+  filter: blur(10px);
+  transform: translateY(0.18em);
+  animation: sm-intro-letter 420ms cubic-bezier(0.2, 0.8, 0.2, 1) calc(420ms + var(--i) * 50ms) forwards;
+}
+.sm-intro.is-leaving { animation: sm-intro-out 380ms cubic-bezier(0.4, 0, 1, 1) forwards; }
+.sm-intro.is-leaving .sm-intro-word { transform: scale(1.04); transition: transform 380ms cubic-bezier(0.4, 0, 1, 1); }
+@keyframes sm-intro-letter {
+  to { opacity: 1; filter: blur(0); transform: none; }
+}
+@keyframes sm-intro-pulse {
+  45% { scale: 1.35; text-shadow: 0 0 0.45em rgb(195 237 137 / 0.9); }
+}
+@keyframes sm-intro-glide {
+  to { transform: translateX(0); text-shadow: 0 0 0.12em rgb(195 237 137 / 0.35); }
 }
 @keyframes sm-intro-out {
   to { opacity: 0; }

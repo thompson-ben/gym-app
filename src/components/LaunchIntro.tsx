@@ -8,14 +8,25 @@ export function LaunchIntro() {
     const el = document.getElementById("launch-intro");
     if (!el || el.hidden) return;
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    // The overlay matches the splash exactly, so a short cross-fade hides the switch.
-    void import("@capacitor/splash-screen").then(({ SplashScreen }) => SplashScreen.hide({ fadeOutDuration: 200 })).catch(() => undefined);
-    el.classList.add("is-playing");
-    const leave = window.setTimeout(() => el.classList.add("is-leaving"), reduce ? 150 : 950);
-    const done = window.setTimeout(() => (el.hidden = true), reduce ? 450 : 1250);
+    const timers: number[] = [];
+    let cancelled = false;
+    // Wait for the typeface (at most half a second) so the dot's starting point is measured right.
+    void Promise.race([document.fonts.ready, new Promise((r) => window.setTimeout(r, 500))]).then(() => {
+      if (cancelled) return;
+      // Start the dot in the middle of the screen, where the splash shows it.
+      const dot = el.querySelector<HTMLElement>(".sm-intro-dot");
+      if (dot) {
+        const r = dot.getBoundingClientRect();
+        dot.style.setProperty("--sm-intro-dx", `${window.innerWidth / 2 - (r.left + r.width / 2)}px`);
+      }
+      void import("@capacitor/splash-screen").then(({ SplashScreen }) => SplashScreen.hide({ fadeOutDuration: 150 })).catch(() => undefined);
+      el.classList.add("is-playing");
+      timers.push(window.setTimeout(() => el.classList.add("is-leaving"), reduce ? 150 : 1150));
+      timers.push(window.setTimeout(() => (el.hidden = true), reduce ? 450 : 1530));
+    });
     return () => {
-      window.clearTimeout(leave);
-      window.clearTimeout(done);
+      cancelled = true;
+      timers.forEach((t) => window.clearTimeout(t));
     };
   }, []);
   return null;

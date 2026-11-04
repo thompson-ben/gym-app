@@ -13,7 +13,11 @@ export function LaunchIntroOverlay() {
   return (
     <div id="launch-intro" className="sm-intro" hidden aria-hidden="true" suppressHydrationWarning>
       <span className="sm-intro-word">
-        <span className="sm-intro-letters">setmodo</span>
+        {[..."setmodo"].map((letter, i) => (
+          <span key={i} className="sm-intro-letter" style={{ "--i": i } as React.CSSProperties}>
+            {letter}
+          </span>
+        ))}
         <span className="sm-intro-dot">.</span>
       </span>
     </div>
