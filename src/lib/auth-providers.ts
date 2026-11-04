@@ -95,3 +95,6 @@ export function isNewOAuthAccount(user: { created_at?: string; app_metadata?: { 
   if (!user?.created_at || !provider || provider === "email") return false;
   return now.getTime() - new Date(user.created_at).getTime() < 10 * 60_000;
 }
+
+/** "Hide My Email" addresses from Sign in with Apple: they work, but mean nothing to read. */
+export const isAppleRelayEmail = (email: string | null | undefined) => /@privaterelay\.appleid\.com$/i.test(email?.trim() ?? "");

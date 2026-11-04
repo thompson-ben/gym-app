@@ -10,6 +10,7 @@ import { formatDate, formatDuration } from "@/lib/format";
 import { clearUser, hasUnsyncedChanges, listRecords } from "@/lib/session/store";
 import { appleAuthorizationCode } from "@/lib/native-apple";
 import { isNativeApp } from "@/lib/native";
+import { isAppleRelayEmail } from "@/lib/auth-providers";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { friendlyError } from "@/lib/supabase/errors";
 import { isWeightUnit, type WeightUnit } from "@/lib/units";
@@ -158,7 +159,8 @@ export function ProfileForm({
     window.location.assign("/sign-in");
   }
 
-  const initial = (savedName || email || "?").trim().charAt(0).toUpperCase();
+  const appleRelay = isAppleRelayEmail(email);
+  const initial = (savedName || (appleRelay ? "" : email) || "?").trim().charAt(0).toUpperCase();
 
   return (
     <div className="space-y-8">
@@ -168,7 +170,7 @@ export function ProfileForm({
         </span>
         <div className="min-w-0">
           <p className="truncate text-lg font-semibold">{savedName || "No display name"}</p>
-          <p className="truncate text-sm text-muted">{email}</p>
+          <p className="truncate text-sm text-muted">{appleRelay ? "Signed in with Apple" : email}</p>
           {membership ? (
             <p className="mt-1 inline-flex rounded-full border border-accent-text/40 px-2 py-0.5 text-xs font-medium text-accent-text">
               {MEMBERSHIP_LABEL[membership.status]}
@@ -260,10 +262,20 @@ export function ProfileForm({
       <section>
         <SectionTitle>Account</SectionTitle>
         <div className="divide-y divide-line overflow-hidden rounded-3xl border border-line bg-surface">
-          <div className="flex items-center justify-between gap-3 px-4 py-3">
-            <span className="text-sm font-medium text-muted">Email</span>
-            <span className="min-w-0 truncate">{email}</span>
-          </div>
+          {appleRelay ? (
+            <div className="px-4 py-3">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-sm font-medium text-muted">Email</span>
+                <span>Hidden by Apple</span>
+              </div>
+              <p className="mt-1 text-sm text-muted">You chose Hide My Email, so our emails reach you through Apple’s private relay.</p>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between gap-3 px-4 py-3">
+              <span className="text-sm font-medium text-muted">Email</span>
+              <span className="min-w-0 truncate">{email}</span>
+            </div>
+          )}
           {reminderEmails !== null ? (
             <div className="px-4 py-2">
               <Toggle
