@@ -16,7 +16,8 @@ declare global {
 }
 
 export function readConsent(): Consent | null {
-  // Never in the iOS app: Apple counts the Pixel as tracking, which would need its own permission prompt.
+  // In the iOS app the ad pixel would be cross-app tracking (Apple's App Tracking Transparency),
+  // so it never loads there, and there's no cookie banner to answer.
   if (!trackingAllowed() || isNativeApp()) return "denied";
   try {
     return parseConsent(window.localStorage.getItem(CONSENT_KEY), Date.now());

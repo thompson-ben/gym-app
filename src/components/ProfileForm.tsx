@@ -12,7 +12,7 @@ import { supabaseBrowser } from "@/lib/supabase/client";
 import { friendlyError } from "@/lib/supabase/errors";
 import { isWeightUnit, type WeightUnit } from "@/lib/units";
 import { ExportLink } from "./ExportLink";
-import { ManageBillingButton } from "./billing/ManageBillingButton";
+import { APPLE_SUBSCRIPTIONS_URL, ManageSubscription } from "./billing/ManageSubscription";
 import { InviteCard } from "./billing/InviteCard";
 import { FeedbackRow } from "./FeedbackButton";
 import { IconChevronRight } from "./icons";
@@ -48,6 +48,7 @@ export function ProfileForm({
   reminderEmails = null,
   trainingDays,
   support,
+  native = false,
 }: {
   userId: string;
   email: string | null;
@@ -61,6 +62,8 @@ export function ProfileForm({
   trainingDays?: number[] | null;
   /** Undefined until migration 30: Help & support links to email instead. */
   support?: { unread: number; adminOpen: number | null };
+  /** Running in the iOS app (from the request, so server and browser render the same). */
+  native?: boolean;
 }) {
   const router = useRouter();
   const [displayName, setDisplayName] = useState(profile.display_name ?? "");
@@ -81,8 +84,9 @@ export function ProfileForm({
     if (deleteText.trim().toUpperCase() !== "DELETE") return setDeleteError("Type DELETE to confirm.");
     setDeleteBusy(true);
     setDeleteError(null);
-    // Stop any subscription first, so nobody is charged for an account that no longer exists.
-    if (membership?.status === "paid") {
+    // Stop a website (Stripe) subscription first, so nobody is charged for an account that no
+    // longer exists. Only Apple can cancel an App Store one; the sheet says so.
+    if (membership?.status === "paid" && membership.billing_source !== "apple") {
       const res = await fetch("/api/billing/cancel", { method: "POST" });
       if (!res.ok) {
         setDeleteBusy(false);
@@ -233,7 +237,7 @@ export function ProfileForm({
         </div>
       </section>
 
-      {membership ? <MembershipSection membership={membership} referral={referral} /> : null}
+      {membership ? <MembershipSection membership={membership} referral={referral} native={native} /> : null}
 
       <section>
         <SectionTitle>Account</SectionTitle>
@@ -368,6 +372,13 @@ export function ProfileForm({
             This permanently deletes your account, splits, workouts, exercise history and settings. It cannot be undone. Share links you created
             stop working; friends’ copies of your splits are theirs and are not affected.
           </p>
+          {membership?.status === "paid" && membership.billing_source === "apple" ? (
+            <p className="rounded-2xl border border-warn/40 px-4 py-3 text-sm">
+              <span className="font-semibold">Cancel your subscription with Apple too.</span>{" "}
+              <span className="text-muted">Deleting your account doesn’t stop your App Store subscription.</span>{" "}
+              <a href={APPLE_SUBSCRIPTIONS_URL} target="_blank" rel="noopener" className="font-medium text-accent-text underline underline-offset-4">Manage subscriptions</a>
+            </p>
+          ) : null}
           <p className="text-sm text-muted">
             Want a copy first?{" "}
             <ExportLink href="/api/export?format=csv" fallbackName="setmodo-export.csv" className="text-accent-text underline underline-offset-4">Export as spreadsheet</ExportLink>
@@ -413,8 +424,10 @@ function StatusLine({ status, hint, id }: { status?: Status; hint?: string; id?:
   ) : null;
 }
 
-function MembershipSection({ membership, referral }: { membership: NonNullable<Membership>; referral: ReferralStatus | null }) {
+function MembershipSection({ membership, referral, native }: { membership: NonNullable<Membership>; referral: ReferralStatus | null; native: boolean }) {
   const state = membershipState(membership);
+  // App Store prices are set in App Store Connect (and local currency), so they aren't quoted for Apple plans.
+  const apple = membership.billing_source === "apple";
   const line =
     state.kind === "free"
       ? state.early
@@ -426,16 +439,16 @@ function MembershipSection({ membership, referral }: { membership: NonNullable<M
           ? "Your free trial has ended. Your history is safe; choose a plan to keep logging."
           : state.kind === "lapsed"
             ? "Your membership has ended. Your history is safe; choose a plan to keep logging."
-            : `${state.plan ? `${PLANS[state.plan].label} plan, ${PLANS[state.plan].price}/${PLANS[state.plan].per}. ` : ""}${
+            : `${state.plan ? (apple ? `${PLANS[state.plan].label} plan. ` : `${PLANS[state.plan].label} plan, ${PLANS[state.plan].price}/${PLANS[state.plan].per}. `) : ""}${
                 state.renewsAt ? `${state.canceling ? "Ends" : "Renews"} ${formatDate(state.renewsAt, undefined, { year: "numeric" })}.` : ""
-              }${state.billingIssue ? " Your last payment didn’t go through: please update your card." : ""}`;
+              }${state.billingIssue ? (apple ? " Your last payment didn’t go through: please update your payment method with Apple." : " Your last payment didn’t go through: please update your card.") : ""}`;
   return (
     <section>
       <SectionTitle>Membership</SectionTitle>
       <div className="rounded-3xl border border-line bg-surface p-4">
         <p className="text-[15px]">{line}</p>
         {state.kind === "paid" ? (
-          <div className="mt-3"><ManageBillingButton /></div>
+          <div className="mt-3"><ManageSubscription source={membership.billing_source} native={native} /></div>
         ) : state.kind !== "free" ? (
           <Link href="/upgrade" className="mt-3 inline-flex h-11 items-center rounded-2xl bg-accent px-4 font-semibold text-accent-ink">See plans</Link>
         ) : null}

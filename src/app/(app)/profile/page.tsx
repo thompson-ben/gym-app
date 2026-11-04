@@ -3,6 +3,7 @@ import { ProfileForm } from "@/components/ProfileForm";
 import { PageHeader } from "@/components/ui";
 import { Wordmark } from "@/components/Wordmark";
 import { MEMBERSHIP_COLUMNS, type MembershipRow } from "@/lib/billing/membership";
+import { isNativeRequest } from "@/lib/native-server";
 import type { ReferralStatus } from "@/lib/referral";
 import { requireUser } from "@/lib/supabase/server";
 
@@ -56,7 +57,7 @@ export default async function ProfilePage() {
           Your profile settings could not be loaded, so defaults are shown. Your splits and workouts are not affected.
         </p>
       ) : null}
-      <ProfileForm userId={userId} email={email} profile={data ?? defaults} membership={(membership as MembershipRow) ?? null} referral={referral} isAdmin={isAdmin === true} reminderEmails={(emailPrefs as { reminder_emails?: boolean } | null)?.reminder_emails ?? null} trainingDays={trainingDays} support={support} />
+      <ProfileForm userId={userId} email={email} profile={data ?? defaults} membership={(membership as MembershipRow) ?? null} referral={referral} isAdmin={isAdmin === true} reminderEmails={(emailPrefs as { reminder_emails?: boolean } | null)?.reminder_emails ?? null} trainingDays={trainingDays} support={support} native={await isNativeRequest()} />
       <div className="mt-12 text-center">
         <Wordmark size="sm" className="text-muted" />
         <p className="text-xs text-faint">Workout Planner &amp; Tracker</p>

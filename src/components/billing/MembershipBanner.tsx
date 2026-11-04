@@ -3,10 +3,22 @@ import type { MembershipState } from "@/lib/billing/membership";
 import { YEARLY_PER_MONTH } from "@/lib/billing/plans";
 import { REFERRAL_DAYS } from "@/lib/referral";
 import { buttonClass, cx } from "../styles";
-import { ManageBillingButton } from "./ManageBillingButton";
+import { ManageSubscription } from "./ManageSubscription";
 
 /** Train screen: trial countdown (with the invite offer), trial ended, or a failed payment. Nothing otherwise. */
-export function MembershipBanner({ state, invite = false }: { state: MembershipState; invite?: boolean }) {
+export function MembershipBanner({
+  state,
+  invite = false,
+  source = null,
+  native = false,
+}: {
+  state: MembershipState;
+  invite?: boolean;
+  /** Who takes the payments (migration 37): a failed Apple payment is fixed in the App Store. */
+  source?: "stripe" | "apple" | null;
+  /** In the iOS app, prices come from the App Store, so none are quoted here. */
+  native?: boolean;
+}) {
   if (state.kind === "trial") {
     const urgent = state.daysLeft <= 3;
     return (
@@ -20,7 +32,7 @@ export function MembershipBanner({ state, invite = false }: { state: MembershipS
         >
           <span>
             <span className="font-semibold">{state.daysLeft === 1 ? "Last day" : `${state.daysLeft} days left`}</span>
-            <span className="text-muted"> of your free trial{urgent ? ` · keep training from ${YEARLY_PER_MONTH}/month` : ""}</span>
+            <span className="text-muted"> of your free trial{urgent && !native ? ` · keep training from ${YEARLY_PER_MONTH}/month` : ""}</span>
           </span>
           <span className="shrink-0 font-medium text-accent-text">See plans</span>
         </Link>
@@ -46,8 +58,11 @@ export function MembershipBanner({ state, invite = false }: { state: MembershipS
   if (state.kind === "paid" && state.billingIssue) {
     return (
       <section className="mt-2 rounded-2xl border border-warn/40 px-4 py-3 text-sm">
-        <p><span className="font-semibold">Your last payment didn’t go through.</span> <span className="text-muted">Update your card to keep your membership.</span></p>
-        <div className="mt-2"><ManageBillingButton label="Update card" size="sm" /></div>
+        <p>
+          <span className="font-semibold">Your last payment didn’t go through.</span>{" "}
+          <span className="text-muted">{source === "apple" ? "Update your payment method with Apple to keep your membership." : "Update your card to keep your membership."}</span>
+        </p>
+        <div className="mt-2"><ManageSubscription source={source} native={native} label={source === "apple" ? "Update payment" : "Update card"} size="sm" /></div>
       </section>
     );
   }
