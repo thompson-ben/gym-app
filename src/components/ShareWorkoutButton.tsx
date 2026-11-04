@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import type { ShareCard } from "@/lib/share-card";
+import { isNativeApp } from "@/lib/native";
+import { shareFileNatively } from "@/lib/native-files";
 import { trackDetail } from "@/lib/track";
 import { Button, ErrorNote } from "./ui";
 
@@ -148,7 +150,10 @@ export function ShareWorkoutButton({ card, fileName }: { card: ShareCard; fileNa
       const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/png"));
       if (!blob) throw new Error("no image");
       const file = new File([blob], `${fileName}.png`, { type: "image/png" });
-      if (navigator.canShare?.({ files: [file] })) {
+      if (isNativeApp()) {
+        // The iOS app's web view has no Web Share or downloads: iOS's own share sheet instead.
+        await shareFileNatively(blob, file.name, "My workout");
+      } else if (navigator.canShare?.({ files: [file] })) {
         await navigator.share({ files: [file] });
       } else {
         const url = URL.createObjectURL(blob);

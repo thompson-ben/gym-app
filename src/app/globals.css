@@ -189,6 +189,53 @@ input[type="number"]::-webkit-outer-spin-button {
 }
 .sm-burst > span { animation: sm-burst 900ms cubic-bezier(0.2, 0.7, 0.3, 1) both; }
 
+/* Opening the iOS app (LaunchIntro): the native splash's wordmark, drawn at the same size and
+   place (the splash image is 2732 px square, aspect-filled, with the wordmark 260 px high), then
+   a light sweeps across it, the dot pulses, and it all lifts away. */
+.sm-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #131416;
+  pointer-events: none;
+  /* If the page's script never runs, it still gets out of the way. */
+  animation: sm-intro-out 300ms ease-in 4s forwards;
+}
+.sm-intro[hidden] { display: none; }
+.sm-intro-word {
+  font-size: calc(100vh * 260 / 2732);
+  font-weight: 700;
+  letter-spacing: -0.045em;
+  line-height: 1;
+  color: #eaebed;
+}
+.sm-intro-dot { display: inline-block; color: #c3ed89; transform-origin: 50% 85%; }
+.sm-intro.is-playing .sm-intro-letters {
+  background: linear-gradient(100deg, #eaebed 38%, #ffffff 50%, #eaebed 62%) 100% 0 / 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: sm-intro-sheen 650ms ease-in-out 150ms both;
+}
+.sm-intro.is-playing .sm-intro-dot { animation: sm-intro-dot 480ms cubic-bezier(0.3, 1.5, 0.5, 1) 380ms both; }
+.sm-intro.is-leaving { animation: sm-intro-out 300ms ease-in forwards; }
+.sm-intro.is-leaving .sm-intro-word { transform: scale(1.06); transition: transform 300ms ease-in; }
+@keyframes sm-intro-sheen {
+  from { background-position: 100% 0; }
+  to { background-position: 0% 0; }
+}
+@keyframes sm-intro-dot {
+  0% { transform: scale(1); text-shadow: none; }
+  45% { transform: scale(1.5); text-shadow: 0 0 0.3em rgb(195 237 137 / 0.9); }
+  100% { transform: scale(1); text-shadow: 0 0 0.12em rgb(195 237 137 / 0.35); }
+}
+@keyframes sm-intro-out {
+  to { opacity: 0; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .sm-burst { display: none; }
 

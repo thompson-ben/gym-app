@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 import { ConsentBanner } from "@/components/ConsentBanner";
+import { InlineScript, LaunchIntro } from "@/components/LaunchIntro";
+import { LAUNCH_INTRO_SCRIPT, LaunchIntroOverlay } from "@/components/LaunchIntroOverlay";
 import { VisitTracker } from "@/components/VisitTracker";
 import { SITE_URL } from "@/lib/site";
 import "./globals.css";
@@ -39,6 +41,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en-GB">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <LaunchIntroOverlay />
+        <InlineScript html={LAUNCH_INTRO_SCRIPT} />
+        <LaunchIntro />
         {children}
         <ServiceWorkerRegister />
         <VisitTracker />
