@@ -331,14 +331,14 @@ export function ProfileForm({
       <section>
         <SectionTitle>Your data</SectionTitle>
         <div className="divide-y divide-line overflow-hidden rounded-3xl border border-line bg-surface">
-          <ExportLink href="/api/export?format=csv" fallbackName="setmodo-export.csv" className="flex min-h-13 items-center gap-3 px-4 py-3 hover:bg-surface-2/50">
+          <ExportLink href="/api/export?format=csv" fallbackName="setmodo-export.csv" className="flex min-h-13 flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 hover:bg-surface-2/50">
             <span className="min-w-0 flex-1">
               <span className="block font-medium">Export as spreadsheet</span>
               <span className="block text-sm text-muted">Every completed set as a CSV file. Opens in Excel or Google Sheets.</span>
             </span>
             <IconChevronRight className="shrink-0 text-faint" />
           </ExportLink>
-          <ExportLink href="/api/export?format=json" fallbackName="setmodo-export.json" className="flex min-h-13 items-center gap-3 px-4 py-3 hover:bg-surface-2/50">
+          <ExportLink href="/api/export?format=json" fallbackName="setmodo-export.json" className="flex min-h-13 flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 hover:bg-surface-2/50">
             <span className="min-w-0 flex-1">
               <span className="block font-medium">Export everything</span>
               <span className="block text-sm text-muted">Splits, workouts, history and settings as a JSON file.</span>

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { isNativeApp } from "@/lib/native";
+import { reportClientError } from "@/lib/monitoring";
 import { shareDownload } from "@/lib/native-files";
 
 /**
@@ -18,14 +19,16 @@ export function ExportLink({ href, fallbackName, className, children }: { href: 
     try {
       await shareDownload(href, fallbackName);
       setState("idle");
-    } catch {
+    } catch (error) {
+      reportClientError(error);
       setState("error");
     }
   }
+  // In a row (flex-wrap), basis-full puts the message on its own line under the text.
   return (
     <a href={href} download onClick={onClick} aria-busy={state === "busy" || undefined} className={className}>
       {children}
-      {state === "error" ? <span role="alert" className="block text-sm text-danger">Couldn’t export just now. Please try again.</span> : null}
+      {state === "error" ? <span role="alert" className="block basis-full text-sm text-danger">Couldn’t export just now. Please try again.</span> : null}
     </a>
   );
 }
