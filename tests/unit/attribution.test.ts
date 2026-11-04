@@ -2,11 +2,11 @@ import { describe, expect, it } from "vitest";
 import { decodeTouch, deviceFromUserAgent, encodeTouch, isBot, isPublicPath, readTouch } from "@/lib/attribution";
 
 const now = new Date("2026-10-07T12:00:00Z");
-const read = (url: string, referrer = "") => readTouch(new URL(url), referrer, "notchlift.com", now);
+const read = (url: string, referrer = "") => readTouch(new URL(url), referrer, "setmodo.com", now);
 
 describe("attribution", () => {
   it("reads campaign tags and Facebook ad clicks without keeping the click id", () => {
-    const t = read("https://notchlift.com/?utm_source=facebook&utm_medium=paid&utm_campaign=launch-ppl&fbclid=IwAR123secret", "https://l.facebook.com/");
+    const t = read("https://setmodo.com/?utm_source=facebook&utm_medium=paid&utm_campaign=launch-ppl&fbclid=IwAR123secret", "https://l.facebook.com/");
     expect(t).toEqual({
       landing_path: "/",
       utm_source: "facebook",
@@ -20,18 +20,18 @@ describe("attribution", () => {
   });
 
   it("uses the referring site, ignores our own, and treats a plain visit as direct", () => {
-    expect(read("https://notchlift.com/", "https://www.google.com/")?.referrer_host).toBe("www.google.com");
-    expect(read("https://notchlift.com/", "https://notchlift.com/privacy")).toBeNull();
-    expect(read("https://notchlift.com/")).toBeNull();
+    expect(read("https://setmodo.com/", "https://www.google.com/")?.referrer_host).toBe("www.google.com");
+    expect(read("https://setmodo.com/", "https://setmodo.com/privacy")).toBeNull();
+    expect(read("https://setmodo.com/")).toBeNull();
   });
 
   it("labels shared invite and split links, with their tokens blanked", () => {
-    expect(read("https://notchlift.com/join/Ab3_x-9QkLmN0pQrStUvWxYz")).toMatchObject({ utm_source: "group-invite", landing_path: "/join/[token]" });
-    expect(read("https://notchlift.com/s/Ab3_x-9QkLmN0pQrStUvWxYz")).toMatchObject({ utm_source: "split-share", landing_path: "/s/[token]" });
+    expect(read("https://setmodo.com/join/Ab3_x-9QkLmN0pQrStUvWxYz")).toMatchObject({ utm_source: "group-invite", landing_path: "/join/[token]" });
+    expect(read("https://setmodo.com/s/Ab3_x-9QkLmN0pQrStUvWxYz")).toMatchObject({ utm_source: "split-share", landing_path: "/s/[token]" });
   });
 
   it("round-trips through the cookie and survives junk", () => {
-    const t = read("https://notchlift.com/?utm_source=tiktok&utm_campaign=a%20b%3Bc")!;
+    const t = read("https://setmodo.com/?utm_source=tiktok&utm_campaign=a%20b%3Bc")!;
     expect(decodeTouch(encodeTouch(t))).toEqual(t);
     expect(decodeTouch("not json")).toBeNull();
     expect(decodeTouch(undefined)).toBeNull();
@@ -62,10 +62,10 @@ describe("admin percentages", () => {
 
 describe("invite links", () => {
   it("keeps a valid invite code and labels the source as referral", () => {
-    expect(read("https://notchlift.com/?ref=ab12cd34")).toBeNull(); // contains 1: not a valid code
-    const t = read("https://notchlift.com/?ref=abcd2345");
+    expect(read("https://setmodo.com/?ref=ab12cd34")).toBeNull(); // contains 1: not a valid code
+    const t = read("https://setmodo.com/?ref=abcd2345");
     expect(t).toMatchObject({ ref: "ABCD2345", utm_source: "referral", landing_path: "/" });
-    expect(read("https://notchlift.com/?ref=ABCD2345&utm_source=instagram")).toMatchObject({ ref: "ABCD2345", utm_source: "instagram" });
-    expect(read("https://notchlift.com/?ref=<script>")).toBeNull();
+    expect(read("https://setmodo.com/?ref=ABCD2345&utm_source=instagram")).toMatchObject({ ref: "ABCD2345", utm_source: "instagram" });
+    expect(read("https://setmodo.com/?ref=<script>")).toBeNull();
   });
 });

@@ -4,7 +4,7 @@ import { db, newUser, seedSplit, signIn } from "./helpers";
 test("a new account is welcomed, can start from a template and train straight away", async ({ page }) => {
   const user = await newUser("first-run");
   await signIn(page, user);
-  await expect(page.getByRole("heading", { name: "Welcome to NotchLift" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Welcome to Setmodo" })).toBeVisible();
   await page.getByRole("button", { name: "Start from a template" }).click();
   await page.getByRole("button", { name: /Full Body \(3 days\)/ }).click();
   await expect(page.getByText("Back squat · Barbell bench press")).toBeVisible();
@@ -29,18 +29,18 @@ test("feedback is sent with the screen it came from", async ({ page }) => {
   expect(rows).toEqual([{ kind: "idea", message: "Would love a dark-green theme", page: "/progress" }]);
 });
 
-test("phone browsers are shown how to add NotchLift to the Home Screen, and can dismiss it", async ({ page }) => {
+test("phone browsers are shown how to add Setmodo to the Home Screen, and can dismiss it", async ({ page }) => {
   const user = await newUser("install");
   await signIn(page, user);
-  const card = page.getByRole("button", { name: /Add NotchLift to your Home Screen/ });
+  const card = page.getByRole("button", { name: /Add Setmodo to your Home Screen/ });
   await expect(card).toBeVisible();
   await card.click();
-  await expect(page.getByRole("dialog", { name: "Add to Home Screen" })).toContainText(/Install app|Install NotchLift/);
+  await expect(page.getByRole("dialog", { name: "Add to Home Screen" })).toContainText(/Install app|Install Setmodo/);
   await page.getByRole("button", { name: "Close" }).click();
   await page.getByRole("button", { name: "Dismiss" }).click();
   await expect(card).toHaveCount(0);
   await page.reload();
-  await expect(page.getByRole("button", { name: /Add NotchLift to your Home Screen/ })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /Add Setmodo to your Home Screen/ })).toHaveCount(0);
   // Always available later from Profile.
   await page.goto("/profile");
   await page.getByRole("button", { name: /Add to Home Screen/ }).click();
@@ -90,7 +90,7 @@ test("before a first workout, Train offers to log the last session and to have B
   const card = page.getByRole("region", { name: "Trained recently?" });
   await expect(card).toBeVisible();
   const help = page.getByRole("link", { name: "Send my programme" });
-  await expect(help).toHaveAttribute("href", /^mailto:.+\?subject=Set%20up%20my%20NotchLift%20split&body=/);
+  await expect(help).toHaveAttribute("href", /^mailto:.+\?subject=Set%20up%20my%20Setmodo%20split&body=/);
   await card.getByRole("button", { name: "Log my last session" }).click();
   // The existing past-workout flow: pick when it was performed.
   await expect(page.getByRole("dialog")).toBeVisible();
@@ -102,6 +102,6 @@ test("before a first workout, Train offers to log the last session and to have B
 test("a brand-new account can ask Ben to set up its split", async ({ page }) => {
   const user = await newUser("setup-help-welcome");
   await signIn(page, user);
-  await expect(page.getByRole("heading", { name: "Welcome to NotchLift" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Welcome to Setmodo" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Send my programme" })).toBeVisible();
 });

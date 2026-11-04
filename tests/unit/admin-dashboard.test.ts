@@ -32,8 +32,8 @@ describe("admin dashboard helpers", () => {
   });
 
   it("stores double-encoded ad tags decoded", () => {
-    const url = new URL("https://notchlift.com/?utm_source=facebook&utm_campaign=NL%2B%25E2%2580%2593%2BSign-ups");
-    expect(readTouch(url, "", "notchlift.com", new Date())?.utm_campaign).toBe("NL – Sign-ups");
+    const url = new URL("https://setmodo.com/?utm_source=facebook&utm_campaign=NL%2B%25E2%2580%2593%2BSign-ups");
+    expect(readTouch(url, "", "setmodo.com", new Date())?.utm_campaign).toBe("NL – Sign-ups");
   });
 });
 

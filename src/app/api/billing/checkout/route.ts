@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 const fail = (error: string, status: number) => NextResponse.json({ error }, { status });
 
-/** Starts Stripe Checkout for the signed-in user. Card details never touch NotchLift. */
+/** Starts Stripe Checkout for the signed-in user. Card details never touch Setmodo. */
 export async function POST(request: Request) {
   const stripe = stripeClient();
   const secret = billingSecret();

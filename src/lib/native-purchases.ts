@@ -1,6 +1,6 @@
 /**
  * App Store subscriptions in the iOS app, through RevenueCat's plugin. RevenueCat is set up
- * with the NotchLift user ID, so purchases follow the account (not the device), and after a
+ * with the Setmodo user ID, so purchases follow the account (not the device), and after a
  * purchase or restore the server re-reads RevenueCat (/api/billing/apple-sync).
  *
  * NEXT_PUBLIC_REVENUECAT_IOS_KEY is RevenueCat's public Apple key ("appl_…"); it's safe in

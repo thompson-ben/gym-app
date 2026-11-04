@@ -11,8 +11,8 @@ describe("support", () => {
 
   it("names who wrote each message", () => {
     expect(authorLabel({ author: "user", admin_name: null })).toBe("You");
-    expect(authorLabel({ author: "support", admin_name: "Ben Thompson" })).toBe("Ben from NotchLift");
-    expect(authorLabel({ author: "support", admin_name: null })).toBe("NotchLift support");
+    expect(authorLabel({ author: "support", admin_name: "Ben Thompson" })).toBe("Ben from Setmodo");
+    expect(authorLabel({ author: "support", admin_name: null })).toBe("Setmodo support");
   });
 
   it("checks messages before sending and explains server errors", () => {
@@ -35,21 +35,21 @@ describe("support", () => {
   });
 
   it("emails the member the reply, escaped, with a link back to the conversation", () => {
-    const e = supportReplyEmail({ displayName: "Sam Jones", subject: "Lost <set>", reply: "Fixed it.\n\nTry again & let me know.", fromName: "Ben Thompson", threadUrl: "https://notchlift.com/profile/support/abc" });
+    const e = supportReplyEmail({ displayName: "Sam Jones", subject: "Lost <set>", reply: "Fixed it.\n\nTry again & let me know.", fromName: "Ben Thompson", threadUrl: "https://setmodo.com/profile/support/abc" });
     expect(e.subject).toBe("Re: Lost <set>");
     expect(e.html).toContain("Lost &lt;set&gt;");
     expect(e.html).not.toContain("<set>");
     expect(e.html).toContain("Try again &amp; let me know.");
-    expect(e.html).toContain("https://notchlift.com/profile/support/abc");
+    expect(e.html).toContain("https://setmodo.com/profile/support/abc");
     expect(e.text).toContain("Hi Sam,");
-    expect(e.text).toContain("Ben from NotchLift replied");
+    expect(e.text).toContain("Ben from Setmodo replied");
   });
 
   it("emails the inbox each new message with a link to Admin", () => {
-    const e = supportNoticeEmail({ email: "sam@example.com", displayName: null, subject: "Billing", topic: "Trial & payments", body: "<b>hi</b>", isReply: true, adminUrl: "https://notchlift.com/admin/support/abc" });
+    const e = supportNoticeEmail({ email: "sam@example.com", displayName: null, subject: "Billing", topic: "Trial & payments", body: "<b>hi</b>", isReply: true, adminUrl: "https://setmodo.com/admin/support/abc" });
     expect(e.subject).toBe("Support reply: Billing");
     expect(e.html).toContain("&lt;b&gt;hi&lt;/b&gt;");
-    expect(e.html).toContain("https://notchlift.com/admin/support/abc");
+    expect(e.html).toContain("https://setmodo.com/admin/support/abc");
     expect(e.text).toContain("sam@example.com");
   });
 });

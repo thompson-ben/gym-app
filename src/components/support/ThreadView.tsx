@@ -10,7 +10,7 @@ const textareaClass = "w-full rounded-2xl border border-line bg-field p-4 text-f
 
 /**
  * One support conversation with a reply box. Members reply as themselves; admins reply as
- * NotchLift (and can close the thread). Times show in the viewer's own time zone.
+ * Setmodo (and can close the thread). Times show in the viewer's own time zone.
  */
 export function ThreadView({ thread, admin = false }: { thread: SupportThread; admin?: boolean }) {
   const router = useRouter();
@@ -70,7 +70,7 @@ export function ThreadView({ thread, admin = false }: { thread: SupportThread; a
       ) : null}
 
       <form onSubmit={(e) => { e.preventDefault(); void send(false); }} className="space-y-3">
-        <label htmlFor="support-reply" className="block text-sm font-medium text-muted">{admin ? "Reply as NotchLift" : "Your reply"}</label>
+        <label htmlFor="support-reply" className="block text-sm font-medium text-muted">{admin ? "Reply as Setmodo" : "Your reply"}</label>
         <textarea id="support-reply" value={body} onChange={(e) => setBody(e.target.value)} maxLength={BODY_MAX} rows={admin ? 6 : 4} className={textareaClass} placeholder={admin ? "They’ll see this in the app and get it by email." : "Add more detail or reply"} />
         <ErrorNote>{error}</ErrorNote>
         {note ? <p className="text-sm text-muted" role="status">{note}</p> : null}

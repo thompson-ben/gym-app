@@ -2,7 +2,7 @@
  * App Store subscriptions through RevenueCat (pure, unit-tested). The iOS app buys the
  * products below; RevenueCat grants the "pro" entitlement and tells the server through its
  * webhook, and the server applies RevenueCat's view of the subscriber to the membership.
- * The RevenueCat app user ID is the NotchLift user ID.
+ * The RevenueCat app user ID is the Setmodo user ID.
  */
 
 import type { PlanId } from "./plans";
@@ -21,7 +21,7 @@ export function applePlan(productId: string | null | undefined): PlanId | null {
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-/** The NotchLift user an event is about: the app user ID, or an alias if RevenueCat merged an anonymous one. */
+/** The Setmodo user an event is about: the app user ID, or an alias if RevenueCat merged an anonymous one. */
 export function eventUserId(event: { app_user_id?: string | null; original_app_user_id?: string | null; aliases?: string[] | null }): string | null {
   for (const id of [event.app_user_id, event.original_app_user_id, ...(event.aliases ?? [])]) {
     if (id && UUID.test(id)) return id.toLowerCase();
@@ -44,7 +44,7 @@ export type RevenueCatSubscriber = {
 
 export type AppleSubscriptionState = { active: boolean; plan: PlanId | null; expiresAt: string | null; willRenew: boolean; billingIssue: boolean };
 
-/** Whether the subscriber has NotchLift now, on which plan, until when, and whether it renews. */
+/** Whether the subscriber has Setmodo Pro now, on which plan, until when, and whether it renews. */
 export function appleSubscriptionState(subscriber: RevenueCatSubscriber | null | undefined, now: Date = new Date()): AppleSubscriptionState {
   const ent = subscriber?.entitlements?.[ENTITLEMENT];
   const inactive: AppleSubscriptionState = { active: false, plan: null, expiresAt: null, willRenew: false, billingIssue: false };

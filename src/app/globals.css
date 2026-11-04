@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* NotchLift design tokens (PM look-and-feel concept). Dark is the primary experience. */
+/* Setmodo design tokens (PM look-and-feel concept). Dark is the primary experience. */
 :root {
   --bg: #131416;
   --surface: #1c2023;

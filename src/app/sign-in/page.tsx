@@ -19,7 +19,7 @@ export default async function SignInPage({ searchParams }: { searchParams: Promi
   const { data: paidPlans } = await supabase.rpc("paid_plans_live");
   const ua = (await headers()).get("user-agent") ?? "";
   // In the iOS app, web sign-in redirects can't come back (Google refuses embedded browsers, and
-  // leaving notchlift.com opens Safari): Apple uses its native sheet there, and Google is left out.
+  // leaving setmodo.com opens Safari): Apple uses its native sheet there, and Google is left out.
   const listed = parseProviders(process.env.AUTH_PROVIDERS);
   const providers = isNativeAppUserAgent(ua) ? listed.filter((p) => p === "apple") : listed;
   const inApp = inAppBrowser(ua);

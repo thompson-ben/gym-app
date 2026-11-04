@@ -18,13 +18,13 @@ describe("unsubscribe links", () => {
   });
 
   it("build the page and one-click addresses", () => {
-    expect(unsubscribePageUrl("https://notchlift.com", ID, SECRET)).toBe(`https://notchlift.com/unsubscribe?u=${ID}&t=${unsubscribeToken(ID, SECRET)}`);
-    expect(unsubscribeOneClickUrl("https://notchlift.com", ID, SECRET)).toMatch(/^https:\/\/notchlift\.com\/api\/unsubscribe\?u=/);
+    expect(unsubscribePageUrl("https://setmodo.com", ID, SECRET)).toBe(`https://setmodo.com/unsubscribe?u=${ID}&t=${unsubscribeToken(ID, SECRET)}`);
+    expect(unsubscribeOneClickUrl("https://setmodo.com", ID, SECRET)).toMatch(/^https:\/\/setmodo\.com\/api\/unsubscribe\?u=/);
   });
 
   it("add a footer link inside the email body", () => {
-    const html = withUnsubscribeFooter("<html><body><p>Hi</p></body></html>", "https://notchlift.com/unsubscribe?u=a&t=b");
-    expect(html).toContain('href="https://notchlift.com/unsubscribe?u=a&amp;t=b"');
+    const html = withUnsubscribeFooter("<html><body><p>Hi</p></body></html>", "https://setmodo.com/unsubscribe?u=a&t=b");
+    expect(html).toContain('href="https://setmodo.com/unsubscribe?u=a&amp;t=b"');
     expect(html.indexOf("Unsubscribe")).toBeLessThan(html.indexOf("</body>"));
   });
 });

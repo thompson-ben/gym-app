@@ -22,7 +22,7 @@ test("a finished workout can be shared as a story-sized image, with last time's 
   const download = page.waitForEvent("download");
   await page.getByRole("button", { name: "Share workout" }).click();
   const file = await download;
-  expect(file.suggestedFilename()).toBe("notchlift-push.png");
+  expect(file.suggestedFilename()).toBe("setmodo-push.png");
   await file.saveAs("/tmp/claude-0/-home-user-gym-app/2af1f745-bdc3-56f7-9755-fbeaf65cca57/scratchpad/preview/share-card.png");
   await expect.poll(async () =>
     (await db.query("select count(*)::int as n from analytics_events where name = 'cta_click' and detail = 'share_workout' and path = '/sessions' and created_at > now() - interval '2 minutes'")).rows[0].n,

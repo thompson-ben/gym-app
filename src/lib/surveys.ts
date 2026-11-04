@@ -16,7 +16,7 @@ type Survey = {
 
 export const SURVEYS: Record<SurveyQuestion, Survey> = {
   heard_from: {
-    title: "How did you hear about NotchLift?",
+    title: "How did you hear about Setmodo?",
     options: [
       { value: "instagram", label: "Instagram" },
       { value: "facebook", label: "Facebook" },
@@ -30,7 +30,7 @@ export const SURVEYS: Record<SurveyQuestion, Survey> = {
     thanks: "Thanks! That helps us know where to find more people like you.",
   },
   trial_pulse: {
-    title: "How’s NotchLift working for you so far?",
+    title: "How’s Setmodo working for you so far?",
     options: [
       { value: "bad", label: "Not great", emoji: "😕" },
       { value: "ok", label: "It’s OK", emoji: "🙂" },
@@ -53,7 +53,7 @@ export const SURVEYS: Record<SurveyQuestion, Survey> = {
     detailFor: "all",
     detailLabel: (a) =>
       a === "missing_feature" ? "Which feature?" : a === "other_app" ? "Which one, and what does it do better? (optional)" : a === "other" ? "Tell us more" : "Anything else? (optional)",
-    thanks: "Thanks for telling us. It helps make NotchLift better.",
+    thanks: "Thanks for telling us. It helps make Setmodo better.",
   },
 };
 

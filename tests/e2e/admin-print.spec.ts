@@ -16,10 +16,10 @@ test("admin can save the dashboard as a PDF that leaves out navigation, forms an
   const refunds = page.getByRole("region", { name: "Refund window" });
   await expect(refunds.getByText(payer.email, { exact: false })).toBeVisible();
   await expect(page.getByRole("button", { name: "Save as PDF" })).toBeVisible();
-  await expect(page.getByText(/^NotchLift · Last 7 days · Customers only.* · generated/)).toBeHidden();
+  await expect(page.getByText(/^Setmodo · Last 7 days · Customers only.* · generated/)).toBeHidden();
 
   await page.emulateMedia({ media: "print" });
-  await expect(page.getByText(/^NotchLift · Last 7 days · Customers only.* · generated/)).toBeVisible();
+  await expect(page.getByText(/^Setmodo · Last 7 days · Customers only.* · generated/)).toBeVisible();
   await expect(page.getByRole("heading", { name: "Admin", level: 1 })).toBeVisible();
   await expect(refunds.getByText("£30", { exact: true }).first()).toBeVisible();
   for (const hidden of [

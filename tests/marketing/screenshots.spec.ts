@@ -127,7 +127,7 @@ test("landing screenshots", async ({ page }) => {
   await page.goto(`/together/${groupId}`);
   await expect(page.getByText("Jordan")).toBeVisible();
   // Show the production address rather than the local test server's.
-  await page.getByLabel("Invite link").evaluate((el, token) => (el.textContent = `https://notchlift.com/join/${token}`), group!.invite_token);
+  await page.getByLabel("Invite link").evaluate((el, token) => (el.textContent = `https://setmodo.com/join/${token}`), group!.invite_token);
   await page.getByRole("heading", { name: /Invite your training partners/ }).evaluate((el) => window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 24));
   await shot(page, "together");
 
@@ -162,7 +162,7 @@ test("social preview image", async ({ browser }) => {
   await page.setContent(`<!doctype html><html><body style="margin:0">
     <div style="width:1200px;height:630px;box-sizing:border-box;background:radial-gradient(60% 70% at 78% 40%,rgba(195,237,137,.18),transparent),#131416;color:#eaebed;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;display:flex;align-items:center;padding:0 80px;overflow:hidden;position:relative">
       <div style="width:500px;position:relative;z-index:1">
-        <div style="font-size:44px;font-weight:700;letter-spacing:-2px">notchlift<span style="color:#c3ed89">.</span></div>
+        <div style="font-size:44px;font-weight:700;letter-spacing:-2px">setmodo<span style="color:#c3ed89">.</span></div>
         <div style="margin-top:38px;font-size:60px;line-height:1.05;font-weight:700;letter-spacing:-2.5px">Know exactly what to lift next.</div>
         <div style="margin-top:26px;font-size:26px;line-height:1.4;color:#a9aeb3">Plan your split, log every set, and know when to add weight.</div>
       </div>

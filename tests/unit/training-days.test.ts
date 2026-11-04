@@ -25,7 +25,7 @@ describe("training days", () => {
 });
 
 describe("training-day email", () => {
-  const base = { displayName: "Sam", trainingDays: [1, 4], splitName: "Upper / Lower", workoutName: "Upper A", remindersSent: 0, siteUrl: "https://notchlift.com" };
+  const base = { displayName: "Sam", trainingDays: [1, 4], splitName: "Upper / Lower", workoutName: "Upper A", remindersSent: 0, siteUrl: "https://setmodo.com" };
 
   it("names today's waiting workout and the days they chose", () => {
     const m = trainingDayEmail(base, new Date("2026-10-19T09:00:00Z"));
@@ -33,7 +33,7 @@ describe("training-day email", () => {
     expect(m.html).toContain("It’s Monday, one of your training days");
     expect(m.html).toContain("<strong>Upper A</strong>");
     expect(m.html).toContain("You said you train on Mondays and Thursdays");
-    expect(m.html).toContain("https://notchlift.com/train");
+    expect(m.html).toContain("https://setmodo.com/train");
     expect(m.text).toContain("until your first workout, then stop");
   });
 
@@ -48,27 +48,27 @@ describe("training-day email", () => {
 
 describe("week-one check-in email", () => {
   it("reads like a personal note and says how far they got", () => {
-    const m = checkinEmail({ displayName: "Sam Smith", trainingDays: [1, 4], hasSplit: true, splitName: "Push / Pull / Legs", siteUrl: "https://notchlift.com" });
-    expect(m.subject).toBe("Quick question about NotchLift");
+    const m = checkinEmail({ displayName: "Sam Smith", trainingDays: [1, 4], hasSplit: true, splitName: "Push / Pull / Legs", siteUrl: "https://setmodo.com" });
+    expect(m.subject).toBe("Quick question about Setmodo");
     expect(m.text).toMatch(/^Hi Sam,/);
-    expect(m.text).toContain("I’m Ben, I built NotchLift");
+    expect(m.text).toContain("I’m Ben, I built Setmodo");
     expect(m.text).toContain("set up Push / Pull / Legs and planned to train on Mondays and Thursdays");
     expect(m.text).toContain("- Not sure how to use it");
     expect(m.html).not.toContain("<table"); // no banner or button
   });
 
   it("covers no split yet and escapes names", () => {
-    const none = checkinEmail({ displayName: null, trainingDays: null, hasSplit: false, splitName: null, siteUrl: "https://notchlift.com" });
+    const none = checkinEmail({ displayName: null, trainingDays: null, hasSplit: false, splitName: null, siteUrl: "https://setmodo.com" });
     expect(none.text).toMatch(/^Hi,/);
     expect(none.text).toContain("haven’t picked a split");
     expect(none.text).toContain("I’ll set a split up for you");
-    const started = checkinEmail({ displayName: "<i>", trainingDays: [], hasSplit: true, splitName: null, siteUrl: "https://notchlift.com" });
+    const started = checkinEmail({ displayName: "<i>", trainingDays: [], hasSplit: true, splitName: null, siteUrl: "https://setmodo.com" });
     expect(started.text).toContain("started building a split");
     expect(started.html).not.toContain("<i>");
   });
 
   it("keeps the sending address and changes only the name", () => {
-    expect(fromWithName("NotchLift <hello@notchlift.com>", "Ben from NotchLift")).toBe("Ben from NotchLift <hello@notchlift.com>");
-    expect(fromWithName("hello@notchlift.com", "Ben")).toBe("Ben <hello@notchlift.com>");
+    expect(fromWithName("Setmodo <hello@setmodo.com>", "Ben from Setmodo")).toBe("Ben from Setmodo <hello@setmodo.com>");
+    expect(fromWithName("hello@setmodo.com", "Ben")).toBe("Ben <hello@setmodo.com>");
   });
 });

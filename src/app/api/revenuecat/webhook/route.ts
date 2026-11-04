@@ -16,7 +16,7 @@ function authorized(header: string | null): boolean {
 }
 
 /**
- * RevenueCat → NotchLift, for App Store subscriptions bought in the iOS app. RevenueCat sends
+ * RevenueCat → Setmodo, for App Store subscriptions bought in the iOS app. RevenueCat sends
  * "Authorization: Bearer <REVENUECAT_WEBHOOK_AUTH>". Real payments and refunds are recorded,
  * then the membership is brought in line with RevenueCat. Failures answer 500 so it retries.
  */
