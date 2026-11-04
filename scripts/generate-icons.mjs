@@ -32,11 +32,17 @@ await page.setViewportSize({ width: 1024, height: 1024 });
 await page.setContent(icon(1024, { maskable: true }), { waitUntil: "networkidle" });
 await page.evaluate(() => document.fonts.ready);
 await page.screenshot({ path: IOS + "AppIcon.appiconset/AppIcon-512@2x.png", omitBackground: false });
-// Launch splash: the app background with a small mark, shown for a moment while the site loads.
+// Launch splash: only the green dot, centred, exactly where the intro starts (LaunchIntroOverlay
+// and .sm-intro in globals.css): the dot then glides into place as "setmodo" appears.
 await page.setViewportSize({ width: 2732, height: 2732 });
 await page.setContent(`<!doctype html><html><head>${FONT}</head><body style="margin:0;width:2732px;height:2732px;background:#131416;display:flex;align-items:center;justify-content:center;font-family:Geist,Inter,Helvetica,Arial,sans-serif">
-<span style="color:#eaebed;font-weight:700;font-size:260px;letter-spacing:-0.045em">setmodo<span style="color:#c3ed89">.</span></span></body></html>`, { waitUntil: "networkidle" });
+<span style="display:flex;align-items:baseline;color:#eaebed;font-weight:700;font-size:260px;letter-spacing:-0.045em;line-height:1"><span style="opacity:0">setmodo</span><span id="dot" style="display:inline-block;color:#c3ed89;text-shadow:0 0 0.25em rgb(195 237 137 / 0.6)">.</span></span></body></html>`, { waitUntil: "networkidle" });
 await page.evaluate(() => document.fonts.ready);
+await page.evaluate(() => {
+  const dot = document.getElementById("dot");
+  const r = dot.getBoundingClientRect();
+  dot.style.transform = `translateX(${2732 / 2 - (r.left + r.width / 2)}px)`;
+});
 for (const name of ["splash-2732x2732.png", "splash-2732x2732-1.png", "splash-2732x2732-2.png"]) {
   await page.screenshot({ path: IOS + "Splash.imageset/" + name, omitBackground: false });
 }
