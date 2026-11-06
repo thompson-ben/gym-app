@@ -75,7 +75,17 @@ export type RevenueCatEvent = {
   currency?: string | null;
   purchased_at_ms?: number | null;
   cancel_reason?: string | null;
+  /** TRANSFER events: the purchase moved from these app user IDs to those (Restore on another account). */
+  transferred_from?: string[] | null;
+  transferred_to?: string[] | null;
 };
+
+/** Everyone a TRANSFER event touches: the account that lost the purchase and the one that gained it. */
+export function transferUserIds(event: Pick<RevenueCatEvent, "type" | "transferred_from" | "transferred_to">): string[] {
+  if (event.type !== "TRANSFER") return [];
+  const ids = [...(event.transferred_from ?? []), ...(event.transferred_to ?? [])].filter((id) => UUID.test(id)).map((id) => id.toLowerCase());
+  return [...new Set(ids)];
+}
 
 /** A real App Store payment to record for the dashboard (never a sandbox or TestFlight one). */
 export function applePayment(e: RevenueCatEvent): { transaction: string; pence: number; currency: string; plan: PlanId | null; paidAt: string } | null {
