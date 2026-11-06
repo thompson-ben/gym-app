@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { applePayment, applePlan, appleSubscriptionState, eventUserId, isAppleRefund } from "@/lib/billing/apple";
+import { applePayment, applePlan, appleSubscriptionState, eventUserId, isAppleRefund, transferUserIds } from "@/lib/billing/apple";
 
 const now = new Date("2026-11-01T12:00:00Z");
 const user = "0b6f1c1e-2f4a-4c3b-9d7e-1a2b3c4d5e6f";
@@ -52,5 +52,17 @@ describe("App Store subscriptions", () => {
 
     expect(isAppleRefund({ type: "CANCELLATION", cancel_reason: "CUSTOMER_SUPPORT", transaction_id: "2000000123" })).toBe(true);
     expect(isAppleRefund({ type: "CANCELLATION", cancel_reason: "UNSUBSCRIBE", transaction_id: "2000000123" })).toBe(false);
+  });
+});
+
+describe("Restore purchases on another account (TRANSFER)", () => {
+  const a = "0eb939c4-812d-4d71-88db-faf5dc7a7705";
+  const b = "1FB939C4-812D-4D71-88DB-FAF5DC7A7706";
+  it("re-checks both the account the purchase left and the one it moved to", () => {
+    expect(transferUserIds({ type: "TRANSFER", transferred_from: [a, "$RCAnonymousID:abc"], transferred_to: [b] })).toEqual([a, b.toLowerCase()]);
+    expect(transferUserIds({ type: "TRANSFER", transferred_from: [a], transferred_to: [a] })).toEqual([a]);
+  });
+  it("ignores every other event", () => {
+    expect(transferUserIds({ type: "RENEWAL", transferred_from: [a], transferred_to: [b] })).toEqual([]);
   });
 });

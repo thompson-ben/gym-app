@@ -1,6 +1,6 @@
 import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
-import { applePayment, eventUserId, isAppleRefund, type RevenueCatEvent } from "@/lib/billing/apple";
+import { applePayment, eventUserId, isAppleRefund, transferUserIds, type RevenueCatEvent } from "@/lib/billing/apple";
 import { syncAppleSubscription } from "@/lib/billing/revenuecat";
 import { billingSecret } from "@/lib/billing/server";
 import { supabaseAnon } from "@/lib/supabase/anon";
@@ -28,6 +28,14 @@ export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as { event?: RevenueCatEvent } | null;
   const event = body?.event;
   if (!event) return NextResponse.json({ error: "bad request" }, { status: 400 });
+  // Restore purchases on another account moves the subscription: re-check both accounts, so the
+  // one it left doesn't stay a member.
+  if (event.type === "TRANSFER") {
+    for (const id of transferUserIds(event)) {
+      if ((await syncAppleSubscription(id)) === "error") return NextResponse.json({ error: "sync failed" }, { status: 500 });
+    }
+    return NextResponse.json({ ok: true });
+  }
   const userId = eventUserId(event);
   // Test events from the dashboard, and anonymous buyers who never signed in: nothing to do.
   if (event.type === "TEST" || !userId) return NextResponse.json({ ok: true });
