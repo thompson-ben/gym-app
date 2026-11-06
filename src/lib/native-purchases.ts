@@ -16,6 +16,9 @@ export const appStorePurchasesAvailable = () => Boolean(API_KEY);
 
 let configuredFor: string | null = null;
 
+// Returned inside an object: a Capacitor plugin answers to every property name, including
+// "then", so returning (or awaiting) the plugin itself makes JavaScript treat it as a promise
+// and wait for a native "then" call that never answers.
 async function purchases(userId: string) {
   const { Purchases } = await import("@revenuecat/purchases-capacitor");
   if (!API_KEY) throw new Error("not_configured");
@@ -25,14 +28,14 @@ async function purchases(userId: string) {
     else await Purchases.configure({ apiKey: API_KEY, appUserID: userId });
     configuredFor = userId;
   }
-  return Purchases;
+  return { p: Purchases };
 }
 
 export type AppStorePlan = { plan: PlanId; price: string; title: string };
 
 /** The two plans as the App Store sells them, with prices in the person's own currency. */
 export async function appStorePlans(userId: string): Promise<AppStorePlan[]> {
-  const p = await purchases(userId);
+  const { p } = await purchases(userId);
   const { products } = await p.getProducts({ productIdentifiers: Object.values(APPLE_PRODUCTS) });
   return (Object.keys(APPLE_PRODUCTS) as PlanId[]).flatMap((plan) => {
     const product = products.find((x) => x.identifier === APPLE_PRODUCTS[plan]);
@@ -48,7 +51,7 @@ async function syncMembership(): Promise<boolean> {
 export type PurchaseResult = { ok: true } | { ok: false; reason: "cancelled" | "failed" | "pending" };
 
 export async function buyAppStorePlan(userId: string, plan: PlanId): Promise<PurchaseResult> {
-  const p = await purchases(userId);
+  const { p } = await purchases(userId);
   try {
     const { products } = await p.getProducts({ productIdentifiers: [APPLE_PRODUCTS[plan]] });
     const product = products[0];
@@ -66,7 +69,7 @@ export async function buyAppStorePlan(userId: string, plan: PlanId): Promise<Pur
 
 /** Apple requires a way to restore purchases (a new phone, or reinstalling the app). */
 export async function restoreAppStorePurchases(userId: string): Promise<boolean> {
-  const p = await purchases(userId);
+  const { p } = await purchases(userId);
   await p.restorePurchases();
   return syncMembership();
 }
