@@ -40,6 +40,10 @@ const config: CapacitorConfig = {
       backgroundColor: "#131416",
       showSpinner: false,
     },
+    // The rest-over alert also sounds and shows while the app is open (src/lib/native-alerts.ts).
+    LocalNotifications: {
+      presentationOptions: ["sound", "banner", "list"],
+    },
   },
 };
 

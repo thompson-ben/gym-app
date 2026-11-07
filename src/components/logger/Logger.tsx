@@ -22,6 +22,7 @@ import {
 import { formatDate, formatDuration, formatTime } from "@/lib/format";
 import { hasUnsyncedChanges, removeRecord, type LocalRecord } from "@/lib/session/store";
 import { adjustTimer, clockNow, startTimer } from "@/lib/timer";
+import { cancelRestAlert, restAlertAt, scheduleRestAlert } from "@/lib/native-alerts";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { loadTargets } from "@/lib/targets";
 import { friendlyError } from "@/lib/supabase/errors";
@@ -257,6 +258,7 @@ export default function Logger({ userId, initial, timeZone }: { userId: string; 
         return;
       }
       sync?.stop();
+      void cancelRestAlert();
       removeRecord(window.localStorage, userId, doc.id);
       router.replace(`/sessions/${doc.id}?finished=1`);
       router.refresh();
@@ -280,6 +282,7 @@ export default function Logger({ userId, initial, timeZone }: { userId: string; 
       return;
     }
     engine.current?.stop();
+    void cancelRestAlert();
     removeRecord(window.localStorage, userId, doc.id);
     router.replace(savedForGym ? `/train?ready=${encodeURIComponent(doc.template_name)}` : "/train");
     router.refresh();
@@ -291,6 +294,14 @@ export default function Logger({ userId, initial, timeZone }: { userId: string; 
   const notesEntry = notesFor && notesFor !== "session" ? doc.exercises.find((e) => e.id === notesFor) : null;
   const progress = summary.plannedSets ? summary.completedSets / summary.plannedSets : 0;
   const closed = status.kind === "closed";
+
+  // In the iOS app, an alert when rest ends (sound, vibration, lock screen), moved or cancelled
+  // whenever the rest changes or the workout closes.
+  const restAt = restAlertAt(record.rest, closed);
+  useEffect(() => {
+    if (restAt) void scheduleRestAlert(restAt, doc.template_name);
+    else void cancelRestAlert();
+  }, [restAt, doc.template_name]);
 
   return (
     <div className={cx("mx-auto w-full max-w-xl px-4 sm:px-6", record.rest ? "pb-[calc(15rem+env(safe-area-inset-bottom))]" : "pb-[calc(11rem+env(safe-area-inset-bottom))]")}>

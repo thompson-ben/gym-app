@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { formatDuration } from "@/lib/format";
+import { buzz } from "@/lib/native-alerts";
 import { remainingSeconds, type RestTimer as Timer } from "@/lib/timer";
 import { cx } from "../styles";
 import { Button } from "../ui";
@@ -42,7 +43,7 @@ export function RestTimerBar({
   useEffect(() => {
     if (finished && !buzzed.current) {
       buzzed.current = true;
-      navigator.vibrate?.([120, 80, 120]);
+      buzz("done");
     }
     if (!finished) buzzed.current = false;
   }, [finished]);
