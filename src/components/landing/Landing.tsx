@@ -8,6 +8,7 @@ import { buttonClass, cx } from "../styles";
 import { Wordmark } from "../Wordmark";
 import { PLANS, YEARLY_PER_MONTH, YEARLY_SAVING_PCT } from "@/lib/billing/plans";
 import { COMPANY, COMPANY_LINE, CONTACT_EMAIL } from "@/lib/company";
+import { APP_STORE_URL } from "@/lib/site";
 import { PricingSeen } from "./PricingSeen";
 import { ScrollDepth, TrackedLink } from "./Tracked";
 
@@ -26,6 +27,16 @@ export function Phone({ src, alt, priority, className }: { src: string; alt: str
         <Image src={src} alt={alt} width={1170} height={2532} priority={priority} sizes="(min-width: 1024px) 320px, 70vw" className="block h-auto w-full" />
       </div>
     </div>
+  );
+}
+
+/** Apple's official "Download on the App Store" badge (public/badges), unaltered as Apple requires. */
+function AppStoreBadge({ track, className }: { track: string; className?: string }) {
+  return (
+    <TrackedLink track={track} href={APP_STORE_URL} target="_blank" rel="noopener" className={cx("shrink-0", className)}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/badges/app-store-black.svg" alt="Download on the App Store" width={150} height={50} className="block h-[50px] w-auto" />
+    </TrackedLink>
   );
 }
 
@@ -128,7 +139,7 @@ const GRID = [
 const FAQ: { q: string; a: ReactNode }[] = [
   {
     q: "Is there an app to download?",
-    a: "Our iPhone app is coming to the App Store very soon. Until then, and on Android or a computer, Setmodo runs in your browser: add it to your home screen and it opens full screen with its own icon, just like any other app. Your account and history are the same everywhere.",
+    a: "Yes, on iPhone: search for Setmodo on the App Store. On Android or a computer, Setmodo runs in your browser: add it to your home screen and it opens full screen with its own icon. Your account and history are the same everywhere, so you can switch between them any time.",
   },
   {
     q: "What happens when my trial ends?",
@@ -213,7 +224,10 @@ export function Landing({ paidPlans = false }: { paidPlans?: boolean }) {
                 <TrackedLink track="hero_try" href="/try" className={buttonClass("secondary", "lg", "w-full px-7 sm:w-auto")}>Try a workout, no sign-up</TrackedLink>
               </div>
               <p className="mt-5 text-sm text-faint">{paidPlans ? "14-day free trial" : "Free during early access"} · No card needed</p>
-              <p className="mt-1.5 hidden text-sm text-faint lg:block">Works in your phone’s browser today. iPhone app coming soon to the App Store.</p>
+              <div className="mt-5 hidden items-center gap-4 lg:flex">
+                <AppStoreBadge track="hero_app_store" />
+                <p className="text-sm text-faint">On Android or a computer, it runs in your browser.</p>
+              </div>
             </div>
             <div className="relative mx-auto -mt-4 h-[31rem] w-full max-w-[22rem] sm:h-[36rem] sm:max-w-[26rem] lg:mt-0">
               <Phone src="/landing/target-hit.png" alt="" className="absolute top-12 right-0 w-[56%] rotate-[4deg]" />
@@ -222,7 +236,8 @@ export function Landing({ paidPlans = false }: { paidPlans?: boolean }) {
             {/* On phones the product shows first; the detail follows it. */}
             <div className="-mt-6 text-center lg:hidden">
               <p className="mx-auto max-w-xl text-lg leading-relaxed text-muted text-pretty">{HERO_BODY}</p>
-              <p className="mt-3 text-sm text-faint">Works in your phone’s browser today. iPhone app coming soon to the App Store.</p>
+              <AppStoreBadge track="hero_app_store_mobile" className="mt-5 inline-block" />
+              <p className="mt-3 text-sm text-faint">On Android? Setmodo runs in your phone’s browser; add it to your home screen.</p>
             </div>
           </div>
         </section>

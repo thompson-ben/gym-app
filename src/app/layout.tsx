@@ -5,7 +5,7 @@ import { ConsentBanner } from "@/components/ConsentBanner";
 import { InlineScript, LaunchIntro } from "@/components/LaunchIntro";
 import { LAUNCH_INTRO_SCRIPT, LaunchIntroOverlay } from "@/components/LaunchIntroOverlay";
 import { VisitTracker } from "@/components/VisitTracker";
-import { SITE_URL } from "@/lib/site";
+import { APP_STORE_ID, SITE_URL } from "@/lib/site";
 import "./globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
@@ -18,6 +18,8 @@ export const metadata: Metadata = {
   openGraph: { type: "website", siteName: "Setmodo", url: "/", locale: "en_GB" },
   twitter: { card: "summary_large_image" },
   applicationName: "Setmodo",
+  // Safari on iPhone shows its "Open in the App Store" banner (not in the app itself).
+  itunes: { appId: APP_STORE_ID },
   appleWebApp: { capable: true, title: "Setmodo", statusBarStyle: "black-translucent" },
   icons: { icon: [{ url: "/icons/favicon-32.png?v=s", sizes: "32x32" }, { url: "/icons/icon-192.png?v=s", sizes: "192x192" }], apple: "/icons/apple-touch-icon.png?v=s" },
   formatDetection: { telephone: false },
