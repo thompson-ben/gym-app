@@ -48,7 +48,6 @@ import {
 } from "@/lib/admin";
 import { emailConfigured } from "@/lib/emails/send";
 import { paymentsConfigured } from "@/lib/billing/server";
-import { formatDate } from "@/lib/format";
 import { DAY_SHORT, WEEKDAYS } from "@/lib/training-days";
 import { requireUser } from "@/lib/supabase/server";
 
@@ -258,23 +257,6 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
               {d.trials.paid_early ? ` ${d.trials.paid_early} paid before their trial ended.` : ""}
             </p>
             {trialsEnding ? <TrialsEnding t={trialsEnding} today={todayUk} /> : null}
-            {d.trials.recent.length ? (
-              <ul aria-label="Recently ended trials" className="mt-3 divide-y divide-line rounded-3xl border border-line bg-surface px-4 text-sm">
-                {d.trials.recent.map((t) => (
-                  <li key={`${t.email}-${t.ended_at}`} className="flex items-center justify-between gap-3 py-2.5">
-                    <span className="min-w-0">
-                      <span className="block truncate print:hidden">{t.email}</span>
-                      <span className="block text-xs text-faint">
-                        Ended {formatDate(t.ended_at, "Europe/London", { year: undefined })} · {t.workouts} {t.workouts === 1 ? "workout" : "workouts"} logged
-                      </span>
-                    </span>
-                    <span className={cx("shrink-0 rounded-full px-2.5 py-1 text-xs font-medium", t.converted ? "bg-accent-soft text-accent-text" : "bg-surface-2 text-muted")}>
-                      {t.converted ? "Member" : "Didn’t join"}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
           </Section>
 
           <Section id="sources" title="Ads & where people come from">
