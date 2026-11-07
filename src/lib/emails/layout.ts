@@ -14,7 +14,8 @@ export function emailLayout(opts: {
   heading: string;
   /** Trusted HTML paragraphs (escape any user data before passing it in). */
   body: string;
-  button: { label: string; href: string };
+  /** With `image`, the button is that image (e.g. Apple's App Store badge), with the label as its alt text. */
+  button: { label: string; href: string; image?: { src: string; width: number; height: number } };
   /** Trusted HTML under the button. */
   after?: string;
   footer: string;
@@ -45,9 +46,11 @@ export function emailLayout(opts: {
             ${body}
             <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:24px;">
               <tr>
-                <td align="center" style="border-radius:14px;background-color:#c3ed89;">
+                ${button.image
+                  ? `<td align="center"><a href="${esc(button.href)}" target="_blank" style="display:inline-block;text-decoration:none;"><img src="${esc(button.image.src)}" width="${button.image.width}" height="${button.image.height}" alt="${esc(button.label)}" style="display:block;border:0;outline:none;width:${button.image.width}px;height:${button.image.height}px;"></a></td>`
+                  : `<td align="center" style="border-radius:14px;background-color:#c3ed89;">
                   <a href="${esc(button.href)}" target="_blank" style="display:block;padding:16px 24px;font-size:17px;line-height:22px;font-weight:700;color:#172009;text-decoration:none;border-radius:14px;">${esc(button.label)}</a>
-                </td>
+                </td>`}
               </tr>
             </table>
             ${after}
