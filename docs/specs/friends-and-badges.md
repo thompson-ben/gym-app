@@ -1,6 +1,6 @@
 # Friends and badges: spec for review
 
-**Status:** draft for review. Not started. Planned after launch week, as part of App Store update 1.1 (with supersets in quick workouts).
+**Status:** draft for review, with decisions from the first review. Not started. Planned after launch week, as part of App Store update 1.1 (with supersets in quick workouts).
 
 **Purpose:** see what your friends are training and copy their splits. Nobody's weights or reps are ever shown.
 
@@ -73,7 +73,7 @@ Emails or push notifications for requests aren't in phase 1. Push notifications 
 Opens from the list. Shows:
 - Display name, @username, avatar letter
 - **Active split:** e.g. "Push / Pull / Legs · since 21 Sep (7 weeks)"
-- **Last workout:** e.g. "Trained Tuesday". This shows the day only, never the time, and never which workout or what was lifted.
+- **Last workout:** e.g. "Trained **Push** on Tuesday". It shows the workout name and the day, never the time or what was lifted.
 - **Total workouts logged**
 - **Badges** (phase 2)
 - **Their split:** each workout in it, expandable to show exercises with sets and rep ranges (e.g. "Bench Press · 3 × 8–10 · rest 2:00"). Supersets show as A1 / A2.
@@ -89,7 +89,7 @@ Opens from the list. Shows:
 - **Copy this split** adds a copy of their active split to your Splits, as **"[Split name] (from @username)"**.
 - It works like the existing share links: exercises, sets, rep ranges, rest times and supersets are copied. Weights and targets aren't.
 - **Custom exercises** they created are copied as your own custom exercises (as with share links today).
-- Your copy is yours: their later changes don't affect it, and they aren't told you copied it.
+- Your copy is yours: their later changes don't affect it. They aren't notified, but the split's **"Copied by N people"** count goes up.
 - After copying: "Make it your active split?" with **Activate** / **Not now**.
 
 ### 7. Block and report (Apple requirement)
@@ -123,43 +123,34 @@ Opens from the list. Shows:
 
 ---
 
-## Phase 2: badges
+## Phase 2: badges (kept simple)
 
-**Purpose:** a light reward for training consistently, shown on your profile and to friends. No points, streak pressure or leaderboards.
+**Purpose:** a light, fun reward, shown on your profile and to friends. No points, streaks or leaderboards.
 
-### Badges
-
-Earned from your own history, automatically, including workouts imported from Strong or Hevy. Each badge is earned once and never lost.
-
-| Group | Badges |
+| Badge | Earned when |
 |---|---|
-| **Workouts logged** | 1 (First workout) · 10 · 25 · 50 · 100 · 250 · 500 |
-| **Time with Setmodo** | 1 month · 3 months · 6 months · 1 year (from your first workout) |
-| **Consistency** | 4 weeks in a row · 12 weeks in a row · 26 weeks in a row (at least one workout each Monday–Sunday week) |
-| **Progress** | First target hit · 10 targets hit (sets where you reached the top of your rep range on a target) |
-| **Social** (needs phase 1) | First split shared or copied by a friend · Trained in a group workout |
+| **I'm new here** | You sign up (everyone starts with one) |
+| **First workout** | You log your first workout |
+| **10 · 25 · 50 · 100 · 250 · 500 workouts** | You reach each number of logged workouts (imported workouts count) |
 
-The thresholds are a starting point, open to change.
-
-### Where they show
-
-- **Your Profile:** a Badges section with earned badges in colour and the next one in grey ("12 more workouts to 50").
-- **Friends see** your earned badges on your profile. This is on whenever friends is on; a separate switch can hide badges.
-- **Finishing a workout:** if it earns a badge, the workout summary shows it with a short celebration (the existing confetti style).
-
-### Design
-
-- **Simple icons** in Setmodo's style (dark tile with a green accent, number on top), not cartoon trophies.
-- Each badge shows its name, when you earned it, and what it means.
-
-### Phase 2 open questions
-
-1. Is the **Consistency** group right, given it can feel like streak pressure? It never takes anything away, and a missed week just restarts the count.
-2. **"Time with Setmodo":** count from **sign-up** or from the **first workout**? (First workout is as above.)
-3. Show the **next badge** progress in grey, or only earned ones?
-4. Any badge ideas of your own, especially ones that fit Setmodo's "know when to go heavier" angle?
+- Earned automatically, once, and never taken away.
+- **Your Profile:** a Badges row with earned badges, and the next one in grey ("12 more workouts to 50").
+- **Friends** see your earned badges on your profile.
+- **Finishing a workout** that earns a badge shows it in the workout summary, with the existing celebration.
+- **Design:** simple icons in Setmodo's style: dark tile, green accent, the number on top.
+- More badges can come later if people like them.
 
 ---
+
+## Phase 3 (later): community splits
+
+**Purpose:** new people get proven, ready-made splits from real users; regulars get recognition for theirs.
+
+- **Share with everyone:** on any of your splits, a switch makes it public (structure only, as with friends: exercises, sets, rep ranges, rest). Off by default.
+- **Browse:** when choosing a starter split ("3-day split", "Push / Pull / Legs" and so on), people see Setmodo's ready-made splits plus **community splits** matching that type, e.g. "Ben's PPL · @benthompson".
+- **⭐ Save (like):** anyone can star a public split. Splits show **⭐ count** and **"Copied by N people"**, and the most-saved rise to the top.
+- **Safety:** public splits use the phase 1 report and block tools. Split names and descriptions go through the same offensive-words filter as usernames. Admin can hide any public split.
+- **Needs before building:** phase 1 (usernames, reports) in place, and enough users with good splits to make the list worth browsing.
 
 ## Rough build plan
 
@@ -169,6 +160,7 @@ The thresholds are a starting point, open to change.
 | 2 | Friends screens: list, search, friend links, profiles, copy split | Test on TestFlight |
 | 3 | Admin → Reports; privacy policy | Review the policy text |
 | 4 | Badges (phase 2) | Run 1 migration |
+| 6 | Community splits (phase 3, later) | Run 1 migration |
 | 5 | App Store update 1.1 (with supersets in quick workouts) | Build, upload and submit |
 
 Every step comes with automated tests, including the privacy rules: that friends can never read weights, and that blocked users are invisible.
