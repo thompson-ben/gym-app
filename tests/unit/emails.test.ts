@@ -109,6 +109,8 @@ describe("App Store launch announcement", () => {
     expect(m.subject).toBe("Setmodo is now on the App Store 📲");
     expect(m.html).toContain("https://apps.apple.com/gb/app/setmodo-workout-tracker/id6830100182");
     expect(m.html).toContain("Hi Sam,");
+    expect(m.html).toContain('src="https://www.setmodo.com/badges/app-store-black.png"');
+    expect(m.html).toContain('alt="Download on the App Store"');
     expect(m.html).not.toContain("<b>Smith");
     expect(m.text).toContain("Download it here: https://apps.apple.com/gb/app/setmodo-workout-tracker/id6830100182");
     expect(appStoreLaunchEmail({ displayName: null, siteUrl: "https://www.setmodo.com" }).text.startsWith("Hi,")).toBe(true);

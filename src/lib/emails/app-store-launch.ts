@@ -19,7 +19,8 @@ export function appStoreLaunchEmail(d: { displayName: string | null; siteUrl: st
 <li>Smoother logging between sets</li>
 <li>Export and share workouts straight from the share sheet</li>
 </ul>`,
-    button: { label: "Download on the App Store", href: APP_STORE_URL },
+    // Apple's badge, served from the site as a PNG (email clients don't show SVG).
+    button: { label: "Download on the App Store", href: APP_STORE_URL, image: { src: `${d.siteUrl}/badges/app-store-black.png`, width: 180, height: 60 } },
     after:
       `<p style="margin:20px 0 0;font-size:15px;line-height:22px;color:#16191b;"><strong>One small favour:</strong> if Setmodo has helped your training, a quick rating on the App Store would massively help. Early ratings decide whether other gym-goers find it.</p>` +
       `<p style="margin:14px 0 0;font-size:15px;line-height:22px;color:#16191b;">On Android or a computer? Nothing changes: keep using <a href="${esc(d.siteUrl)}" style="color:#16191b;">setmodo.com</a> as normal.</p>` +
