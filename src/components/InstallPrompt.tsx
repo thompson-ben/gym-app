@@ -3,7 +3,6 @@
 import { useState, useSyncExternalStore } from "react";
 import { isNativeApp } from "@/lib/native";
 import { APP_STORE_URL } from "@/lib/site";
-import { buttonClass } from "./styles";
 import { IconChevronRight, IconX } from "./icons";
 import { Button, IconButton, Sheet } from "./ui";
 
@@ -70,7 +69,11 @@ function Steps({ platform, canPrompt, onInstall }: { platform: Platform; canProm
     return (
       <div className="space-y-3">
         <p className="text-muted">Setmodo is on the App Store. Sign in with the same account and everything you’ve logged is there.</p>
-        <a href={APP_STORE_URL} target="_blank" rel="noopener" className={buttonClass("primary", "lg", "w-full")}>Download on the App Store</a>
+        <a href={APP_STORE_URL} target="_blank" rel="noopener" className="inline-block">
+          {/* Apple's official badge, unaltered. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/badges/app-store-black.svg" alt="Download on the App Store" width={150} height={50} className="block h-[50px] w-auto" />
+        </a>
       </div>
     );
   }

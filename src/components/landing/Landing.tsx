@@ -30,6 +30,16 @@ export function Phone({ src, alt, priority, className }: { src: string; alt: str
   );
 }
 
+/** Apple's official "Download on the App Store" badge (public/badges), unaltered as Apple requires. */
+function AppStoreBadge({ track, className }: { track: string; className?: string }) {
+  return (
+    <TrackedLink track={track} href={APP_STORE_URL} target="_blank" rel="noopener" className={cx("shrink-0", className)}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/badges/app-store-black.svg" alt="Download on the App Store" width={150} height={50} className="block h-[50px] w-auto" />
+    </TrackedLink>
+  );
+}
+
 function Eyebrow({ children }: { children: ReactNode }) {
   return <p className="text-xs font-semibold tracking-[0.18em] text-accent-text uppercase">{children}</p>;
 }
@@ -214,9 +224,10 @@ export function Landing({ paidPlans = false }: { paidPlans?: boolean }) {
                 <TrackedLink track="hero_try" href="/try" className={buttonClass("secondary", "lg", "w-full px-7 sm:w-auto")}>Try a workout, no sign-up</TrackedLink>
               </div>
               <p className="mt-5 text-sm text-faint">{paidPlans ? "14-day free trial" : "Free during early access"} · No card needed</p>
-              <p className="mt-1.5 hidden text-sm text-faint lg:block">
-                On iPhone? <TrackedLink track="hero_app_store" href={APP_STORE_URL} target="_blank" rel="noopener" className="text-accent-text underline underline-offset-4">Download Setmodo on the App Store</TrackedLink>. Android and computer: it runs in your browser.
-              </p>
+              <div className="mt-5 hidden items-center gap-4 lg:flex">
+                <AppStoreBadge track="hero_app_store" />
+                <p className="text-sm text-faint">On Android or a computer, it runs in your browser.</p>
+              </div>
             </div>
             <div className="relative mx-auto -mt-4 h-[31rem] w-full max-w-[22rem] sm:h-[36rem] sm:max-w-[26rem] lg:mt-0">
               <Phone src="/landing/target-hit.png" alt="" className="absolute top-12 right-0 w-[56%] rotate-[4deg]" />
@@ -225,9 +236,7 @@ export function Landing({ paidPlans = false }: { paidPlans?: boolean }) {
             {/* On phones the product shows first; the detail follows it. */}
             <div className="-mt-6 text-center lg:hidden">
               <p className="mx-auto max-w-xl text-lg leading-relaxed text-muted text-pretty">{HERO_BODY}</p>
-              <TrackedLink track="hero_app_store_mobile" href={APP_STORE_URL} target="_blank" rel="noopener" className={buttonClass("secondary", "lg", "mt-5 w-full px-7 sm:w-auto")}>
-                Download on the App Store
-              </TrackedLink>
+              <AppStoreBadge track="hero_app_store_mobile" className="mt-5 inline-block" />
               <p className="mt-3 text-sm text-faint">On Android? Setmodo runs in your phone’s browser; add it to your home screen.</p>
             </div>
           </div>
