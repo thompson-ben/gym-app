@@ -83,7 +83,7 @@ export function AdLanding({ paidPlans = false }: { paidPlans?: boolean }) {
               ))}
             </ol>
             <ul className="mt-10 grid gap-2 text-sm text-muted sm:grid-cols-2">
-              {["Works in your browser, iPhone app soon", "Kilograms or pounds", "Export your data any time", "No ads, no social feed"].map((t) => (
+              {["On the App Store, or in your browser", "Kilograms or pounds", "Export your data any time", "No ads, no social feed"].map((t) => (
                 <li key={t} className="flex gap-2"><IconCheck size={16} className="mt-0.5 shrink-0 text-accent-text" />{t}</li>
               ))}
             </ul>

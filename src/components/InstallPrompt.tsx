@@ -2,6 +2,8 @@
 
 import { useState, useSyncExternalStore } from "react";
 import { isNativeApp } from "@/lib/native";
+import { APP_STORE_URL } from "@/lib/site";
+import { buttonClass } from "./styles";
 import { IconChevronRight, IconX } from "./icons";
 import { Button, IconButton, Sheet } from "./ui";
 
@@ -32,10 +34,12 @@ const subscribe = (l: () => void) => {
 
 function detect(): string {
   const nav = navigator as Navigator & { standalone?: boolean };
-  // The iOS app is already installed, so it never offers "Add to Home Screen".
-  const standalone = window.matchMedia("(display-mode: standalone)").matches || nav.standalone === true || isNativeApp();
   const ua = navigator.userAgent;
   const ios = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  // Already in the iOS app, or added to an Android home screen: nothing to offer. On iPhone the
+  // home-screen version still gets the App Store prompt, since the app is the better one there.
+  const homeScreen = window.matchMedia("(display-mode: standalone)").matches || nav.standalone === true;
+  const standalone = isNativeApp() || (homeScreen && !ios);
   const platform: Platform = ios ? "ios" : /Android/.test(ua) ? "android" : "other";
   const browser = /CriOS/.test(ua) ? "chrome" : /FxiOS/.test(ua) ? "firefox" : /EdgiOS/.test(ua) ? "edge" : "safari";
   let dismissed = false;
@@ -53,7 +57,7 @@ function useInstallState() {
   return { standalone: standalone === "1", platform: platform as Platform, browser, dismissed: dismissed === "1", canPrompt: canPrompt === "1" };
 }
 
-function Steps({ platform, browser, canPrompt, onInstall }: { platform: Platform; browser: string; canPrompt: boolean; onInstall: () => void }) {
+function Steps({ platform, canPrompt, onInstall }: { platform: Platform; canPrompt: boolean; onInstall: () => void }) {
   if (canPrompt) {
     return (
       <div className="space-y-3">
@@ -64,15 +68,10 @@ function Steps({ platform, browser, canPrompt, onInstall }: { platform: Platform
   }
   if (platform === "ios") {
     return (
-      <ol className="list-decimal space-y-2 pl-5 text-muted">
-        {browser === "safari" ? (
-          <li>Tap the <strong className="text-fg">Share</strong> button (the square with an arrow) at the bottom of Safari.</li>
-        ) : (
-          <li>Tap the <strong className="text-fg">Share</strong> button (the square with an arrow) in the address bar.</li>
-        )}
-        <li>Scroll down and tap <strong className="text-fg">Add to Home Screen</strong>.</li>
-        <li>Tap <strong className="text-fg">Add</strong>. Open Setmodo from the new icon from now on.</li>
-      </ol>
+      <div className="space-y-3">
+        <p className="text-muted">Setmodo is on the App Store. Sign in with the same account and everything you’ve logged is there.</p>
+        <a href={APP_STORE_URL} target="_blank" rel="noopener" className={buttonClass("primary", "lg", "w-full")}>Download on the App Store</a>
+      </div>
     );
   }
   if (platform === "android") {
@@ -112,12 +111,12 @@ export function InstallCard() {
   return (
     <div className="mt-3 flex items-center gap-3 rounded-2xl border border-accent-text/30 bg-accent-soft px-4 py-3">
       <button type="button" onClick={() => (s.canPrompt ? void install() : setOpen(true))} className="min-w-0 flex-1 text-left">
-        <span className="block font-medium">Add Setmodo to your Home Screen</span>
-        <span className="block text-sm text-muted">Opens full screen like an app. Takes 10 seconds.</span>
+        <span className="block font-medium">{s.platform === "ios" ? "Get the Setmodo iPhone app" : "Add Setmodo to your Home Screen"}</span>
+        <span className="block text-sm text-muted">{s.platform === "ios" ? "Free on the App Store. Same account, same history." : "Opens full screen like an app. Takes 10 seconds."}</span>
       </button>
       <IconButton label="Dismiss" onClick={dismiss} className="-mr-2"><IconX size={18} /></IconButton>
-      <Sheet open={open} onClose={() => setOpen(false)} title="Add to Home Screen">
-        <div className="pb-2"><Steps platform={s.platform} browser={s.browser} canPrompt={s.canPrompt} onInstall={() => void install()} /></div>
+      <Sheet open={open} onClose={() => setOpen(false)} title={s.platform === "ios" ? "Get the iPhone app" : "Add to Home Screen"}>
+        <div className="pb-2"><Steps platform={s.platform} canPrompt={s.canPrompt} onInstall={() => void install()} /></div>
       </Sheet>
     </div>
   );
@@ -131,17 +130,17 @@ export function InstallRow() {
     <>
       <button type="button" onClick={() => setOpen(true)} className="flex min-h-13 w-full items-center gap-3 px-4 py-3 text-left hover:bg-surface-2/50">
         <span className="min-w-0 flex-1">
-          <span className="block font-medium">Add to Home Screen</span>
-          <span className="block text-sm text-muted">{s.standalone ? "Installed: you’re using the app version." : "Use Setmodo like an app, full screen."}</span>
+          <span className="block font-medium">{s.platform === "ios" ? "Get the iPhone app" : "Add to Home Screen"}</span>
+          <span className="block text-sm text-muted">{s.standalone ? "Installed: you’re using the app version." : s.platform === "ios" ? "Setmodo on the App Store." : "Use Setmodo like an app, full screen."}</span>
         </span>
         <IconChevronRight className="shrink-0 text-faint" />
       </button>
-      <Sheet open={open} onClose={() => setOpen(false)} title="Add to Home Screen">
+      <Sheet open={open} onClose={() => setOpen(false)} title={s.platform === "ios" && !s.standalone ? "Get the iPhone app" : "Add to Home Screen"}>
         <div className="pb-2">
           {s.standalone ? (
             <p className="text-muted">You’re already using Setmodo from your Home Screen. Nothing else to do.</p>
           ) : (
-            <Steps platform={s.platform} browser={s.browser} canPrompt={s.canPrompt} onInstall={() => void install()} />
+            <Steps platform={s.platform} canPrompt={s.canPrompt} onInstall={() => void install()} />
           )}
         </div>
       </Sheet>

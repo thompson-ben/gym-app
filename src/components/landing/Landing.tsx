@@ -8,6 +8,7 @@ import { buttonClass, cx } from "../styles";
 import { Wordmark } from "../Wordmark";
 import { PLANS, YEARLY_PER_MONTH, YEARLY_SAVING_PCT } from "@/lib/billing/plans";
 import { COMPANY, COMPANY_LINE, CONTACT_EMAIL } from "@/lib/company";
+import { APP_STORE_URL } from "@/lib/site";
 import { PricingSeen } from "./PricingSeen";
 import { ScrollDepth, TrackedLink } from "./Tracked";
 
@@ -128,7 +129,7 @@ const GRID = [
 const FAQ: { q: string; a: ReactNode }[] = [
   {
     q: "Is there an app to download?",
-    a: "Our iPhone app is coming to the App Store very soon. Until then, and on Android or a computer, Setmodo runs in your browser: add it to your home screen and it opens full screen with its own icon, just like any other app. Your account and history are the same everywhere.",
+    a: "Yes, on iPhone: search for Setmodo on the App Store. On Android or a computer, Setmodo runs in your browser: add it to your home screen and it opens full screen with its own icon. Your account and history are the same everywhere, so you can switch between them any time.",
   },
   {
     q: "What happens when my trial ends?",
@@ -213,7 +214,9 @@ export function Landing({ paidPlans = false }: { paidPlans?: boolean }) {
                 <TrackedLink track="hero_try" href="/try" className={buttonClass("secondary", "lg", "w-full px-7 sm:w-auto")}>Try a workout, no sign-up</TrackedLink>
               </div>
               <p className="mt-5 text-sm text-faint">{paidPlans ? "14-day free trial" : "Free during early access"} · No card needed</p>
-              <p className="mt-1.5 hidden text-sm text-faint lg:block">Works in your phone’s browser today. iPhone app coming soon to the App Store.</p>
+              <p className="mt-1.5 hidden text-sm text-faint lg:block">
+                On iPhone? <TrackedLink track="hero_app_store" href={APP_STORE_URL} target="_blank" rel="noopener" className="text-accent-text underline underline-offset-4">Download Setmodo on the App Store</TrackedLink>. Android and computer: it runs in your browser.
+              </p>
             </div>
             <div className="relative mx-auto -mt-4 h-[31rem] w-full max-w-[22rem] sm:h-[36rem] sm:max-w-[26rem] lg:mt-0">
               <Phone src="/landing/target-hit.png" alt="" className="absolute top-12 right-0 w-[56%] rotate-[4deg]" />
@@ -222,7 +225,10 @@ export function Landing({ paidPlans = false }: { paidPlans?: boolean }) {
             {/* On phones the product shows first; the detail follows it. */}
             <div className="-mt-6 text-center lg:hidden">
               <p className="mx-auto max-w-xl text-lg leading-relaxed text-muted text-pretty">{HERO_BODY}</p>
-              <p className="mt-3 text-sm text-faint">Works in your phone’s browser today. iPhone app coming soon to the App Store.</p>
+              <TrackedLink track="hero_app_store_mobile" href={APP_STORE_URL} target="_blank" rel="noopener" className={buttonClass("secondary", "lg", "mt-5 w-full px-7 sm:w-auto")}>
+                Download on the App Store
+              </TrackedLink>
+              <p className="mt-3 text-sm text-faint">On Android? Setmodo runs in your phone’s browser; add it to your home screen.</p>
             </div>
           </div>
         </section>
