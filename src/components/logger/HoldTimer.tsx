@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { formatDuration } from "@/lib/format";
+import { buzz } from "@/lib/native-alerts";
 import { heldSeconds, holdPhase, startHold, type HoldTimer as Timer } from "@/lib/hold-timer";
 import { cx } from "../styles";
 import { Button } from "../ui";
@@ -40,11 +41,11 @@ export function HoldTimer({
     }
     if (phase?.phase === "holding" && !buzzed.current.start) {
       buzzed.current.start = true;
-      navigator.vibrate?.(80);
+      buzz("tap");
     }
     if (reached && !buzzed.current.goal) {
       buzzed.current.goal = true;
-      navigator.vibrate?.([120, 80, 120]);
+      buzz("done");
     }
   }, [timer, phase?.phase, reached]);
 
