@@ -62,3 +62,14 @@ describe("Hide My Email addresses", () => {
     expect(isAppleRelayEmail(null)).toBe(false);
   });
 });
+
+describe("sign-up with an email that already has an account", () => {
+  it("is spotted from the empty identities, and nothing else", async () => {
+    const { isExistingAccountSignup } = await import("@/lib/auth-providers");
+    expect(isExistingAccountSignup({ user: { identities: [] }, session: null })).toBe(true);
+    expect(isExistingAccountSignup({ user: { identities: [{ provider: "email" }] }, session: null })).toBe(false);
+    expect(isExistingAccountSignup({ user: { identities: [{ provider: "email" }] }, session: {} })).toBe(false);
+    expect(isExistingAccountSignup({ user: null, session: null })).toBe(false);
+    expect(isExistingAccountSignup({ user: { identities: null }, session: null })).toBe(false);
+  });
+});

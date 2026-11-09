@@ -7,7 +7,7 @@ import { IconCheck } from "@/components/icons";
 import { Button, ErrorNote, Field, Input } from "@/components/ui";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { DEMO_COOKIE } from "@/lib/demo";
-import { IN_APP_NAME, PROVIDER_LABEL, signupErrorMessage, signupErrorReason, type InApp, type OAuthProvider, type SignupErrorReason } from "@/lib/auth-providers";
+import { IN_APP_NAME, PROVIDER_LABEL, isExistingAccountSignup, signupErrorMessage, signupErrorReason, type InApp, type OAuthProvider, type SignupErrorReason } from "@/lib/auth-providers";
 import { isNativeApp } from "@/lib/native";
 import { nativeAppleSignIn } from "@/lib/native-apple";
 import { pixelEvent, pixelStep } from "@/lib/pixel";
@@ -147,6 +147,26 @@ export function AuthForm({
         });
         if (error) {
           failSignup(signupErrorReason(error));
+          return;
+        }
+        // The email already has an account (common after reinstalling the app). The auth service
+        // answers as if it had signed up, without saying so or sending an email, so try signing in
+        // with what was typed; if that's not the password, switch to Sign in and say why.
+        if (isExistingAccountSignup(data)) {
+          const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+          if (!signInError) {
+            router.replace(next);
+            router.refresh();
+            return;
+          }
+          setMode("sign-in");
+          setPassword("");
+          setMessage(
+            signInError.message === "Email not confirmed"
+              ? "You already have an account with this email. Please confirm it first: check your inbox for the link."
+              : "You already have an account with this email. Sign in with your password, or tap “Forgot password?” to reset it.",
+          );
+          if (signInError.message === "Email not confirmed") setUnconfirmed(true);
           return;
         }
         pixelEvent("CompleteRegistration");

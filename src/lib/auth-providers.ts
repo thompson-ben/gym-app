@@ -98,3 +98,11 @@ export function isNewOAuthAccount(user: { created_at?: string; app_metadata?: { 
 
 /** "Hide My Email" addresses from Sign in with Apple: they work, but mean nothing to read. */
 export const isAppleRelayEmail = (email: string | null | undefined) => /@privaterelay\.appleid\.com$/i.test(email?.trim() ?? "");
+
+/**
+ * Sign-up with an email that already has an account: the auth service answers like a fresh sign-up
+ * (no error, no session, no email sent) but with no identities, so nobody can probe for accounts.
+ */
+export function isExistingAccountSignup(data: { user: { identities?: unknown[] | null } | null; session: unknown }): boolean {
+  return Boolean(data.user && !data.session && Array.isArray(data.user.identities) && data.user.identities.length === 0);
+}
