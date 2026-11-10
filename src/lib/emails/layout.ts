@@ -74,3 +74,14 @@ export function emailLayout(opts: {
 
 export const p = (html: string, muted = false) =>
   `<p style="margin:0 0 14px;font-size:16px;line-height:24px;color:${muted ? "#6b7176" : "#4a5055"};">${html}</p>`;
+
+/**
+ * "On iPhone? Get the app", with Apple's App Store badge (served from the site as a PNG, as email
+ * clients don't show SVG). Trusted HTML for `after`.
+ */
+export function appStoreNote(siteUrl: string, appStoreUrl: string): string {
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:24px;border-top:1px solid #e0e3df;">
+  <tr><td style="padding-top:20px;font-size:15px;line-height:22px;color:#16191b;">On iPhone? Setmodo is on the App Store: same account, same history.</td></tr>
+  <tr><td style="padding-top:12px;"><a href="${esc(appStoreUrl)}" target="_blank" style="display:inline-block;text-decoration:none;"><img src="${esc(siteUrl)}/badges/app-store-black.png" width="135" height="45" alt="Download on the App Store" style="display:block;border:0;width:135px;height:45px;"></a></td></tr>
+</table>`;
+}
