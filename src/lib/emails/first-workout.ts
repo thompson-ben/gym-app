@@ -1,4 +1,5 @@
-import { emailLayout, esc, p } from "./layout";
+import { APP_STORE_URL } from "../site";
+import { appStoreNote, emailLayout, esc, p } from "./layout";
 
 export type FirstWorkoutData = {
   displayName: string | null;
@@ -37,8 +38,9 @@ export function firstWorkoutEmail(d: FirstWorkoutData, now = new Date()) {
     heading: ready ? "Your first workout is waiting" : "Let's get your first workout in",
     body: p(hi) + p(step) + p(why + trial),
     button: { label: ready ? `Open ${d.workoutName}` : "Pick a split", href: link },
+    after: appStoreNote(d.siteUrl, APP_STORE_URL),
     footer: "You're receiving this once because you signed up for Setmodo. We won't send another reminder like it.",
   });
-  const text = `${d.displayName ? `Hi ${d.displayName},` : "Hi,"}\n\n${stepText}\n\n${why}${trialText}\n\n${link}\n\nWe won't send another reminder like this.`;
+  const text = `${d.displayName ? `Hi ${d.displayName},` : "Hi,"}\n\n${stepText}\n\n${why}${trialText}\n\n${link}\n\nOn iPhone? Get Setmodo on the App Store (same account, same history): ${APP_STORE_URL}\n\nWe won't send another reminder like this.`;
   return { subject, html, text };
 }

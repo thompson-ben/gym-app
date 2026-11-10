@@ -97,6 +97,9 @@ describe("first workout email", () => {
     expect(ready.html).toContain("13 days");
     expect(ready.text).toContain("https://setmodo.com/train");
     const blank = firstWorkoutEmail({ displayName: null, splitName: null, workoutName: null, trialEndsAt: null, siteUrl: "https://setmodo.com" }, now);
+    expect(ready.html).toContain('src="https://setmodo.com/badges/app-store-black.png"');
+    expect(ready.html).toContain("https://apps.apple.com/gb/app/setmodo-workout-tracker/id6830100182");
+    expect(ready.text).toContain("On iPhone? Get Setmodo on the App Store");
     expect(blank.subject).toBe("Ready to train? Pick a split in 2 minutes");
     expect(blank.text).not.toContain("trial");
   });
