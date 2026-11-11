@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { billingSecret } from "@/lib/billing/server";
 import { checkinEmail } from "@/lib/emails/checkin";
+import { firstSessionEmail, type FirstSessionExercise } from "@/lib/emails/first-session";
 import { firstWorkoutEmail } from "@/lib/emails/first-workout";
 import { referralRewardEmail } from "@/lib/emails/referral-reward";
 import { trialEndedEmail } from "@/lib/emails/trial-ended";
@@ -22,7 +23,8 @@ type Due = { user_id: string; email: string; display_name: string | null; trial_
  * Daily: first gives 7 more days (once) to trials about to end without a workout, with a note from
  * the founder. Then emails everyone whose trial ends within 3 days (once each), anyone who earned
  * referral days since the last run, asks once why a trial ended without a plan, and nudges
- * new accounts that haven't logged a first workout by the next morning. Until that first workout,
+ * new accounts that haven't logged a first workout by the next morning, and congratulates people
+ * the morning after their first workout. Until that first workout,
  * people who chose training days get a short reminder on those mornings, and a week after
  * sign-up one personal check-in from the founder. Nobody gets two of these in one run. Reminder emails carry an
  * unsubscribe link and header, and skip anyone who has turned them off. Called by a scheduled job with
@@ -152,6 +154,37 @@ export async function POST(request: Request) {
     }
   }
 
+  // The morning after someone's first workout: what they did and what to beat next time (migration 41; before it this is skipped).
+  let firstSessions = 0;
+  const { data: firstRows, error: firstError } = await db.rpc("first_session_emails_due", { p_secret: secret });
+  if (!firstError) {
+    for (const row of (firstRows ?? []) as { user_id: string; email: string; display_name: string | null; weight_unit: string; trial_ends_at: string | null; workout_name: string; working_sets: number; exercises: FirstSessionExercise[] | null }[]) {
+      if (optedOut.has(row.user_id)) {
+        await db.rpc("mark_first_session_emailed", { p_secret: secret, p_user: row.user_id });
+        skipped++;
+        continue;
+      }
+      // Already emailed this morning: it stays due until tomorrow (the window is 3 days).
+      if (emailed.has(row.user_id)) continue;
+      const msg = firstSessionEmail({
+        displayName: row.display_name,
+        workoutName: row.workout_name,
+        workingSets: row.working_sets,
+        exercises: row.exercises ?? [],
+        unit: isWeightUnit(row.weight_unit) ? row.weight_unit : "kg",
+        trialEndsAt: row.trial_ends_at,
+        siteUrl: SITE_URL,
+      });
+      if (await sendEmail(row.email, msg, links(row.user_id), { fromName: `${FOUNDER_NAME} from Setmodo` })) {
+        await db.rpc("mark_first_session_emailed", { p_secret: secret, p_user: row.user_id });
+        emailed.add(row.user_id);
+        firstSessions++;
+      } else {
+        failed++;
+      }
+    }
+  }
+
   // A week after sign-up and still no workout: one personal check-in (migration 26; before it this is skipped).
   // People who turned reminders off aren't returned. Anyone already emailed in this run waits until tomorrow.
   let checkins = 0;
@@ -186,5 +219,5 @@ export async function POST(request: Request) {
       }
     }
   }
-  return NextResponse.json({ extended, sent, rewards, exits, nudges, checkins, trainingDays, skipped, failed });
+  return NextResponse.json({ extended, sent, rewards, exits, nudges, firstSessions, checkins, trainingDays, skipped, failed });
 }
