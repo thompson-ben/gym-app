@@ -141,8 +141,13 @@ export function AuthForm({
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/auth/confirm`,
-            // Came from the "Try a workout" demo: the account starts with the same split (see Train).
-            ...(document.cookie.includes(`${DEMO_COOKIE}=`) ? { data: { via: "demo" } } : {}),
+            data: {
+              // Where the account was made, for the dashboard (migration 40): the email link may
+              // be opened in a browser even when someone signed up in the iPhone app.
+              signup_platform: isNativeApp() ? "ios_app" : "web",
+              // Came from the "Try a workout" demo: the account starts with the same split (see Train).
+              ...(document.cookie.includes(`${DEMO_COOKIE}=`) ? { via: "demo" } : {}),
+            },
           },
         });
         if (error) {

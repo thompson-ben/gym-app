@@ -349,6 +349,18 @@ export type AdminTrialsEnding = {
 /** admin_invite_shares (migration 36): people who shared their invite in the range, and how many times. */
 export type AdminInviteShares = { people: number; shares: number };
 
+/** admin_app_funnel (migration 40): App Store link taps on the website, sign-ups by platform, iPhone app use. */
+export type AdminAppFunnel = {
+  app_store_taps: number;
+  taps_landing: number;
+  taps_ad_page: number;
+  taps_signed_in: number;
+  signups_app: number;
+  signups_web: number;
+  app_users: number;
+  app_new_users: number;
+};
+
 /** admin_billing_mix (migration 33): paying members by plan, with the dashboard's exclusions. */
 export type AdminBillingMix = { monthly: number; yearly: number; canceling: number; billing_issue: number };
 

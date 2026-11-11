@@ -3,6 +3,7 @@ import { IconCheck, IconCloudOff, IconDumbbell, IconHistory } from "../icons";
 import { buttonClass } from "../styles";
 import { Wordmark } from "../Wordmark";
 import { COMPANY_LINE, CONTACT_EMAIL } from "@/lib/company";
+import { APP_STORE_URL } from "@/lib/site";
 import { Founder } from "./Founder";
 import { Phone, STEPS } from "./Landing";
 import { ScrollDepth, TrackedLink } from "./Tracked";
@@ -46,6 +47,11 @@ export function AdLanding({ paidPlans = false }: { paidPlans?: boolean }) {
               <p className="-mt-1 text-sm text-faint">No sign-up. Takes a minute.</p>
               <TrackedLink track="hero_start" href={SIGN_UP} className={buttonClass("secondary", "lg", "w-full text-[17px]")}>Create a free account</TrackedLink>
               <p className="-mt-1 text-sm text-faint">{offer}</p>
+              <TrackedLink track="ad_app_store" href={APP_STORE_URL} target="_blank" rel="noopener" className="mx-auto mt-1 inline-block">
+                {/* Apple's official badge, unaltered. */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/badges/app-store-black.svg" alt="Download on the App Store" width={150} height={50} className="block h-[50px] w-auto" />
+              </TrackedLink>
             </div>
           </div>
           <div className="relative mx-auto h-[28rem] w-full max-w-[22rem] sm:h-[34rem] sm:max-w-[26rem]">
