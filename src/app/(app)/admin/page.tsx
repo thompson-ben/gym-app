@@ -42,6 +42,7 @@ import {
   type AdminTimeOfDay,
   type AdminTrialsEnding,
   type AdminBillingMix,
+  type AdminAppFunnel,
   type AdminInviteShares,
   type AdminTrainingDays,
   type IncludeKey,
@@ -73,7 +74,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const days = RANGES.find((d) => String(d) === params.days) ?? 30;
   const include = parseInclude(params.include);
   const { supabase } = await requireUser();
-  const [dashRes, overviewRes, freeList, activationRes, surveyRes, spendRes, refundRes, glanceRes, nudgeRes, stepsRes, daysRes, demoRes, engageRes, supportRes, timeRes, endingRes, mixRes, invitesRes] = await Promise.all([
+  const [dashRes, overviewRes, freeList, activationRes, surveyRes, spendRes, refundRes, glanceRes, nudgeRes, stepsRes, daysRes, demoRes, engageRes, supportRes, timeRes, endingRes, mixRes, invitesRes, appRes] = await Promise.all([
     supabase.rpc("admin_dashboard", { p_days: days, p_include: include }),
     supabase.rpc("admin_overview", { p_days: days }),
     supabase.rpc("admin_free_access_list"),
@@ -92,6 +93,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
     supabase.rpc("admin_trials_ending", { p_include: include }),
     supabase.rpc("admin_billing_mix", { p_include: include }),
     supabase.rpc("admin_invite_shares", { p_days: days, p_include: include }),
+    supabase.rpc("admin_app_funnel", { p_days: days, p_include: include }),
   ]);
   // Not an admin (or migration 13 not applied): the page does not exist for them.
   if (overviewRes.error || !overviewRes.data) notFound();
@@ -121,6 +123,8 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const billing = (mixRes.data as AdminBillingMix | null) ?? o.billing ?? null;
   // Missing until migration 36: invite shares aren't known, so the tile counts split and group links only.
   const inviteShares = invitesRes.data as AdminInviteShares | null;
+  // Missing until migration 40: the line is hidden.
+  const app = appRes.error ? null : (appRes.data as AdminAppFunnel | null);
   const todayUk = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/London" }).format(new Date());
   const free = freeList.data as FreeAccessList | null;
 
@@ -232,6 +236,14 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                 {demo.started
                   ? `${demo.started} opened it, ${demo.logged_set} ticked a set${engagement ? `, ${engagement.demo_three_sets} did 3 sets, ${engagement.demo_finished} finished` : ""}, ${demo.tapped_signup} tapped to sign up · ${demo.accounts} ${demo.accounts === 1 ? "account" : "accounts"} from it, ${demo.trained} trained`
                   : "nobody yet"}
+              </p>
+            ) : null}
+            {app ? (
+              <p className="mt-1 text-sm text-muted">
+                <span className="font-medium text-fg">iPhone app:</span>{" "}
+                {app.app_store_taps} App Store {app.app_store_taps === 1 ? "tap" : "taps"} on the site ({app.taps_landing} home · {app.taps_ad_page} ad page · {app.taps_signed_in} signed in)
+                {" · "}sign-ups {app.signups_app} in the app, {app.signups_web} on the web
+                {" · "}{app.app_users} {app.app_users === 1 ? "member" : "members"} used the app ({app.app_new_users} for the first time)
               </p>
             ) : null}
             {trainingDays ? (
