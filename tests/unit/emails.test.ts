@@ -105,6 +105,49 @@ describe("first workout email", () => {
   });
 });
 
+describe("first session email", () => {
+  it("shows the workout, the best set of each exercise in the member's unit, and the App Store badge", async () => {
+    const { firstSessionEmail, bestSetLabel } = await import("@/lib/emails/first-session");
+    const now = new Date("2026-11-12T09:00:00Z");
+    const m = firstSessionEmail(
+      {
+        displayName: "Sam <b>Smith</b>",
+        workoutName: "Push",
+        workingSets: 12,
+        exercises: [
+          { name: "Bench Press", mode: "weight_reps", weight_kg: "60.00", reps: 8 },
+          { name: "Dips", mode: "added_weight_reps", weight_kg: 0, reps: 10 },
+        ],
+        unit: "kg",
+        trialEndsAt: "2026-11-20T09:00:00Z",
+        siteUrl: "https://www.setmodo.com",
+      },
+      now,
+    );
+    expect(m.subject).toBe("Nice first session 💪");
+    expect(m.html).toContain("Hi Sam,");
+    expect(m.html).not.toContain("<b>Smith");
+    expect(m.html).toContain("12 working sets across 2 exercises");
+    expect(m.html).toContain("60 kg × 8");
+    expect(m.html).toContain("BW × 10");
+    expect(m.html).toContain("8 days");
+    expect(m.html).toContain('src="https://www.setmodo.com/badges/app-store-black.png"');
+    expect(m.text).toContain("- Bench Press: 60 kg × 8");
+    expect(m.text).toContain("https://www.setmodo.com/train");
+
+    expect(bestSetLabel({ name: "Bench", mode: "weight_reps", weight_kg: 100, reps: 5 }, "lb")).toBe("220.46 lb × 5");
+    expect(bestSetLabel({ name: "Pull-up", mode: "bodyweight_reps", weight_kg: null, reps: 12 }, "kg")).toBe("12 reps");
+    expect(bestSetLabel({ name: "Plank", mode: "duration", weight_kg: null, reps: 45 }, "kg")).toBe("45 s");
+    expect(bestSetLabel({ name: "Dip", mode: "added_weight_reps", weight_kg: 10, reps: 6 }, "kg")).toBe("+10 kg × 6");
+
+    const bare = firstSessionEmail({ displayName: null, workoutName: "Quick workout", workingSets: 1, exercises: [], unit: "kg", trialEndsAt: null, siteUrl: "https://www.setmodo.com" }, now);
+    expect(bare.text.startsWith("Hi,")).toBe(true);
+    expect(bare.text).toContain("1 working set.");
+    expect(bare.text).not.toContain("trial");
+    expect(bare.html).not.toContain("Next time, beat these");
+  });
+});
+
 describe("App Store launch announcement", () => {
   it("links to the App Store, greets by first name and escapes it", async () => {
     const { appStoreLaunchEmail } = await import("@/lib/emails/app-store-launch");
