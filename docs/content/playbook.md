@@ -16,6 +16,8 @@ Other files in this folder:
 - **Talking to camera:** it's FaceTime with one mate who goes to the gym. Look at the lens, say "you" (never "you guys"), and talk normally.
 - **Talking points, not scripts.** Only the opening line (the hook) is said word for word. The rest is said in Ben's own words.
 - **Only claim things that are true.** Use real member numbers (round down), real requests and real stories. Ben trains at **5:30am**.
+- **Not a fitness influencer.** Ben shares how he trains and why he built the app, but doesn't position himself as a coach. Tips are fine when they lead back to the app.
+- **Comment keyword:** captions use *"Comment APP and I'll send you the link"*. Ben replies to the comment ("Sent! 👊") and DMs the link. Use one keyword everywhere so people learn it.
 - **Every post ends with a question**, and every comment gets a reply, ideally within the first hour.
 
 ## 2. Daily posting plan (Instagram)
@@ -111,7 +113,7 @@ Add a row for each talking-to-camera or trial reel, and fill in the numbers afte
 | Date | Post | Type | Length | Views | Avg watch time | Notes |
 |---|---|---|---|---|---|---|
 | 11 Nov 2026 | "It's just me" (hook: "No big company. Just me.") | Trial reel, 7:30pm | 45 s | | | First talking-to-camera video. AirPods audio, eye-level frame used for the cover |
-| 12 Nov 2026 | Carousel "When should you add weight?" (7 slides: problem, rep range, same weight until every set hits the top, +2.5 kg, app slide, CTA) + poll story "When do you add weight?" + link story "Know exactly when to add weight" | Carousel 6:30pm, stories | 7 slides | | | Caption asks people to comment "RANGE" (DM-keyword idea from Brian Mark research) |
+| 12 Nov 2026 | Carousel "When should you add weight?" (7 slides: problem, rep range, same weight until every set hits the top, +2.5 kg, app slide, CTA) + poll story "When do you add weight?" + link story "Know exactly when to add weight" | Carousel 6:30pm, stories | 7 slides | | | Caption asks people to comment "APP"; Ben DMs each one the link (DM-keyword idea from Brian Mark research). Story 1 replaced by the animated "Which lifter are you?" video with a Lifter A / Lifter B poll |
 
 **What we've learned so far:**
 - Word-for-word scripts don't sound natural for Ben. Talking points do.
