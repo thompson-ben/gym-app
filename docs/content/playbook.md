@@ -63,7 +63,7 @@ Other files in this folder:
 - **Excuses reel** ("Gym excuses, sorted."): Ben's favourite and the best-performing ad. Caption: *"Which excuse have you used? Be honest 😅👇"*
 - **"Help us say goodbye"**: an image that looks like a note announcing that the excuse "I can't remember what I lifted last week" is being retired. Ben likes it.
 - **Hero image**: the original best performer under the old name; rebranded for Setmodo.
-- **Carousels**: "3 mistakes stopping you getting stronger", "5 signs you're stuck on a plateau". Hook slide, one point per slide, then a CTA slide with the App Store badge and "📌 Save this".
+- **Carousels**: "3 mistakes stopping you getting stronger", "5 signs you're stuck on a plateau", "When should you add weight?". Hook slide, one point per slide, then a CTA slide with the App Store badge and "📌 Save this".
 - **Talking to camera**: see `talking-points.md`. Current favourites are **A. 5:30am brain**, **B. 5:30am club · Day N** (a repeatable series), **C. Rate my split** and **D. What members have asked for**.
 - **Reply reels**: tap Reply on a comment, then **Reply with reel**.
 
@@ -111,6 +111,7 @@ Add a row for each talking-to-camera or trial reel, and fill in the numbers afte
 | Date | Post | Type | Length | Views | Avg watch time | Notes |
 |---|---|---|---|---|---|---|
 | 11 Nov 2026 | "It's just me" (hook: "No big company. Just me.") | Trial reel, 7:30pm | 45 s | | | First talking-to-camera video. AirPods audio, eye-level frame used for the cover |
+| 12 Nov 2026 | Carousel "When should you add weight?" (7 slides: problem, rep range, same weight until every set hits the top, +2.5 kg, app slide, CTA) + poll story "When do you add weight?" + link story "Know exactly when to add weight" | Carousel 6:30pm, stories | 7 slides | | | Caption asks people to comment "RANGE" (DM-keyword idea from Brian Mark research) |
 
 **What we've learned so far:**
 - Word-for-word scripts don't sound natural for Ben. Talking points do.
