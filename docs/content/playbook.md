@@ -98,8 +98,8 @@ Other files in this folder:
 **What we've learned:**
 - Meta put nearly all the spend on the **excuses video**. Test 3: £23.35 for 2 sign-ups (£11.68 each). Test 4, day 1: £8.50 for 1 sign-up.
 - Even with separate ad sets, Meta favours one ad. This is **auction overlap**: the ad sets target the same people, so Meta enters only the one it predicts will do best in each auction.
-- Test 4, day 2 (11 Nov, full day): excuses got **50 visits and 2 sign-ups** (a 4% sign-up rate, about £5 per sign-up: the best so far).
-- **Test running 12–13 Nov:** excuses **paused** so hero and goodbye get spend (£10/day each). **Switch excuses back on Saturday 14 Nov.** Then compare cost per sign-up: keep anything at about £10 or less. Clicks but no sign-ups means the ad and landing page don't match. Few clicks means images lose to video, so test another video next.
+- Test 4, day 2 (11 Nov, full day): excuses got **50 visits and 2 sign-ups for £12.78** (a 4% sign-up rate, **£6.39 per sign-up**: the best so far).
+- **Test running 12–13 Nov:** excuses **paused** so hero and goodbye get spend (£10/day each). **Switch excuses back on Saturday 14 Nov.** Then compare cost per sign-up: keep anything at about £10 or less. (A separate campaign wouldn't help: auction overlap works across the whole ad account. For proper tests of several ads, use Meta's A/B test.) Clicks but no sign-ups means the ad and landing page don't match. Few clicks means images lose to video, so test another video next.
 - *Original plan (superseded by the test above):* leave it until **Saturday**. If hero and goodbye are still near £0, **pause excuses for Saturday and Sunday** so they get shown, then compare cost per sign-up (aim for about £10 or less) and keep the winners. The proper alternative is Meta's **A/B test** (Experiments, on a computer).
 - **Next creative to test:** another **video**, probably the talking-to-camera reel with the best watch time.
 - **Log spend** in Setmodo Admin → Ad spend. Admin's funnel shows App Store taps and sign-ups by platform.
