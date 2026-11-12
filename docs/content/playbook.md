@@ -6,7 +6,7 @@ Other files in this folder:
 - [`talking-points.md`](talking-points.md): talking-to-camera ideas in the talking-points format (the current approach)
 - [`scripts.md`](scripts.md): the earlier word-for-word scripts (kept for ideas; Ben found full scripts didn't sound natural)
 
-*Last updated: 11 November 2026*
+*Last updated: 12 November 2026*
 
 ---
 
@@ -98,7 +98,9 @@ Other files in this folder:
 **What we've learned:**
 - Meta put nearly all the spend on the **excuses video**. Test 3: £23.35 for 2 sign-ups (£11.68 each). Test 4, day 1: £8.50 for 1 sign-up.
 - Even with separate ad sets, Meta favours one ad. This is **auction overlap**: the ad sets target the same people, so Meta enters only the one it predicts will do best in each auction.
-- **The plan:** leave it until **Saturday**. If hero and goodbye are still near £0, **pause excuses for Saturday and Sunday** so they get shown, then compare cost per sign-up (aim for about £10 or less) and keep the winners. The proper alternative is Meta's **A/B test** (Experiments, on a computer).
+- Test 4, day 2 (11 Nov, full day): excuses got **50 visits and 2 sign-ups** (a 4% sign-up rate, about £5 per sign-up: the best so far).
+- **Test running 12–13 Nov:** excuses **paused** so hero and goodbye get spend (£10/day each). **Switch excuses back on Saturday 14 Nov.** Then compare cost per sign-up: keep anything at about £10 or less. Clicks but no sign-ups means the ad and landing page don't match. Few clicks means images lose to video, so test another video next.
+- *Original plan (superseded by the test above):* leave it until **Saturday**. If hero and goodbye are still near £0, **pause excuses for Saturday and Sunday** so they get shown, then compare cost per sign-up (aim for about £10 or less) and keep the winners. The proper alternative is Meta's **A/B test** (Experiments, on a computer).
 - **Next creative to test:** another **video**, probably the talking-to-camera reel with the best watch time.
 - **Log spend** in Setmodo Admin → Ad spend. Admin's funnel shows App Store taps and sign-ups by platform.
 
@@ -117,7 +119,7 @@ Add a row for each talking-to-camera or trial reel, and fill in the numbers afte
 ## 8. Still to do
 
 - [ ] Fill in the "It's just me" numbers (views, average watch time, retention drop-off)
-- [ ] Ads check on Saturday, and decide whether to pause excuses for the weekend
+- [ ] Saturday 14 Nov: switch excuses back on, compare hero and goodbye against it (cost per sign-up), and keep the winners
 - [ ] Film **A. 5:30am brain** on the next training morning, plus the after-gym story
 - [ ] Start the **5:30am club · Day N** series (2–3 a week)
 - [ ] Film **C. Rate my split** and **D. What members have asked for** on a rest day (check the real member count first)
