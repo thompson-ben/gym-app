@@ -114,6 +114,7 @@ Add a row for each talking-to-camera or trial reel, and fill in the numbers afte
 |---|---|---|---|---|---|---|
 | 11 Nov 2026 | "It's just me" (hook: "No big company. Just me.") | Trial reel, 7:30pm | 45 s | | | First talking-to-camera video. AirPods audio, eye-level frame used for the cover |
 | 12 Nov 2026 | Carousel "When should you add weight?" (7 slides: problem, rep range, same weight until every set hits the top, +2.5 kg, app slide, CTA) + poll story "When do you add weight?" + link story "Know exactly when to add weight" | Carousel 6:30pm, stories | 7 slides | | | Caption asks people to comment "APP"; Ben DMs each one the link (DM-keyword idea from Brian Mark research). Story 1 replaced by the animated "Which lifter are you?" video with a Lifter A / Lifter B poll |
+| 14 Nov 2026 | Reel "5:30am. Brain: offline 😴" (animated, app screen, "Zero thinking. Just beat it.") 9:30am · Carousel "I built a gym app on my own" (founder story, 7 slides, Comment APP) 6:30pm · Trial reel "Which lifter are you?" (A vs B animation, "Be Lifter B.") 7:30pm · Story quiz "How many people built Setmodo?" (answer: 1) · Link story "Know what to beat before you start" | Reel, carousel, trial reel, 2 stories | 13 s / 7 slides / 11 s | | | No filming needed: all animated from app screenshots |
 
 **What we've learned so far:**
 - Word-for-word scripts don't sound natural for Ben. Talking points do.
