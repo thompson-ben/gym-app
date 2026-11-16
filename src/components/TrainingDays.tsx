@@ -1,10 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { friendlyError } from "@/lib/supabase/errors";
+import { loadReminderPrefs, readReminderPrefsRaw, saveReminderPrefs, syncTrainingReminders } from "@/lib/native-reminders";
 import { DAY_NAME, DAY_SHORT, WEEKDAYS, formatDays, normalizeDays, toggleDay, type Weekday } from "@/lib/training-days";
+import { REMINDER_TIMES, formatReminderTime, parseReminderPrefs, type ReminderPrefs } from "@/lib/training-reminders";
 import { Button, ErrorNote, cx } from "./ui";
 
 /** Seven day chips, Monday first. */
@@ -36,15 +38,17 @@ async function saveDays(userId: string, days: Weekday[]) {
 }
 
 /**
- * Asked once on Train, after a split is active and before a first workout: which days do you
- * train? Until that first workout, those mornings bring a short reminder email.
+ * Asked once on Train before a first workout (with or without a split yet): which days do you
+ * train? Until that first workout, those mornings bring a short reminder email; in the iOS app
+ * they also bring a notification, every training day, until turned off in Profile.
  */
-export function TrainingDaysCard({ userId, className }: { userId: string; className?: string }) {
+export function TrainingDaysCard({ userId, native = false, className }: { userId: string; native?: boolean; className?: string }) {
   const router = useRouter();
   const [days, setDays] = useState<Weekday[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<Weekday[] | null>(null);
+  const [notified, setNotified] = useState(false);
 
   async function submit(next: Weekday[]) {
     if (!navigator.onLine) return setError("You’re offline. Try again when you’re back online.");
@@ -53,6 +57,8 @@ export function TrainingDaysCard({ userId, className }: { userId: string; classN
     const { error } = await saveDays(userId, next);
     setBusy(false);
     if (error) return setError(friendlyError(error, "Not saved. Please try again."));
+    // In the app: schedule the notifications, asking permission now that they've chosen days.
+    if (native && next.length) setNotified((await syncTrainingReminders(userId, { ask: true })) === "scheduled");
     setDone(next);
     router.refresh();
   }
@@ -60,7 +66,10 @@ export function TrainingDaysCard({ userId, className }: { userId: string; classN
   if (done) {
     return done.length ? (
       <p role="status" className={cx("rounded-2xl border border-line bg-surface px-4 py-3 text-sm text-muted", className)}>
-        Got it: {formatDays(done)}. We’ll email you on those mornings until your first workout. Change them any time in Profile.
+        Got it: {formatDays(done)}.{" "}
+        {notified
+          ? `We’ll send a notification at ${formatReminderTime(loadReminderPrefs().time)} on those days. Change the days or time any time in Profile.`
+          : "We’ll email you on those mornings until your first workout. Change them any time in Profile."}
       </p>
     ) : null;
   }
@@ -72,7 +81,11 @@ export function TrainingDaysCard({ userId, className }: { userId: string; classN
           Skip
         </button>
       </div>
-      <p className="mt-1 text-sm text-muted">We’ll send a short reminder on those mornings with your workout ready, until you’ve logged your first one.</p>
+      <p className="mt-1 text-sm text-muted">
+        {native
+          ? "We’ll send a notification on those mornings, so your workout’s ready when you are."
+          : "We’ll send a short reminder on those mornings with your workout ready, until you’ve logged your first one."}
+      </p>
       <div className="mt-3">
         <DayChips days={days} onToggle={(d) => setDays((s) => toggleDay(s, d))} disabled={busy} />
       </div>
@@ -101,6 +114,7 @@ export function TrainingDaysRow({ userId, initial }: { userId: string; initial: 
       return setStatus("error");
     }
     setStatus("saved");
+    void syncTrainingReminders(userId, { ask: next.length > 0 });
     router.refresh();
   }
 
@@ -115,3 +129,62 @@ export function TrainingDaysRow({ userId, initial }: { userId: string; initial: 
     </div>
   );
 }
+
+/**
+ * Profile, in the iOS app: training-day notifications on or off, and what time. Stored on this
+ * phone; each change reschedules them.
+ */
+export function ReminderNotificationsRow({ userId }: { userId: string }) {
+  // Stored on this phone, so read after hydration (null on the server).
+  const stored = useSyncExternalStore(noSubscribe, readReminderPrefsRaw, () => null);
+  const [changed, setPrefs] = useState<ReminderPrefs | null>(null);
+  const prefs = changed ?? (stored === null ? null : parseReminderPrefs(stored));
+  const [denied, setDenied] = useState(false);
+
+  async function change(next: ReminderPrefs) {
+    setPrefs(next);
+    saveReminderPrefs(next);
+    setDenied((await syncTrainingReminders(userId, { ask: next.on })) === "denied");
+  }
+
+  if (!prefs) return null;
+  return (
+    <div className="px-4 py-2">
+      <div className="flex items-center justify-between gap-4 py-2">
+        <div>
+          <p id="reminder-notifications" className="font-medium">Training-day notifications</p>
+          <p className="text-sm text-muted">A nudge on your training days, with your workout ready.</p>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-labelledby="reminder-notifications"
+          aria-checked={prefs.on}
+          onClick={() => void change({ ...prefs, on: !prefs.on })}
+          className={cx("relative h-8 w-13 shrink-0 rounded-full transition", prefs.on ? "bg-accent" : "bg-surface-3")}
+        >
+          <span className={cx("absolute top-1 h-6 w-6 rounded-full transition-all", prefs.on ? "left-6 bg-accent-ink" : "left-1 bg-fg/80")} />
+        </button>
+      </div>
+      {prefs.on ? (
+        <label className="flex items-center justify-between gap-3 pb-2 text-sm">
+          <span className="text-muted">Time</span>
+          <select
+            value={prefs.time}
+            onChange={(e) => void change({ ...prefs, time: e.target.value })}
+            className="rounded-xl border border-line bg-surface-2 px-3 py-2 text-fg"
+          >
+            {REMINDER_TIMES.map((t) => (
+              <option key={t} value={t}>
+                {formatReminderTime(t)}
+              </option>
+            ))}
+          </select>
+        </label>
+      ) : null}
+      {denied ? <p className="pb-2 text-sm text-danger">Notifications are off for Setmodo. Turn them on in iPhone Settings → Notifications → Setmodo.</p> : null}
+    </div>
+  );
+}
+
+const noSubscribe = () => () => {};
