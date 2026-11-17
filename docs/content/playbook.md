@@ -32,6 +32,17 @@ Other files in this folder:
 
 **App Store link:** https://apps.apple.com/gb/app/setmodo-workout-tracker/id6830100182
 
+**Tracked links** (so Admin credits the right channel; anything untagged shows as "direct"):
+
+| Where | Link |
+|---|---|
+| Instagram bio | `https://www.setmodo.com/?utm_source=instagram&utm_medium=bio&utm_campaign=profile` |
+| Story link stickers | `https://www.setmodo.com/?utm_source=instagram&utm_medium=story&utm_campaign=YYYY-MM-DD` |
+| DMs to "APP" comments | `https://www.setmodo.com/?utm_source=instagram&utm_medium=dm&utm_campaign=comment-app` |
+| Facebook page | `https://www.setmodo.com/?utm_source=facebook&utm_medium=profile&utm_campaign=page` |
+
+Note: sign-ups made **inside the iPhone app** always show as "direct", even when an ad or post sent them to the App Store, because the App Store doesn't pass tracking through. The "How did you hear about us?" answers (Admin → More detail) fill that gap.
+
 **Trial reel or normal reel?**
 - **Trial:** videos aimed at strangers (problem → app, tips, hot takes, the 5:30am series).
 - **Normal:** videos for existing followers and members (personal updates, a friends-feature teaser that asks for opinions, reply reels to comments).
