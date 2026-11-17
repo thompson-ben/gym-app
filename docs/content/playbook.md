@@ -36,10 +36,12 @@ Other files in this folder:
 
 | Where | Link |
 |---|---|
-| Instagram bio | `https://www.setmodo.com/?utm_source=instagram&utm_medium=bio&utm_campaign=profile` |
+| Instagram bio | `https://www.setmodo.com/?utm_source=instagram` (kept short; Admin counts it as Instagram) |
 | Story link stickers | `https://www.setmodo.com/?utm_source=instagram&utm_medium=story&utm_campaign=YYYY-MM-DD` |
-| DMs to "APP" comments | `https://www.setmodo.com/?utm_source=instagram&utm_medium=dm&utm_campaign=comment-app` |
-| Facebook page | `https://www.setmodo.com/?utm_source=facebook&utm_medium=profile&utm_campaign=page` |
+| DMs to "APP" comments | `https://www.setmodo.com/?utm_source=instagram&utm_medium=post&utm_campaign=comment-app` |
+| Facebook page | `https://www.setmodo.com/?utm_source=facebook&utm_medium=social` |
+
+**Rule for organic links:** with a `utm_campaign`, the medium must be `bio`, `story`, `post`, `reel`, `social` or `organic`; otherwise Admin counts the visit as a **Meta ad**. Leaving out `utm_campaign` is always safe.
 
 Note: sign-ups made **inside the iPhone app** always show as "direct", even when an ad or post sent them to the App Store, because the App Store doesn't pass tracking through. The "How did you hear about us?" answers (Admin → More detail) fill that gap.
 
