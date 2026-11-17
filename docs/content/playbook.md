@@ -6,7 +6,7 @@ Other files in this folder:
 - [`talking-points.md`](talking-points.md): talking-to-camera ideas in the talking-points format (the current approach)
 - [`scripts.md`](scripts.md): the earlier word-for-word scripts (kept for ideas; Ben found full scripts didn't sound natural)
 
-*Last updated: 12 November 2026*
+*Last updated: 17 November 2026*
 
 ---
 
@@ -102,6 +102,8 @@ Other files in this folder:
 - Even with separate ad sets, Meta favours one ad. This is **auction overlap**: the ad sets target the same people, so Meta enters only the one it predicts will do best in each auction.
 - Test 4, day 2 (11 Nov, full day): excuses got **50 visits and 2 sign-ups for £12.78** (a 4% sign-up rate, **£6.39 per sign-up**: the best so far).
 - **Test running 12–13 Nov:** excuses **paused** so hero and goodbye get spend (£10/day each). **Switch excuses back on Saturday 14 Nov.** Then compare cost per sign-up: keep anything at about £10 or less. (A separate campaign wouldn't help: auction overlap works across the whole ad account. For proper tests of several ads, use Meta's A/B test.) Clicks but no sign-ups means the ad and landing page don't match. Few clicks means images lose to video, so test another video next.
+- **Result of the test (Admin, last 7 days to 16 Nov):** Test 4 spent £114.84 for 2 tracked sign-ups (both from goodbye), £57 each. Test 3 excuses: 2 sign-ups for £23.25. **None of the 4 ad sign-ups trained or paid.** Meta visits convert at about 1.6%; direct visits at 14%. Meta over-reports sign-ups compared with Admin, so **judge on Admin**.
+- **Decision (17 Nov):** run **excuses only, £10/day** (hero and goodbye off) while the activation fixes (training days asked earlier, iPhone notifications, week-one check-ins) take effect. Review on Admin on **Monday 23 Nov**, looking at the *Trained* column. Scale back up only once ad sign-ups start training.
 - *Original plan (superseded by the test above):* leave it until **Saturday**. If hero and goodbye are still near £0, **pause excuses for Saturday and Sunday** so they get shown, then compare cost per sign-up (aim for about £10 or less) and keep the winners. The proper alternative is Meta's **A/B test** (Experiments, on a computer).
 - **Next creative to test:** another **video**, probably the talking-to-camera reel with the best watch time.
 - **Log spend** in Setmodo Admin → Ad spend. Admin's funnel shows App Store taps and sign-ups by platform.
