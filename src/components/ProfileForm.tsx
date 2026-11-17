@@ -22,7 +22,7 @@ import { FeedbackRow } from "./FeedbackButton";
 import { IconChevronRight } from "./icons";
 import { InstallRow } from "./InstallPrompt";
 import { ShowTipsAgainRow } from "./PageTip";
-import { TrainingDaysRow } from "./TrainingDays";
+import { ReminderNotificationsRow, TrainingDaysRow } from "./TrainingDays";
 import { Button, ErrorNote, Field, Input, SectionTitle, Sheet, Toggle, cx, inputClass } from "./ui";
 
 type Profile = { display_name: string | null; default_rest_seconds: number; auto_start_rest: boolean; weight_unit: string; reminder_emails?: boolean };
@@ -291,6 +291,7 @@ export function ProfileForm({
             </div>
           ) : null}
           {trainingDays !== undefined ? <TrainingDaysRow userId={userId} initial={trainingDays} /> : null}
+          {trainingDays !== undefined && native ? <ReminderNotificationsRow userId={userId} /> : null}
           <Link href={`/forgot-password${email ? `?email=${encodeURIComponent(email)}` : ""}`} className="flex min-h-13 items-center gap-3 px-4 py-3 hover:bg-surface-2/50">
             <span className="min-w-0 flex-1">
               <span className="block font-medium">Change password</span>

@@ -126,6 +126,9 @@ export default async function TrainPage({ searchParams }: { searchParams: Promis
   const suggested = next && next.kind !== "choose" ? workouts.find((w) => w.id === next.templateId) ?? null : null;
   const others = workouts.filter((w) => w.id !== suggested?.id);
   const startable = workouts.filter((w) => w.exerciseCount > 0);
+  const native = await isNativeRequest();
+  // Which days do you train? Asked once, before a first workout, whatever stage they're at.
+  const daysCard = askDays && !open && !recent.data.length ? <TrainingDaysCard userId={userId} native={native} className="mt-4" /> : null;
 
   return (
     <div className="pt-safe">
@@ -138,7 +141,7 @@ export default async function TrainPage({ searchParams }: { searchParams: Promis
           <span className="font-medium">{ready}</span> is saved for the gym. Open Setmodo when you get there and tap Start.
         </p>
       ) : null}
-      <MembershipBanner state={membershipNow} invite={invite} source={(membership.data as MembershipRow)?.billing_source ?? null} native={await isNativeRequest()} />
+      <MembershipBanner state={membershipNow} invite={invite} source={(membership.data as MembershipRow)?.billing_source ?? null} native={native} />
       {survey && !open ? <SurveyCard question={survey} className="mt-3" /> : null}
       {!open ? <InstallCard /> : null}
 
@@ -208,6 +211,8 @@ export default async function TrainPage({ searchParams }: { searchParams: Promis
             </section>
           ) : null}
 
+          {daysCard}
+
           {/* Before a first workout: log the last session from memory, or have Ben set the split up. */}
           {!open && !recent.data.length && startable.length ? (
             <>
@@ -215,9 +220,6 @@ export default async function TrainPage({ searchParams }: { searchParams: Promis
               <SetupHelp className="mt-3" />
             </>
           ) : null}
-
-          {/* Before a first workout, once a split is ready: which days do you train? */}
-          {askDays && !open && !recent.data.length && startable.length ? <TrainingDaysCard userId={userId} className="mt-4" /> : null}
 
           {(open ? workouts : others).length ? (
             <section className="mt-6" aria-labelledby="workouts-title">
@@ -265,6 +267,7 @@ export default async function TrainPage({ searchParams }: { searchParams: Promis
               <Link href="/splits" className={buttonClass("primary", "lg")}>Choose a split</Link>
               <Link href="/splits?new=1" className={buttonClass("secondary", "lg")}>Create a split</Link>
             </div>
+            {daysCard}
             <div className="mt-6">
               <QuickWorkoutButton disabled={Boolean(open)} />
             </div>
@@ -294,6 +297,7 @@ export default async function TrainPage({ searchParams }: { searchParams: Promis
               <StarterSplits label={fromDemo ? "Choose a different split" : undefined} />
               <Link href="/splits?new=1" className={buttonClass("ghost", "lg")}>Build my own split</Link>
             </div>
+            {daysCard}
             <SetupHelp className="mt-4" />
             <p className="mt-4 text-sm text-faint">Got a split link from a friend? Open it and tap Copy to use their split.</p>
             <div className="mt-6">
