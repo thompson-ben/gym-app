@@ -23,6 +23,7 @@ import { IconChevronRight } from "./icons";
 import { InstallRow } from "./InstallPrompt";
 import { ShowTipsAgainRow } from "./PageTip";
 import { ReminderNotificationsRow, TrainingDaysRow } from "./TrainingDays";
+import { AppleHealthRow } from "./AppleHealthRow";
 import { Button, ErrorNote, Field, Input, SectionTitle, Sheet, Toggle, cx, inputClass } from "./ui";
 
 type Profile = { display_name: string | null; default_rest_seconds: number; auto_start_rest: boolean; weight_unit: string; reminder_emails?: boolean };
@@ -182,6 +183,7 @@ export function ProfileForm({
       <section>
         <SectionTitle>Workout preferences</SectionTitle>
         <div className="divide-y divide-line rounded-3xl border border-line bg-surface">
+          {native ? <AppleHealthRow /> : null}
           <form onSubmit={saveName} className="px-4 py-3">
             <label htmlFor="display-name" className="block text-sm font-medium text-muted">Display name (optional)</label>
             <div className="mt-1.5 flex gap-2">

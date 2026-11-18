@@ -74,6 +74,7 @@ export default function PrivacyPage() {
           <li><strong>Meta</strong> (Facebook and Instagram) receives the ad-measurement events described under Cookies, only if you accept them.</li>
           <li><strong>Stripe</strong> processes payments for memberships on the website. Your card details go to Stripe directly and never reach us; we keep only whether you are a member, your plan and renewal date, and amounts paid.</li>
           <li><strong>Apple</strong> processes payments for memberships bought in the iOS app, under your Apple ID; we never see your payment details.</li>
+          <li><strong>Apple Health</strong>: if you turn on “Save workouts to Apple Health” in the iOS app, each finished workout (its type, start and end time) is saved to Health on your iPhone. Setmodo never reads anything from Health, and Health data never reaches our servers or is used for advertising.</li>
           <li><strong>RevenueCat</strong> checks App Store purchases for us. It receives your Setmodo account ID (not your name or email) and your App Store purchase records.</li>
         </ul>
         <p>Except for Meta (see Cookies), these providers process data on our behalf and do not use it for their own purposes.</p>
