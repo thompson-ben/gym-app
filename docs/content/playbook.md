@@ -7,7 +7,9 @@ Other files in this folder:
 - [`ads-app-promotion.md`](ads-app-promotion.md): step-by-step setup for the App Store install campaign
 - [`scripts.md`](scripts.md): the earlier word-for-word scripts (kept for ideas; Ben found full scripts didn't sound natural)
 
-*Last updated: 17 November 2026*
+**Daily content is automated.** A scheduled task ("Daily Instagram content", 6:38am UK every day) reads this playbook, makes the day's set and sends it to Ben's phone with captions. It logs each day in section 7. **Section 9 is written for it**: the facts it may claim, the weekly themes, the assets and the idea bank. Anything agreed about content should be added here, because the task only knows what's in this file.
+
+*Last updated: 23 November 2026*
 
 ---
 
@@ -93,7 +95,9 @@ Note: sign-ups made **inside the iPhone app** always show as "direct", even when
 
 ## 6. Ads (Meta)
 
-**Current campaign:** `NL – Sign-ups – Test 4`, objective **Sales**, conversion event **Complete registration** (website pixel).
+**Current set-up (from 17 Nov):** only the **excuses** ad set is on in `NL – Sign-ups – Test 4`, at £10/day; hero and goodbye are off. From 23 Nov the plan is to replace it with an **App promotion** campaign (see "Next" below). *Waiting on Ben: the 23 Nov Admin review, i.e. did any ad sign-ups train?*
+
+**Test 4 set-up (11–17 Nov), for reference:** objective **Sales**, conversion event **Complete registration** (website pixel).
 
 | Ad set | Budget | Creative | utm_content |
 |---|---|---|---|
@@ -137,12 +141,75 @@ Add a row for each talking-to-camera or trial reel, and fill in the numbers afte
 **What we've learned so far:**
 - Word-for-word scripts don't sound natural for Ben. Talking points do.
 - Filming from below looks worse than eye level.
+- Animated reels made from app screenshots (no filming) are quick and on-brand, and keep the schedule full on days Ben can't film.
+
+**Numbers:** Ben, once a week (Sunday), send Claude the views and average watch time for that week's reels and trial reels (Insights → each reel), so they can be added here and the daily task can learn what works.
 
 ## 8. Still to do
 
 - [ ] Fill in the "It's just me" numbers (views, average watch time, retention drop-off)
-- [ ] Saturday 14 Nov: switch excuses back on, compare hero and goodbye against it (cost per sign-up), and keep the winners
+- [ ] Ads: 23 Nov review (Admin → Trained column), then start the App promotion test ([`ads-app-promotion.md`](ads-app-promotion.md))
+- [ ] Hook test: compare 23 Nov reel A ("POV: it's 5:30am…") against trial reel B ("Can't remember what you lifted last week?") on average watch time, and note the winner under "What we've learned"
+- [ ] Once iOS 1.2 is live: a post announcing **Apple Health** (see section 9: don't claim it before then)
 - [ ] Film **A. 5:30am brain** on the next training morning, plus the after-gym story
 - [ ] Start the **5:30am club · Day N** series (2–3 a week)
 - [ ] Film **C. Rate my split** and **D. What members have asked for** on a rest day (check the real member count first)
 - [ ] Turn the talking-to-camera reel with the best watch time into a Meta ad
+
+## 9. For the daily content task
+
+### Facts it may use (all true as of 23 Nov 2026)
+- **Price:** 14 days free, then **£3.99 a month** or **£30 a year** (£2.50 a month). No card needed for the trial on the website.
+- **Where:** iPhone app on the App Store, plus the website (works on Android and computers). Same account, same history.
+- **Core:** last time's numbers beside every set; a rep range per exercise, and **"Target hit"** tells you when to add weight; rest timer with an alert when rest is over (iPhone app); works offline at the gym; history and progress charts per exercise; supersets; quick workouts; logging a past workout.
+- **Splits:** ready-made **Full Body**, **Upper / Lower** and **Push / Pull / Legs**, or build your own. Share a split with a link, and friends can copy it.
+- **Training-day notifications** (iPhone app): pick your days and a time (5am to 9pm), and get "Training day 💪, your workout is ready". Plus reminder emails until your first workout.
+- **Train together:** plan a group workout with friends.
+- **Import** history from other apps (CSV).
+- **Made by one person** (Ben, in Norfolk), who reads every message.
+- **Not yet, so don't claim:** Apple Health (coming in iOS 1.2), Apple Watch, friends feeds and badges (planned), Android app (the website works on Android).
+- Never invent member numbers, reviews, testimonials, discounts or offers.
+
+### Weekly themes (so the week has variety)
+| Day | Theme | Example |
+|---|---|---|
+| Mon | Plan the week: splits, training days, setting up | "Which split should you do?" |
+| Tue | Progressive overload made simple | "When should you add weight?", rep ranges |
+| Wed | App feature spotlight (one feature, shown in the app) | Rest alerts, target hit, supersets, sharing a split |
+| Thu | Founder and build in public | "I built a gym app on my own", what members asked for |
+| Fri | Myths, mistakes and hot takes | "You don't need a new programme" |
+| Sat | Humour and relatable gym moments | Excuses, "5:30am brain", Lifter A vs B |
+| Sun | Reset: consistency, the week ahead, a quick quiz | "How many days did you train this week?" |
+
+### Repetition rules
+- No hook, carousel topic or story question repeated within **21 days** (check section 7).
+- Rotate the app screenshots used, so the same screen doesn't lead two days running.
+- Each reel and trial reel pair tests **one** difference in the opening (question vs POV, number vs no number…). Note what was tested in the log.
+
+### Assets (in the repository)
+- App screens: `public/landing/` (train, logger, target-hit, progress, superset, together) and `docs/screenshots/` (celebrate/, onboarding/ for templates and welcome, plus phone-*.png).
+- App icon `public/icons/icon-192.png`; App Store badge `public/badges/app-store-black.svg`.
+- Ben's photo: `public/landing/ben.jpg`. Use it only for founder posts (Thursday).
+- Files made in `out/social/` are **temporary** (the cloud computer is reset), so Ben saves the ones he wants from his phone.
+
+### Formats that work without filming
+- Lock-screen notification → app screen (23 Nov)
+- Two-column comparison, animated week by week (Lifter A vs B)
+- Big statement → app proof ("5:30am. Brain: offline")
+- Carousel: hook → one point per slide → app slide → "Comment APP" plus 📌 Save
+- Story quiz (the answer reveals something about Setmodo) and story poll (max 4 options)
+
+### Idea bank (pick, then remove or mark as used here)
+- "Stop doing these 3 things at the gym" (ego lifting, no plan, endless phone scrolling between sets)
+- "How long should you rest between sets?" → rest alerts
+- "What's a superset? (and when to use one)" → supersets in the app
+- "Your first week back after a break": start lighter, build up
+- "Gym bag essentials at 5:30am" (humour)
+- "Rate my split" (talking to camera, when Ben films it)
+- "Train with a mate": group workouts and sharing a split
+- "Progress isn't always more weight": reps, sets, form
+- "Deload weeks explained simply"
+- "January is coming": start your plan now, not on the 1st (from mid-December)
+- "How I log a workout in under 2 minutes": app walkthrough
+- "Things only 5am lifters understand" (humour)
+
