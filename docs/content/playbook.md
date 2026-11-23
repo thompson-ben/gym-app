@@ -4,9 +4,10 @@ The single reference for Setmodo's social content and ads: the rules, the style,
 
 Other files in this folder:
 - [`talking-points.md`](talking-points.md): talking-to-camera ideas in the talking-points format (the current approach)
+- [`ads-app-promotion.md`](ads-app-promotion.md): step-by-step setup for the App Store install campaign
 - [`scripts.md`](scripts.md): the earlier word-for-word scripts (kept for ideas; Ben found full scripts didn't sound natural)
 
-*Last updated: 11 November 2026*
+*Last updated: 17 November 2026*
 
 ---
 
@@ -16,6 +17,8 @@ Other files in this folder:
 - **Talking to camera:** it's FaceTime with one mate who goes to the gym. Look at the lens, say "you" (never "you guys"), and talk normally.
 - **Talking points, not scripts.** Only the opening line (the hook) is said word for word. The rest is said in Ben's own words.
 - **Only claim things that are true.** Use real member numbers (round down), real requests and real stories. Ben trains at **5:30am**.
+- **Not a fitness influencer.** Ben shares how he trains and why he built the app, but doesn't position himself as a coach. Tips are fine when they lead back to the app.
+- **Comment keyword:** captions use *"Comment APP and I'll send you the link"*. Ben replies to the comment ("Sent! 👊") and DMs the link. Use one keyword everywhere so people learn it.
 - **Every post ends with a question**, and every comment gets a reply, ideally within the first hour.
 
 ## 2. Daily posting plan (Instagram)
@@ -29,6 +32,19 @@ Other files in this folder:
 | 8:30pm | **Story 2** | App Store link sticker ("Get Setmodo"), or a reshare of the day's reel |
 
 **App Store link:** https://apps.apple.com/gb/app/setmodo-workout-tracker/id6830100182
+
+**Tracked links** (so Admin credits the right channel; anything untagged shows as "direct"):
+
+| Where | Link |
+|---|---|
+| Instagram bio | `https://www.setmodo.com/?utm_source=instagram` (kept short; Admin counts it as Instagram) |
+| Story link stickers | `https://www.setmodo.com/?utm_source=instagram&utm_medium=story&utm_campaign=YYYY-MM-DD` |
+| DMs to "APP" comments | `https://www.setmodo.com/?utm_source=instagram&utm_medium=post&utm_campaign=comment-app` |
+| Facebook page | `https://www.setmodo.com/?utm_source=facebook&utm_medium=social` |
+
+**Rule for organic links:** with a `utm_campaign`, the medium must be `bio`, `story`, `post`, `reel`, `social` or `organic`; otherwise Admin counts the visit as a **Meta ad**. Leaving out `utm_campaign` is always safe.
+
+Note: sign-ups made **inside the iPhone app** always show as "direct", even when an ad or post sent them to the App Store, because the App Store doesn't pass tracking through. The "How did you hear about us?" answers (Admin → More detail) fill that gap.
 
 **Trial reel or normal reel?**
 - **Trial:** videos aimed at strangers (problem → app, tips, hot takes, the 5:30am series).
@@ -63,7 +79,7 @@ Other files in this folder:
 - **Excuses reel** ("Gym excuses, sorted."): Ben's favourite and the best-performing ad. Caption: *"Which excuse have you used? Be honest 😅👇"*
 - **"Help us say goodbye"**: an image that looks like a note announcing that the excuse "I can't remember what I lifted last week" is being retired. Ben likes it.
 - **Hero image**: the original best performer under the old name; rebranded for Setmodo.
-- **Carousels**: "3 mistakes stopping you getting stronger", "5 signs you're stuck on a plateau". Hook slide, one point per slide, then a CTA slide with the App Store badge and "📌 Save this".
+- **Carousels**: "3 mistakes stopping you getting stronger", "5 signs you're stuck on a plateau", "When should you add weight?". Hook slide, one point per slide, then a CTA slide with the App Store badge and "📌 Save this".
 - **Talking to camera**: see `talking-points.md`. Current favourites are **A. 5:30am brain**, **B. 5:30am club · Day N** (a repeatable series), **C. Rate my split** and **D. What members have asked for**.
 - **Reply reels**: tap Reply on a comment, then **Reply with reel**.
 
@@ -98,7 +114,12 @@ Other files in this folder:
 **What we've learned:**
 - Meta put nearly all the spend on the **excuses video**. Test 3: £23.35 for 2 sign-ups (£11.68 each). Test 4, day 1: £8.50 for 1 sign-up.
 - Even with separate ad sets, Meta favours one ad. This is **auction overlap**: the ad sets target the same people, so Meta enters only the one it predicts will do best in each auction.
-- **The plan:** leave it until **Saturday**. If hero and goodbye are still near £0, **pause excuses for Saturday and Sunday** so they get shown, then compare cost per sign-up (aim for about £10 or less) and keep the winners. The proper alternative is Meta's **A/B test** (Experiments, on a computer).
+- Test 4, day 2 (11 Nov, full day): excuses got **50 visits and 2 sign-ups for £12.78** (a 4% sign-up rate, **£6.39 per sign-up**: the best so far).
+- **Test running 12–13 Nov:** excuses **paused** so hero and goodbye get spend (£10/day each). **Switch excuses back on Saturday 14 Nov.** Then compare cost per sign-up: keep anything at about £10 or less. (A separate campaign wouldn't help: auction overlap works across the whole ad account. For proper tests of several ads, use Meta's A/B test.) Clicks but no sign-ups means the ad and landing page don't match. Few clicks means images lose to video, so test another video next.
+- **Result of the test (Admin, last 7 days to 16 Nov):** Test 4 spent £114.84 for 2 tracked sign-ups (both from goodbye), £57 each. Test 3 excuses: 2 sign-ups for £23.25. **None of the 4 ad sign-ups trained or paid.** Meta visits convert at about 1.6%; direct visits at 14%. Meta over-reports sign-ups compared with Admin, so **judge on Admin**.
+- **Decision (17 Nov):** run **excuses only, £10/day** (hero and goodbye off) while the activation fixes (training days asked earlier, iPhone notifications, week-one check-ins) take effect. Review on Admin on **Monday 23 Nov**, looking at the *Trained* column. Scale back up only once ad sign-ups start training.
+- **Next (from Mon 23 Nov):** test a Meta **App promotion** campaign (Download button straight to the App Store, iPhone only, £10/day) in place of the excuses website campaign. Setup and how to judge it: [`ads-app-promotion.md`](ads-app-promotion.md).
+- *Original plan (superseded by the test above):* leave it until **Saturday**. If hero and goodbye are still near £0, **pause excuses for Saturday and Sunday** so they get shown, then compare cost per sign-up (aim for about £10 or less) and keep the winners. The proper alternative is Meta's **A/B test** (Experiments, on a computer).
 - **Next creative to test:** another **video**, probably the talking-to-camera reel with the best watch time.
 - **Log spend** in Setmodo Admin → Ad spend. Admin's funnel shows App Store taps and sign-ups by platform.
 
@@ -109,6 +130,9 @@ Add a row for each talking-to-camera or trial reel, and fill in the numbers afte
 | Date | Post | Type | Length | Views | Avg watch time | Notes |
 |---|---|---|---|---|---|---|
 | 11 Nov 2026 | "It's just me" (hook: "No big company. Just me.") | Trial reel, 7:30pm | 45 s | | | First talking-to-camera video. AirPods audio, eye-level frame used for the cover |
+| 12 Nov 2026 | Carousel "When should you add weight?" (7 slides: problem, rep range, same weight until every set hits the top, +2.5 kg, app slide, CTA) + poll story "When do you add weight?" + link story "Know exactly when to add weight" | Carousel 6:30pm, stories | 7 slides | | | Caption asks people to comment "APP"; Ben DMs each one the link (DM-keyword idea from Brian Mark research). Story 1 replaced by the animated "Which lifter are you?" video with a Lifter A / Lifter B poll |
+| 14 Nov 2026 | Reel "5:30am. Brain: offline 😴" (animated, app screen, "Zero thinking. Just beat it.") 9:30am · Carousel "I built a gym app on my own" (founder story, 7 slides, Comment APP) 6:30pm · Trial reel "Which lifter are you?" (A vs B animation, "Be Lifter B.") 7:30pm · Story quiz "How many people built Setmodo?" (answer: 1) · Link story "Know what to beat before you start" | Reel, carousel, trial reel, 2 stories | 13 s / 7 slides / 11 s | | | No filming needed: all animated from app screenshots |
+| 23 Nov 2026 | Reel A "POV: it's 5:30am and your phone already knows it's push day" (lock-screen training-day notification → Train → last time) 9:30am · Carousel "Which split should you do?" (by days a week: 2 Full Body, 3 Full Body ×3, 4 Upper/Lower, 5–6 PPL; Comment APP) 6:30pm · Trial reel B, same video with hook "Can't remember what you lifted last week? 🤔" 7:30pm (hook test against A) · Poll story "How many days a week do you train?" · Story "A nudge on training day" (new notifications) | Reel, carousel, trial reel, 2 stories | 13 s / 7 slides | | | Compare A vs B watch time to pick a hook style |
 
 **What we've learned so far:**
 - Word-for-word scripts don't sound natural for Ben. Talking points do.
@@ -117,7 +141,7 @@ Add a row for each talking-to-camera or trial reel, and fill in the numbers afte
 ## 8. Still to do
 
 - [ ] Fill in the "It's just me" numbers (views, average watch time, retention drop-off)
-- [ ] Ads check on Saturday, and decide whether to pause excuses for the weekend
+- [ ] Saturday 14 Nov: switch excuses back on, compare hero and goodbye against it (cost per sign-up), and keep the winners
 - [ ] Film **A. 5:30am brain** on the next training morning, plus the after-gym story
 - [ ] Start the **5:30am club · Day N** series (2–3 a week)
 - [ ] Film **C. Rate my split** and **D. What members have asked for** on a rest day (check the real member count first)
