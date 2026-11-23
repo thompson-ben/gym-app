@@ -1,5 +1,7 @@
 # iOS 1.2 release: Apple Health (in progress)
 
+**Update 23 Nov:** the Health purpose strings were added in Xcode (Target → Info) and **1.2 (build 4) uploaded successfully**. Next: step 4 (git log check), 5 (TestFlight test), 6 (submit), 7 (reply to the member).
+
 Status (23 Nov): the web side (PR #75) is merged. The first upload of 1.2 was **rejected by App Store Connect**: "Missing purpose string in Info.plist" for `NSHealthShareUsageDescription` and `NSHealthUpdateUsageDescription`. Both keys are in the repo's `ios/App/App/Info.plist`, so the Mac's copy probably didn't pick up the change.
 
 ## Next steps (on the Mac)
