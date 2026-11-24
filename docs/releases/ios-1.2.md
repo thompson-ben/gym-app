@@ -1,6 +1,6 @@
 # iOS 1.2 release: Apple Health (in progress)
 
-**Update 24 Nov:** build 4 had the Health text but **not** the Apple Health code (the Mac was still on PR #67), so **don't submit build 4**. The Mac was updated (git stash → pull to #74 → stash pop → Info.plist conflict resolved with the repo copy → cap sync). Capabilities checked: HealthKit and Sign In with Apple. **1.2 (5) uploaded.** Next: TestFlight test of build 5 (Apple Health switch, a workout in Health, Sign in with Apple), then submit **build 5**.
+**Update 24 Nov:** build 4 had the Health text but **not** the Apple Health code (the Mac was still on PR #67), so **don't submit build 4**. The Mac was updated (git stash → pull to #74 → stash pop → Info.plist conflict resolved with the repo copy → cap sync). Capabilities checked: HealthKit and Sign In with Apple. **1.2 (5) uploaded and tested on TestFlight:** the Apple Health switch works, and a finished workout appeared in Health as "Traditional Strength Training" with the Setmodo icon (calories show "--"; estimated calories could come later). Training-day notifications show in Profile. Next: **submit build 5**, then reply to the member.
 
 Status (23 Nov): the web side (PR #75) is merged. The first upload of 1.2 was **rejected by App Store Connect**: "Missing purpose string in Info.plist" for `NSHealthShareUsageDescription` and `NSHealthUpdateUsageDescription`. Both keys are in the repo's `ios/App/App/Info.plist`, so the Mac's copy probably didn't pick up the change.
 
