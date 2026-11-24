@@ -9,7 +9,7 @@ Other files in this folder:
 
 **Daily content is automated.** A scheduled task ("Daily Instagram content", 6:38am UK every day) reads this playbook, makes the day's set and sends it to Ben's phone with captions. It logs each day in section 7. **Section 9 is written for it**: the facts it may claim, the weekly themes, the assets and the idea bank. Anything agreed about content should be added here, because the task only knows what's in this file.
 
-*Last updated: 23 November 2026*
+*Last updated: 24 November 2026*
 
 ---
 
@@ -212,4 +212,51 @@ Add a row for each talking-to-camera or trial reel, and fill in the numbers afte
 - "January is coming": start your plan now, not on the 1st (from mid-December)
 - "How I log a workout in under 2 minutes": app walkthrough
 - "Things only 5am lifters understand" (humour)
+
+## 10. Making it interesting (read before every set)
+
+The test for every post: **would a gym-goer stop scrolling, and would they send it to a mate?** If not, change it before sending. A post that's accurate but flat is a fail.
+
+### Creative process (each day)
+1. Write **5 different concepts** for the reel and **3 for the carousel**. Use different formats from the list below, not 5 versions of one idea.
+2. Score each one from 1 to 5 on: **Stops the scroll** (first 1 second), **Relatable** (a gym moment they've lived), **Emotion** (funny, a bit annoying, satisfying, surprising) and **Shareable** ("tag your gym buddy").
+3. Make the highest scorer. Only make a "tip" post if it scores as high as a funny or relatable one.
+4. The app appears as **the answer** at the end, not the subject. Lead with the person's problem or the joke.
+
+### Hook formulas (use a different one each day)
+- **Callout:** "If you've ever scrolled your Notes app mid-set…"
+- **Contrarian:** "You don't need a new programme."
+- **POV:** "POV: you finally beat last week's bench"
+- **Number:** "3 signs you've plateaued (2 is sneaky)"
+- **Confession:** "I skipped legs for 6 months. Here's what happened."
+- **Me vs me:** "Me at 5:29am vs me at 5:31am"
+- **Mistake:** "Stop doing this between sets"
+- **Challenge:** "Beat one number this week. Just one."
+- **Question:** "Be honest: do you actually track your lifts?"
+- **Gym-buddy bait:** "Send this to the mate who always 'feels strong'"
+
+### Formats to rotate (no filming needed)
+- **Text-message chat:** an animated iMessage-style chat between gym mates ("what did you bench last week?" "no idea 😂"), ending on the app.
+- **Notes app:** a messy Notes-app workout log that turns into the clean Setmodo screen.
+- **Tier list:** "Gym excuses tier list", "Rest times tier list" (S to F).
+- **This or that:** two options per slide, with "comment your answers".
+- **Me vs me:** a split screen of two moments (Monday vs Friday, 5:29 vs 5:31).
+- **Lock-screen notification** (as on 23 Nov), a **leaderboard of your own lifts**, a **progress chart drawing itself**.
+- **Myth vs fact** cards, **"Things only 5am lifters understand"** lists, and the **"Help us say goodbye"** note style.
+- **Cheat sheets** people save: rep ranges, rest times, splits by days a week.
+
+### Motion and look
+- Something **moves in the first 0.5 seconds**. Cut every 1 to 2 seconds. Text appears word by word or line by line, never all at once.
+- **Not every post on the dark template.** At least 2 days a week, use a bold **lime background with dark text**, or a light "Notes app" or "iMessage" look, so the grid has variety.
+- Emoji and reaction faces are fine for humour. Keep **one big idea per screen**.
+- Tell Ben to add a **trending sound** in Instagram (reels without sound get less reach). Suggest the vibe: upbeat, funny or calm.
+
+### Make people respond
+- Every post asks for **one specific action**: "Comment APP", "Tag your gym buddy", "Comment 1, 2 or 3", or "Save this".
+- Stories rotate stickers: **poll**, **quiz**, **emoji slider** ("How sore are you today?"), **question box** ("Ask me anything about the app"), **"Add Yours"** ("Show your 5am gym"), and **countdown** (for app updates).
+- Run **series** people can follow: "5:30am club · Day N", "Gym excuses tier list part 2", "Myth Monday".
+
+### Real material from Ben (use whenever available)
+- Ben's real lifts and sessions beat anything invented. When he shares one ("bench 70 × 8, up 1 rep"), make it the day's "real numbers" post.
+- Real gym clips and photos (B-roll) go in `docs/media/broll/` when Ben sends them. Prefer them over drawings.
 
