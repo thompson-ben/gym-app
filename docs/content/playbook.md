@@ -282,3 +282,5 @@ The test for every post: **would a gym-goer stop scrolling, and would they send 
 - **Lead with real-life textures** (Notes app, iMessage, a lock screen, a gym whiteboard), then reveal the app as the fix.
 - **End on a bold full-colour card** with one action (lime background, dark text).
 
+**Covers (from the same post):** a plain frame of text on dark isn't scroll-stopping. What worked was a **diagonal split: the problem versus the fix**. The top half was the messy white Notes app with a big red hand-drawn ✕. The bottom half was the real dark app, zoomed in on "Previous" with a lime ring and a "last time ✓" sticker. Across the middle, huge white-on-black hook text, slightly tilted, with one word in red ("NOT"). Make a dedicated cover image rather than a frame from the video, and check it in the 3:4 grid crop.
+
