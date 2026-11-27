@@ -9,7 +9,7 @@ Other files in this folder:
 
 **Daily content is automated.** A scheduled task ("Daily Instagram content", 6:38am UK every day) reads this playbook, makes the day's set and sends it to Ben's phone with captions. It logs each day in section 7. **Section 9 is written for it**: the facts it may claim, the weekly themes, the assets and the idea bank. Anything agreed about content should be added here, because the task only knows what's in this file.
 
-*Last updated: 24 November 2026*
+*Last updated: 27 November 2026*
 
 ---
 
@@ -259,4 +259,26 @@ The test for every post: **would a gym-goer stop scrolling, and would they send 
 ### Real material from Ben (use whenever available)
 - Ben's real lifts and sessions beat anything invented. When he shares one ("bench 70 × 8, up 1 rep"), make it the day's "real numbers" post.
 - Real gym clips and photos (B-roll) go in `docs/media/broll/` when Ben sends them. Prefer them over drawings.
+
+### Lessons from real posts (what "boring" looked like, and the fix)
+**27 Nov trial reel "Your Notes app is not a training log": good idea, boring execution.** Ben's verdict. What was wrong:
+1. **Static text on a dark screen** for the first seconds. Nothing happened.
+2. **Half the frame was empty.** Big blank areas look unfinished.
+3. **A drawn, pretend app** instead of the real screenshots. It looked generic.
+4. **No "moment":** no reveal, no payoff, nothing to react to.
+
+**The rebuilt version** (same idea, much better) did this:
+- **Showed the problem rather than saying it.** A light iPhone Notes screen with a messy workout being **typed live** ("bench 60x8?? or 62.5", "triceps… forgot to write 😬", "what did I do last week 😩"), a shake, and a 🤷 pop-in. The hook sits on screen from frame one.
+- **Contrast and a transition:** a white Notes app swiped away to the dark Setmodo app with a flash. Light to dark makes the change feel like a fix.
+- **The real app, zoomed in:** the real screenshot (`public/landing/target-hit.png`), zooming into the Previous column, with a lime ring and a sticker "← last time, already there". Then a zoom to "🎯 Target hit", with "next time: go heavier".
+- **A punchy ending that's an action:** a full lime screen saying "Delete the note. 🗑️" plus "Comment APP for the link 👇".
+- About 14 s, something changing every 0.5–1.5 s.
+
+**Rules from this (apply to every reel):**
+- **Never draw a pretend app.** Use the real screenshots, zoomed and highlighted. If the screenshots can't be found, say so instead of drawing one.
+- **Fill the frame.** No more than about a third of the screen empty at any moment.
+- **Frame 1 shows a problem or a joke,** not a title card.
+- **Every reel has a payoff moment:** a zoom, a ring, a pop or a swipe the viewer is waiting for.
+- **Lead with real-life textures** (Notes app, iMessage, a lock screen, a gym whiteboard), then reveal the app as the fix.
+- **End on a bold full-colour card** with one action (lime background, dark text).
 
