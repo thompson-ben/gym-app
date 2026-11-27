@@ -1,0 +1,85 @@
+<!doctype html><html><head><meta charset="utf-8"><link href="https://fonts.googleapis.com/css2?family=Geist:wght@500;600;700;800;900&display=block" rel="stylesheet"><style>
+*{box-sizing:border-box;margin:0}
+body{width:1080px;height:1920px;overflow:hidden;position:relative;font-family:Geist,-apple-system,sans-serif;background:#131416}
+#notes{position:absolute;inset:0;background:#fbfaf6;color:#1c1c1e;font-family:-apple-system,"SF Pro Text",Geist,sans-serif}
+#notes .bar{position:absolute;top:120px;left:60px;right:60px;display:flex;justify-content:space-between;color:#e0a800;font-size:44px;font-weight:600}
+#notes .date{position:absolute;top:220px;left:0;right:0;text-align:center;color:#8e8e93;font-size:30px}
+#lines{position:absolute;top:290px;left:70px;right:70px;font-size:56px;line-height:1.55;font-weight:500}
+#lines .h{font-weight:800;font-size:68px}
+.cursor{display:inline-block;width:4px;height:58px;background:#e0a800;vertical-align:-8px;margin-left:4px}
+#stamp{position:absolute;left:0;right:0;top:960px;text-align:center;font-size:230px;opacity:0}
+#hook{position:absolute;top:1240px;left:50px;right:50px;text-align:center}
+#hook span{display:inline;background:#131416;color:#fff;font-weight:900;font-size:76px;line-height:1.42;padding:6px 22px;border-radius:16px;letter-spacing:-1.5px;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+#hook .l{color:#c3ed89}
+#app{position:absolute;inset:0;background:radial-gradient(900px 900px at 50% 45%,rgba(195,237,137,.14),transparent 70%),#131416;opacity:0}
+#frame{position:absolute;left:150px;top:330px;width:780px;height:1500px;border-radius:70px;border:4px solid #2e3237;background:#0b0c0d;overflow:hidden;box-shadow:0 40px 120px -20px #000,0 0 140px rgba(195,237,137,.22)}
+#shot{position:absolute;left:0;top:0;width:780px;transform-origin:0 0}
+#ring{position:absolute;border:8px solid #c3ed89;border-radius:28px;box-shadow:0 0 40px rgba(195,237,137,.8);opacity:0}
+#tag{position:absolute;background:#c3ed89;color:#131416;font-weight:900;font-size:44px;padding:14px 26px;border-radius:20px;opacity:0;box-shadow:0 20px 40px rgba(0,0,0,.5)}
+#cap{position:absolute;top:120px;left:60px;right:60px;text-align:center;color:#eaebed;font-weight:900;font-size:84px;letter-spacing:-2.5px;line-height:1}
+#cap .l{color:#c3ed89}
+#end{position:absolute;inset:0;background:#c3ed89;opacity:0;color:#131416;text-align:center}
+#end h1{position:absolute;top:520px;left:60px;right:60px;font-size:170px;font-weight:900;letter-spacing:-6px;line-height:.95}
+#end p{position:absolute;top:1060px;left:60px;right:60px;font-size:64px;font-weight:800}
+#end .wm{position:absolute;bottom:260px;left:0;right:0;font-size:56px;font-weight:800;letter-spacing:-2px}
+#flash{position:absolute;inset:0;background:#fff;opacity:0}
+</style></head><body>
+<div id="notes"><div class="bar"><span>‹ Notes</span><span>⋯</span></div><div class="date">Today, 05:41</div><div id="lines"></div><div id="stamp">🤷</div></div>
+<div id="hook"><span>Your Notes app is <span class="l">NOT</span><br>a training log 🙅</span></div>
+<div id="app"><div id="cap"></div><div id="frame"><img id="shot" src="../../../public/landing/target-hit.png"><div id="ring"></div></div><div id="tag"></div></div>
+<div id="end"><h1>Delete<br>the note. 🗑️</h1><p>Comment APP for the link 👇</p><div class="wm">setmodo<span style="color:#131416;opacity:.55">.</span></div></div>
+<div id="flash"></div>
+<script>
+const L=[["Push day 💪","h"],["bench 60x8?? or 62.5",""],["incline db 22s x10 (24s?)",""],["shoulders - same as last wk",""],["triceps… forgot to write 😬",""],["what did I do last week 😩",""]];
+const starts=[0.15,0.75,1.7,2.6,3.4,4.2], cps=34;
+const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x)), ease=x=>1-Math.pow(1-clamp(x),3), lerp=(a,b,t)=>a+(b-a)*t;
+const S=780/1170;
+function box(x,y,w,h){return [x*S,y*S,w*S,h*S]}
+window.setT=t=>{
+  // notes typing
+  let html='';
+  L.forEach(([txt,c],i)=>{const n=Math.floor((t-starts[i])*cps); if(n<=0)return; const shown=txt.slice(0,n); html+=`<div class="${c}">${shown}${(n<txt.length||i===L.length-1)&&t<5.6?'<span class="cursor"></span>':''}</div>`;});
+  document.getElementById('lines').innerHTML=html;
+  const shake=t>5.0&&t<5.6?Math.sin(t*90)*14*(5.6-t):0;
+  document.getElementById('lines').style.transform=`translateX(${shake}px)`;
+  const st=document.getElementById('stamp'); const sp=ease((t-5.0)/0.25); st.style.opacity=t<5.9?sp:0; st.style.transform=`scale(${lerp(2.2,1,sp)}) rotate(${lerp(-25,-8,sp)}deg)`;
+  // hook pops at start and stays through notes
+  const hk=document.getElementById('hook'); const hp=ease(t/0.3); hk.style.opacity=t<5.9?hp:0; hk.style.transform=`scale(${lerp(0.85,1,hp)})`;
+  // swipe to app at 5.9
+  const sw=ease((t-5.85)/0.35);
+  document.getElementById('notes').style.transform=`translateX(${-sw*1080}px)`;
+  const app=document.getElementById('app'); app.style.opacity=t>=5.85?1:0; app.style.transform=`translateX(${(1-sw)*1080}px)`;
+  const cap=document.getElementById('cap');
+  cap.innerHTML=t<9.3?'Last time.<br><span class="l">Every set.</span>':'Hit it?<br><span class="l">Add weight.</span>';
+  const cp=t<9.3?ease((t-6.1)/0.3):ease((t-9.3)/0.3); cap.style.opacity=cp; cap.style.transform=`translateY(${(1-cp)*30}px)`;
+  // zoom phases on screenshot (screenshot coords)
+  // phase A 6.6-7.2 zoom into previous column (x 120..1170, y 850..1500)
+  // phase B 9.3-9.9 zoom to target hit banner (y 1500..1750)
+  const shot=document.getElementById('shot');
+  const zA=ease((t-6.7)/0.6), zB=ease((t-9.4)/0.6);
+  let sc=lerp(1,1.6,zA), ty=lerp(0,-560,zA), tx=lerp(0,-40,zA);
+  sc=lerp(sc,1.15,zB); ty=lerp(ty,700-1607*S*1.15,zB); tx=lerp(tx,-(1170*S*1.15-780)/2,zB);
+  shot.style.transform=`translate(${tx}px,${ty}px) scale(${sc})`;
+  // ring around "previous" cells: screenshot box approx x 180..470, y 1020..1430
+  const ring=document.getElementById('ring'), tag=document.getElementById('tag');
+  const px=(v)=>v*S*sc;
+  if(t<9.3){
+    const [x,y,w,h]=[200,1005,290,430];
+    ring.style.left=(px(x)+tx-10)+'px'; ring.style.top=(px(y)+ty-10)+'px'; ring.style.width=(px(w)+20)+'px'; ring.style.height=(px(h)+20)+'px';
+    const rp=ease((t-7.4)/0.25); ring.style.opacity=rp; ring.style.transform=`scale(${lerp(1.25,1,rp)})`;
+    tag.textContent='← last time, already there'; tag.style.left=(150+px(x+w)+tx+24)+'px'; tag.style.top=(330+px(y+h/2)+ty-40)+'px';
+    const tp=ease((t-7.8)/0.3); tag.style.opacity=tp; tag.style.transform=`translateX(${(1-tp)*-30}px)`;
+    tag.style.maxWidth='380px';tag.style.fontSize='40px';
+  } else {
+    const [x,y,w,h]=[100,1550,970,114];
+    ring.style.left=(px(x)+tx-10)+'px'; ring.style.top=(px(y)+ty-10)+'px'; ring.style.width=(px(w)+20)+'px'; ring.style.height=(px(h)+20)+'px';
+    const rp=ease((t-10.0)/0.25); ring.style.opacity=t<11.9?rp:0; ring.style.transform=`scale(${lerp(1.3,1,rp)})`;
+    tag.textContent='🎯 next time: go heavier'; tag.style.left='260px'; tag.style.top=(330+px(y+h)+ty+40)+'px'; tag.style.maxWidth='none';tag.style.fontSize='48px';
+    const tp=ease((t-10.4)/0.3); tag.style.opacity=t<11.9?tp:0; tag.style.transform=`scale(${lerp(0.7,1,tp)})`;
+  }
+  // end card 12.0
+  const ep=ease((t-12.0)/0.25); const end=document.getElementById('end'); end.style.opacity=ep; end.style.transform=`scale(${lerp(1.08,1,ep)})`;
+  document.getElementById('flash').style.opacity=Math.max(0,0.7-Math.abs(t-5.95)*5, 0.6-Math.abs(t-12.0)*5);
+};
+setT(0);
+</script></body></html>

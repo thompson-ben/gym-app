@@ -7,11 +7,59 @@ Other files in this folder:
 - [`ads-app-promotion.md`](ads-app-promotion.md): step-by-step setup for the App Store install campaign
 - [`scripts.md`](scripts.md): the earlier word-for-word scripts (kept for ideas; Ben found full scripts didn't sound natural)
 
+**Read section 0 first.** It's the quality bar, with templates in [`templates/`](templates/).
+
 **Daily content is automated.** A scheduled task ("Daily Instagram content", 6:38am UK every day) reads this playbook, makes the day's set and sends it to Ben's phone with captions. It logs each day in section 7. **Section 9 is written for it**: the facts it may claim, the weekly themes, the assets and the idea bank. Anything agreed about content should be added here, because the task only knows what's in this file.
 
-*Last updated: 27 November 2026*
+*Last updated: 28 November 2026*
 
 ---
+
+## 0. Quality standard (read this first, every time)
+
+**The bar is the 27 Nov "Notes app" reel and cover** (the versions Ben rated "a lot better"). Their source files are in [`templates/`](templates/). **Start from them**, and change the idea, words and screenshots, rather than starting from a blank page.
+
+### How that post went from boring to good
+| | First version (boring) | Rebuilt version (good) |
+|---|---|---|
+| Opening | A static headline on a dark screen | The problem **happening**: a messy Notes log typed live, a shake, 🤷. Hook on screen from frame 1 |
+| The app | A drawn, pretend app | The **real screenshot**, zoomed into "Previous", with a lime ring and a "← last time, already there" sticker |
+| Frame | Half empty | Filled edge to edge at every moment |
+| Pace | One change every few seconds | Something changes every 0.5–1.5 s |
+| Payoff | None | A swipe with a flash from white Notes to the dark app, a zoom to 🎯 Target hit, then "next time: go heavier" |
+| Ending | Plain | A full lime card: "Delete the note. 🗑️" plus "Comment APP for the link 👇" |
+| Cover | A frame from the video | A dedicated **before / after** cover (see below) |
+
+**The cover went through three versions:**
+1. A video frame: not scroll-stopping.
+2. A meme style (a hand-drawn red ✕, tilted text boxes, emoji): it stopped the scroll but looked cheap.
+3. **The professional version (the standard):** a small uppercase eyebrow, a big left-aligned headline in white → grey → lime, a white Notes card with neat red strikethroughs ("BEFORE"), and the real app in a phone frame with a soft lime glow and a lime ring on the key number ("SETMODO" chip). The wordmark sits top-left, with no emoji and no hand-drawn marks.
+
+### The recipe for every reel
+1. **One idea, shown as problem → fix.** The problem in a real-life texture (Notes, iMessage, a lock screen, a whiteboard), then the real app as the fix.
+2. **Frame 1 is already interesting:** the problem or the joke, with the hook on screen.
+3. **The real app only.** Screenshots from `public/landing/` and `docs/screenshots/`, **zoomed in** on the one number that matters, with a lime ring and a short sticker. Never draw a pretend app.
+4. **Fill the frame, and keep it moving.** No more than a third of the screen empty. Something changes every 0.5–1.5 s.
+5. **One payoff moment** the viewer waits for: a swipe and flash, a zoom, a ring popping on.
+6. **End on a bold lime card** with one action.
+7. **12–15 seconds.** Write the caption so it works without sound, and tell Ben the sound vibe to add.
+
+### The recipe for covers and carousels (professional, not meme)
+- An eyebrow, a three-tone headline, and real objects (app screens in a phone frame, a Notes card) with chips like "BEFORE" / "SETMODO".
+- No hand-drawn marks, tilted boxes or emoji on covers and carousels.
+- Check the grid crop: everything important between y 240 and 1680.
+
+### Score it before sending (redo anything under 4)
+| Check | 1 (fail) → 5 (great) |
+|---|---|
+| Would someone stop scrolling in the first second? | |
+| Is it obviously about a real gym moment? | |
+| Is the real app shown, and is the key number clear? | |
+| Does every second have movement or new information? | |
+| Does it look like a professional brand (covers and carousels clean)? | |
+| Is there one clear action at the end? | |
+
+Include the scores in the message to Ben, one line each, so he can see the reasoning.
 
 ## 1. Ground rules
 
