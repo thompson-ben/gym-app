@@ -1,4 +1,15 @@
-# iOS 1.2 release: Apple Health (in progress)
+# iOS 1.3 release: Apple Health + estimated calories (in progress)
+
+**Decision (27 Nov):** 1.2 (build 5) was tested OK on TestFlight but **not submitted**. We're skipping it and shipping **1.3** instead, with Apple Health and estimated calories (PR #77, merged). Steps:
+1. On the Mac: `git pull origin claude/gym-app-initial-setup-ynpzxt`, then `npx cap sync ios`.
+2. Xcode → General: Version **1.3**, Build **6**. ⇧⌘K, Archive, Upload.
+3. TestFlight: turn on "Include estimated calories", allow Active Energy, enter body weight, finish a short workout, check Health shows kcal.
+4. App Store Connect: rename the prepared 1.2 version to **1.3** (or create 1.3), What's New: *"Save your workouts to Apple Health. Turn it on in Profile → Workout preferences, and every finished workout counts towards your Activity rings as strength training, with estimated calories."*, build **1.3 (6)**, submit.
+5. Once live: reply to the member who asked for Apple Health (with a fresh trial), and tell the daily content task that Apple Health is live (playbook section 9).
+
+---
+
+## Earlier: the 1.2 notes
 
 **Update 24 Nov:** build 4 had the Health text but **not** the Apple Health code (the Mac was still on PR #67), so **don't submit build 4**. The Mac was updated (git stash → pull to #74 → stash pop → Info.plist conflict resolved with the repo copy → cap sync). Capabilities checked: HealthKit and Sign In with Apple. **1.2 (5) uploaded and tested on TestFlight:** the Apple Health switch works, and a finished workout appeared in Health as "Traditional Strength Training" with the Setmodo icon (calories show "--"; estimated calories could come later). Training-day notifications show in Profile. Next: **submit build 5**, then reply to the member.
 
