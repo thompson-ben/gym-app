@@ -183,7 +183,7 @@ export function ProfileForm({
       <section>
         <SectionTitle>Workout preferences</SectionTitle>
         <div className="divide-y divide-line rounded-3xl border border-line bg-surface">
-          {native ? <AppleHealthRow /> : null}
+          {native ? <AppleHealthRow unit={unit} /> : null}
           <form onSubmit={saveName} className="px-4 py-3">
             <label htmlFor="display-name" className="block text-sm font-medium text-muted">Display name (optional)</label>
             <div className="mt-1.5 flex gap-2">

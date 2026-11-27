@@ -24,7 +24,7 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<!-- Apple Health: Setmodo only saves finished workouts (write-only); it never reads Health data. -->
 	<key>NSHealthUpdateUsageDescription</key>
-	<string>Setmodo saves your finished workouts to Apple Health as strength training, so they count towards your Activity rings.</string>
+	<string>Setmodo saves your finished workouts to Apple Health as strength training, with estimated calories if you choose, so they count towards your Activity rings.</string>
 	<key>NSHealthShareUsageDescription</key>
 	<string>Setmodo doesn’t read anything from Apple Health. It only saves your finished workouts there.</string>
 	<key>LSRequiresIPhoneOS</key>

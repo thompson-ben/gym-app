@@ -28,3 +28,15 @@ describe("Apple Health workout window", () => {
     expect(w!.end - w!.start).toBe(60_000);
   });
 });
+
+describe("estimated calories for Apple Health", () => {
+  it("is about 3.5 kcal per kg per hour, capped at 4 hours, and 0 without a sensible body weight", async () => {
+    const { estimateActiveKcal } = await import("@/lib/health");
+    const w = (min: number) => ({ start: 0, end: min * 60_000 });
+    expect(estimateActiveKcal(w(55), 80)).toBe(257);
+    expect(estimateActiveKcal(w(60), 100)).toBe(350);
+    expect(estimateActiveKcal(w(600), 80)).toBe(1120);
+    expect(estimateActiveKcal(w(60), null)).toBe(0);
+    expect(estimateActiveKcal(w(60), 12)).toBe(0);
+  });
+});
