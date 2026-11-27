@@ -22,8 +22,8 @@ import {
 import { formatDate, formatDuration, formatTime } from "@/lib/format";
 import { hasUnsyncedChanges, removeRecord, type LocalRecord } from "@/lib/session/store";
 import { adjustTimer, clockNow, startTimer } from "@/lib/timer";
-import { healthWorkoutWindow } from "@/lib/health";
-import { saveWorkoutToHealth } from "@/lib/native-health";
+import { estimateActiveKcal, healthWorkoutWindow } from "@/lib/health";
+import { bodyKgRaw, caloriesEnabled, saveWorkoutToHealth } from "@/lib/native-health";
 import { cancelRestAlert, restAlertAt, scheduleRestAlert } from "@/lib/native-alerts";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { loadTargets } from "@/lib/targets";
@@ -263,7 +263,10 @@ export default function Logger({ userId, initial, timeZone }: { userId: string; 
       void cancelRestAlert();
       // In the iOS app, when turned on in Profile: save it to Apple Health as strength training.
       const healthWindow = healthWorkoutWindow(recordRef.current.doc);
-      if (healthWindow) void saveWorkoutToHealth(doc.id, healthWindow, doc.template_name);
+      if (healthWindow) {
+        const kcal = caloriesEnabled() ? estimateActiveKcal(healthWindow, Number(bodyKgRaw()) || null) : 0;
+        void saveWorkoutToHealth(doc.id, healthWindow, doc.template_name, kcal);
+      }
       removeRecord(window.localStorage, userId, doc.id);
       router.replace(`/sessions/${doc.id}?finished=1`);
       router.refresh();

@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Content-production scripts (Playwright renderers for social posts), not app code.
+    "docs/content/templates/**",
   ]),
 ]);
 
