@@ -284,3 +284,12 @@ The test for every post: **would a gym-goer stop scrolling, and would they send 
 
 **Covers (from the same post):** a plain frame of text on dark isn't scroll-stopping. What worked was a **diagonal split: the problem versus the fix**. The top half was the messy white Notes app with a big red hand-drawn ✕. The bottom half was the real dark app, zoomed in on "Previous" with a lime ring and a "last time ✓" sticker. Across the middle, huge white-on-black hook text, slightly tilted, with one word in red ("NOT"). Make a dedicated cover image rather than a frame from the video, and check it in the 3:4 grid crop.
 
+**Brand level: professional, not meme.** Ben wants Setmodo to look like a professional brand. The second version of that cover is the standard to follow:
+- A small uppercase **eyebrow** line ("STILL LOGGING LIFTS IN NOTES?").
+- A big, tight, **left-aligned headline** in three tones: white, then grey, then lime for the key words.
+- Two clean **"before" and "after" objects**: a white Notes card with neat red strikethroughs, and the real app in a proper phone frame with a soft lime glow and a lime ring on the key number.
+- Small **chips** ("BEFORE" and "SETMODO").
+- The wordmark top-left.
+
+**No** hand-drawn crosses, tilted text boxes or emoji on covers. Emoji are fine sparingly inside fun reels; covers and carousels stay clean and premium.
+
